@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payout Reports: Stripe Managed (Check)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Exo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#F7F7F7;color:#2D2A26;font-family:Exo,ui-sans-serif,system-ui,sans-serif}
+a{color:#005CB9}a:hover{color:#00488E}
+button{font-family:inherit}
+.navlink{color:#FFFFFF;text-decoration:none;padding:14px 24px;font-size:14px;white-space:nowrap}
+.navlink:hover{background:#979797;color:#FFFFFF}
+.brow:hover{background:#F1FAFE !important}
+.ghostbtn:hover{background:#F1F2F2}
+.linkbtn:hover{text-decoration:underline}
+.tbl{overflow-x:auto}
+.sample{background:#FFFCE4;color:#7A5C00;font-size:13px;text-align:center;padding:6px 16px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+var DAY = 86400000;
+var TODAY = '2026-10-21';
+var ACH = true;
+var L = ACH ? {
+  type: 'Stripe Managed (ACH)', unit: ['ACH payment', 'ACH payments'], history: 'Payment History', date: 'Payment Date', amount: 'Payment Amount',
+  more: 'View More Payments', sheet: 'Payments Selection', noMore: 'No more payments', breakdown: 'Payment Breakdown', paid: 'ACH payment'
+} : {
+  type: 'Stripe Managed (Check)', unit: ['check', 'checks'], history: 'Check History', date: 'Check Date', amount: 'Check Amount',
+  more: 'View More Checks', sheet: 'Checks Selection', noMore: 'No more checks', breakdown: 'Check Breakdown', paid: 'check'
+};
+var SCHOOLS = ['Lincoln High School', 'Washington Middle School', 'Jefferson Middle School', 'Madison Elementary School', 'Roosevelt High School', 'Springfield Early College'];
+var PAYEES = {
+  ath: { name: 'Lincoln High School Athletics', school: 'Lincoln High School', addr: '1200 Lincoln Ave\nSpringfield, OH 45501' },
+  band: { name: 'Lincoln High School Band Boosters', school: 'Lincoln High School', addr: 'PO Box 418\nSpringfield, OH 45501' },
+  wms: { name: 'Washington Middle School', school: 'Washington Middle School', addr: '450 Washington St\nSpringfield, OH 45502' }
+};
+var PAYMENTS = [
+  { key: 'p1', no: '200041273', date: '2026-10-16', payee: 'ath' },
+  { key: 'p2', no: '200041274', date: '2026-10-16', payee: 'band' },
+  { key: 'p3', no: '200040988', date: '2026-10-09', payee: 'ath' },
+  { key: 'p4', no: '200040702', date: '2026-10-02', payee: 'ath' },
+  { key: 'p5', no: '200041275', date: '2026-10-16', payee: 'wms' },
+  { key: 'p6', no: '200040703', date: '2026-10-02', payee: 'wms' }
+];
+var LINES = [
+  ['p1', 'Athletics', 'Football', 'Varsity Football', 'Varsity Football vs. Central', '2026-10-09', 'Athletics', 4280],
+  ['p1', 'Athletics', 'Football', 'JV Football', 'JV Football vs. Central', '2026-10-08', 'Athletics', 612],
+  ['p1', 'Athletics', 'Volleyball', 'Varsity Volleyball', 'Varsity Volleyball vs. Riverside', '2026-10-07', 'Athletics', 538],
+  ['p1', 'Athletics', 'Volleyball', 'JV Volleyball', 'JV Volleyball vs. Riverside', '2026-10-07', 'Athletics', 164],
+  ['p1', 'Athletics', 'Soccer', 'Girls Varsity Soccer', 'Girls Varsity Soccer vs. Eastview', '2026-10-06', 'Athletics', 296],
+  ['p1', 'Concessions', 'Concessions', 'Concessions', 'Concessions 10/9 Football vs. Central', '2026-10-09', 'Concessions', 845.50],
+  ['p1', 'Athletics', 'Football', 'Varsity Football', 'Refund: Varsity Football vs. Valley View', '2026-09-25', 'Athletics', -72, true],
+  ['p2', 'Fine Arts', 'Music', 'Marching Band', 'Band Night at Varsity Football', '2026-10-09', 'Band Boosters', 380],
+  ['p2', 'Fine Arts', 'Music', 'Concert Band', 'Fall Concert', '2026-10-10', 'Band Boosters', 1125],
+  ['p3', 'Athletics', 'Football', 'Varsity Football', 'Varsity Football vs. Westview', '2026-10-02', 'Athletics', 3910],
+  ['p3', 'Athletics', 'Volleyball', 'Varsity Volleyball', 'Varsity Volleyball vs. Westlake', '2026-10-01', 'Athletics', 472],
+  ['p3', 'Athletics', 'Soccer', 'Boys Varsity Soccer', 'Boys Varsity Soccer vs. Northridge', '2026-09-30', 'Athletics', 248],
+  ['p4', 'Athletics', 'Football', 'Varsity Football', 'Varsity Football vs. Valley View', '2026-09-25', 'Athletics', 4055],
+  ['p4', 'Athletics', 'Football', 'JV Football', 'JV Football vs. Valley View', '2026-09-24', 'Athletics', 540],
+  ['p5', 'Athletics', 'Football', '8th Grade Football', '8th Grade Football vs. Jefferson Middle', '2026-10-08', 'Student Activities', 725],
+  ['p5', 'Athletics', 'Volleyball', '7th Grade Volleyball', '7th Grade Volleyball vs. Madison Middle', '2026-10-07', 'Student Activities', 228],
+  ['p6', 'Athletics', 'Football', '8th Grade Football', '8th Grade Football vs. Monroe Middle', '2026-09-24', 'Student Activities', 690]
+].map(function (l) {
+  return { pay: l[0], dept: l[1], activity: l[2], team: l[3], event: l[4], date: l[5], fund: l[6], amount: l[7], refund: !!l[8] };
+});
+var LEVELS = [
+  { key: 'dept', icon: 'dept', color: '#E20010', child: ['activity', 'activities'] },
+  { key: 'activity', icon: 'activity', color: '#C25000', child: ['team', 'teams'] },
+  { key: 'team', icon: 'team', color: '#318CDD', child: ['event', 'events'] },
+  { key: 'event', icon: 'event', color: '#005CB9' }
+];
+var FILTERS = [
+  { key: 'dept', label: 'All Depts', pill: 'DEPT' },
+  { key: 'activity', label: 'All Activities', pill: 'ACTIVITY' },
+  { key: 'team', label: 'All Teams', pill: 'TEAM' },
+  { key: 'event', label: 'All Events', pill: 'EVENT' }
+];
+var FUND_FILTER = { key: 'fund', label: 'Select School Club/Fund', pill: 'SCHOOL CLUB/FUND' };
+var GRID = 'display:grid;grid-template-columns:minmax(280px,1fr) 150px 200px 140px;border-bottom:1px solid #e5e7eb;';
+var HIST = 'display:grid;grid-template-columns:' + (ACH ? '140px 160px' : '140px 160px 130px') + ' minmax(200px,1fr) 150px 300px;';
+
+var SVG = {
+  chevDown: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>',
+  chevRight: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transition:transform 200ms;transform:rotate(ROTdeg)"><path d="M6 3l5 5-5 5"/></svg>',
+  x: '<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>',
+  clock: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1.5"/></svg>',
+  info: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M8 7.5v3.5M8 5v.01"/></svg>',
+  list: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" style="margin-right:8px"><path d="M5.5 4h8M5.5 8h8M5.5 12h8M2.5 4h.01M2.5 8h.01M2.5 12h.01"/></svg>',
+  check: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:8px"><rect x="1.5" y="4" width="13" height="8" rx="1"/><path d="M4 9.5h4M10.5 7h1.5"/></svg>',
+  star: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6l-3.8 2 .7-4.3-3.1-3 4.3-.6z"/></svg>',
+  history: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 2.5v3h3"/><path d="M2.8 5.5A5.5 5.5 0 1 1 2.5 8"/><path d="M8 5v3l2 1.5"/></svg>',
+  download: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8M4.5 6.5L8 10l3.5-3.5M2.5 13.5h11"/></svg>',
+  filter: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6D6E71" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h12l-4.5 5.5V13l-3-1.5V8.5z"/></svg>',
+  flag: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#6D6E71" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14V2M4 3h7l-1.5 2.5L11 8H4"/></svg>',
+  expand: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 2.5h4v4M13.5 2.5L9 7M6.5 13.5h-4v-4M2.5 13.5L7 9"/></svg>',
+  file: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z"/><path d="M6 6.5h4M6 9h4M6 11.5h2"/></svg>',
+  dept: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="12" height="8" rx="1"/><path d="M6 5V3h4v2M2 8.5h12"/></svg>',
+  activity: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 2h6v4a3 3 0 0 1-6 0V2zM5 3H3v1a2 2 0 0 0 2 2M11 3h2v1a2 2 0 0 1-2 2M8 9v3M5.5 14h5"/></svg>',
+  team: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="5.5" r="2.5"/><path d="M1.5 13.5c.5-2.5 2.3-3.5 4.5-3.5s4 1 4.5 3.5"/><circle cx="11.5" cy="6" r="2"/><path d="M12 10c1.5.3 2.3 1.4 2.5 3"/></svg>',
+  search: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#6D6E71" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" style="position:absolute;left:10px"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>',
+  refund: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v3h3"/><path d="M3.5 6A5 5 0 1 1 3 9"/></svg>',
+  event: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>'
+};
+
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function ts(s) { return new Date(s + 'T12:00:00').getTime(); }
+function money(n) { return (n < 0 ? '-$' : '$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function mdy(s) { var p = s.split('-'); return p[1] + '/' + p[2] + '/' + p[0]; }
+function short(s) { return new Date(ts(s)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+function sum(lines) { return lines.reduce(function (a, l) { return a + l.amount; }, 0); }
+function uniq(arr) { return arr.filter(function (v, i) { return arr.indexOf(v) === i; }); }
+function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+function linesOf(keys) { return LINES.filter(function (l) { return keys.indexOf(l.pay) !== -1; }); }
+function paymentsFor(school) { return PAYMENTS.filter(function (p) { return PAYEES[p.payee].school === school; }).sort(function (a, b) { return ts(b.date) - ts(a.date); }); }
+function windowOf(lines) { var paid = lines.filter(function (l) { return !l.refund; }); var ds = (paid.length ? paid : lines).map(function (l) { return l.date; }).sort(); return ds.length ? { from: ds[0], to: ds[ds.length - 1] } : null; }
+function emptyFilters() { return { dept: [], activity: [], team: [], event: [], fund: [] }; }
+function applyFilters(lines, f) { return lines.filter(function (l) { return Object.keys(f).every(function (k) { return !f[k].length || f[k].indexOf(l[k]) !== -1; }); }); }
+
+var state = { school: SCHOOLS[0], schoolOpen: false, schoolQuery: '', tab: 'summary', sheetOpen: false, range: 30, selected: [paymentsFor(SCHOOLS[0])[0].key], open: {}, filters: emptyFilters(), openFilter: null };
+var handlers = [];
+function on(fn) { handlers.push(fn); return handlers.length - 1; }
+function set(patch) { Object.assign(state, patch); render(); }
+function setSel(keys) { set({ selected: keys, open: {}, filters: emptyFilters(), openFilter: null }); }
+function setFilter(key, values) { var f = Object.assign({}, state.filters); f[key] = values; set({ filters: f, open: {} }); }
+
+var BTN = 'display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:0;border-radius:6px;box-shadow:0 0 0 1px #d1d5db;background:#FFFFFF;font-size:14px;color:#2D2A26;white-space:nowrap;cursor:pointer;';
+var CARD = 'background:#FFFFFF;border-radius:12px;box-shadow:0 0 0 1px rgba(45,42,38,0.1);padding:16px;display:flex;flex-direction:column;';
+var CARD_T = 'font-size:16px;font-weight:600;text-transform:uppercase;color:#6D6E71;';
+var LABEL = 'color:#6D6E71;font-size:16px;font-weight:600;text-transform:uppercase;';
+
+function filterHtml(cfg, lines, alignRight) {
+  var cur = state.filters[cfg.key];
+  var active = cur.length > 0;
+  var isOpen = state.openFilter === cfg.key;
+  var label = active ? cfg.label.replace('All ', '').replace('Select ', '') : cfg.label;
+  var h = '<div style="position:relative"><button type="button" data-h="' + on(function () { set({ openFilter: isOpen ? null : cfg.key }); }) + '" aria-expanded="' + isOpen + '" style="' + BTN + (active ? 'box-shadow:0 0 0 1px #C7EAFB;background:#F1FAFE;color:#005CB9;' : '') + '">' + esc(label);
+  if (active) { h += '<span style="background:#005CB9;color:#FFF;border-radius:9999px;padding:0 6px;font-size:11px;line-height:16px">' + cur.length + '</span>'; }
+  h += SVG.chevDown + '</button>';
+  if (isOpen) {
+    h += '<div style="position:absolute;top:calc(100% + 6px);' + (alignRight ? 'right:0' : 'left:0') + ';z-index:30;min-width:256px;max-height:300px;overflow-y:auto;background:#FFF;border:1px solid #E5E8EC;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.12);padding:6px;display:flex;flex-direction:column;gap:2px">';
+    uniq(lines.map(function (l) { return l[cfg.key]; })).sort().forEach(function (v) {
+      var checked = cur.indexOf(v) !== -1;
+      h += '<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;font-size:14px;cursor:pointer"><input type="checkbox"' + (checked ? ' checked' : '') + ' data-c="' + on(function () { setFilter(cfg.key, checked ? cur.filter(function (x) { return x !== v; }) : cur.concat([v])); }) + '" style="width:16px;height:16px;margin:0;accent-color:#005CB9"><span>' + esc(v) + '</span></label>';
+    });
+    h += '</div>';
+  }
+  return h + '</div>';
+}
+
+function rowsHtml(lines, li, path) {
+  if (li >= LEVELS.length) { return ''; }
+  var lv = LEVELS[li];
+  var isLeaf = li === LEVELS.length - 1;
+  var h = '';
+  uniq(lines.map(function (l) { return l[lv.key]; })).forEach(function (v) {
+    var sub = lines.filter(function (l) { return l[lv.key] === v; });
+    var key = path + '/' + v;
+    var expanded = !isLeaf && !!state.open[key];
+    var w = windowOf(sub);
+    var funds = uniq(sub.map(function (l) { return l.fund; }));
+    var isRefund = isLeaf && sub.every(function (l) { return l.refund; });
+    var amt = sum(sub);
+    var badge = isRefund ? 'Refund · previously paid event' : lv.child ? plural(uniq(sub.map(function (l) { return l[LEVELS[li + 1].key]; })).length, lv.child[0], lv.child[1]) : '';
+    h += '<div role="row" class="brow" style="' + GRID + 'background:' + (li === 0 ? '#F8F8FA;font-weight:600' : '#FFFFFF') + '">';
+    h += '<div role="cell" style="padding:8px 16px 8px ' + (li * 24 + 16) + 'px;min-width:0;display:flex;align-items:center"><span style="display:inline-flex;align-items:center;gap:8px;max-width:100%;min-width:0">';
+    if (isLeaf) { h += '<span style="width:12px;flex-shrink:0"></span>'; }
+    else {
+      h += '<button type="button" data-h="' + on(function () { var o = Object.assign({}, state.open); o[key] = !o[key]; set({ open: o }); }) + '" aria-expanded="' + expanded + '" aria-label="' + (expanded ? 'Collapse ' : 'Expand ') + esc(v) + '" style="border:0;background:none;padding:0;width:12px;height:12px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#2D2A26">' + SVG.chevRight.replace('ROT', expanded ? 90 : 0) + '</button>';
+    }
+    h += '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex-shrink:0;color:' + (isRefund ? '#B4000D' : lv.color) + '">' + SVG[isRefund ? 'refund' : lv.icon] + '</span>';
+    h += '<span style="display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' + (isRefund ? ';color:#B4000D' : '') + '" title="' + esc(v) + '">' + esc(v) + '</span>';
+    if (badge) { h += '<span style="flex-shrink:0;white-space:nowrap;margin-left:4px;font-size:12px;font-weight:400;padding:2px 8px;border-radius:9999px;' + (isRefund ? 'color:#B4000D;background:#FDECEC' : 'color:#6D6E71;background:#e5e7eb') + '">' + badge + '</span>'; }
+    h += '</span></div>';
+    h += '<div role="cell" style="padding:8px 16px;text-align:right;white-space:nowrap;color:#6D6E71">' + (w.from === w.to ? short(w.from) : short(w.from) + ' – ' + short(w.to)) + '</div>';
+    h += '<div role="cell" style="padding:8px 16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#6D6E71">' + esc(funds.length === 1 ? funds[0] : plural(funds.length, 'fund', 'funds')) + '</div>';
+    h += '<div role="cell" style="padding:8px 16px;text-align:right;white-space:nowrap;font-weight:600;color:' + (amt < 0 ? '#B4000D' : '#005CB9') + '">' + money(amt) + '</div></div>';
+    if (expanded) { h += rowsHtml(sub, li + 1, key); }
+  });
+  return h;
+}
+
+function parentKeys(lines, li, path, out) {
+  if (li >= LEVELS.length - 1) { return out; }
+  var lv = LEVELS[li];
+  uniq(lines.map(function (l) { return l[lv.key]; })).forEach(function (v) {
+    out[path + '/' + v] = true;
+    parentKeys(lines.filter(function (l) { return l[lv.key] === v; }), li + 1, path + '/' + v, out);
+  });
+  return out;
+}
+
+function render() {
+  handlers = [];
+  var s = state;
+  var all = paymentsFor(s.school);
+  var sel = all.filter(function (p) { return s.selected.indexOf(p.key) !== -1; });
+  var lines = linesOf(s.selected);
+  var shown = applyFilters(lines, s.filters);
+  var w = windowOf(lines);
+  var total = sum(lines);
+  var isSummary = s.tab === 'summary';
+  var parents = parentKeys(shown, 0, '', {});
+  var pk = Object.keys(parents);
+  var allOpen = pk.length > 0 && pk.every(function (k) { return !!s.open[k]; });
+  var cutoff = ts(TODAY) - s.range * DAY;
+  var inRange = all.filter(function (p) { return ts(p.date) >= cutoff; });
+  var funds = uniq(lines.map(function (l) { return l.fund; }));
+  var depts = uniq(lines.map(function (l) { return l.dept; }));
+  var events = uniq(lines.filter(function (l) { return !l.refund; }).map(function (l) { return l.event; }));
+  var refunds = lines.filter(function (l) { return l.refund; });
+  var q = s.schoolQuery.trim().toLowerCase();
+  var matched = SCHOOLS.filter(function (n) { return !q || n.toLowerCase().indexOf(q) !== -1; });
+  var ref = function (p) { return ACH ? 'ACH to ' + esc(PAYEES[p.payee].name) : 'Check #' + p.no; };
+  var tabOn = 'display:inline-flex;align-items:center;height:26px;padding:0 10px;border:0;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;background:#FFF;color:#2D2A26;box-shadow:0 1px 2px rgba(0,0,0,0.12)';
+  var tabOff = 'display:inline-flex;align-items:center;height:26px;padding:0 10px;border:0;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;background:transparent;color:#4b5563';
+
+  var h = '<div class="sample">Prototype with sample data. ' + L.type + ' Payout Reports.</div>';
+  h += '<header style="background:#2D2A26;color:#FFF;font-family:verdana,sans-serif"><nav aria-label="Box Office" style="max-width:1280px;margin:0 auto;padding:0 16px;display:flex;flex-wrap:wrap;align-items:center;min-height:48px">';
+  ['Dashboard', 'District', 'Events', 'Reports', 'Websites', 'Fundraising', 'My Hometown', 'Settings'].forEach(function (n, i) {
+    h += '<a class="navlink" href="#"' + (i === 0 ? ' style="background:#000"' : n === 'Reports' ? ' style="color:#9d9d9d"' : '') + '>' + n + '</a>';
+  });
+  h += '<a class="navlink" href="#" style="margin-left:auto">Log out</a></nav></header>';
+
+  h += '<main style="max-width:1280px;margin:0 auto;padding:32px 16px 64px">';
+  h += '<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px"><h1 style="margin:0;font-size:24px;line-height:32px;font-weight:600">Payout Reports</h1>';
+  h += '<div style="display:flex;align-items:center;gap:8px;font-size:14px;color:#6D6E71">' + SVG.clock + '<span>Last updated: Oct 21, 2026</span><span title="This report refreshes once daily from an overnight data pull. Payments sent after the most recent refresh will appear after the next day\'s refresh." style="display:inline-flex">' + SVG.info + '</span></div></div>';
+
+  h += '<div style="margin-top:32px;display:flex;flex-wrap:wrap;align-items:center;gap:16px"><label for="school-picker" style="color:#6b7280;font-size:16px">School:</label><div style="position:relative;min-width:240px">';
+  h += '<button id="school-picker" type="button" data-h="' + on(function () { set({ schoolOpen: !s.schoolOpen, schoolQuery: '' }); }) + '" aria-expanded="' + s.schoolOpen + '" style="width:100%;height:40px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 12px;background:#FFF;border:1px solid #d1d5db;border-radius:6px;font-size:14px;color:#2D2A26;cursor:pointer"><span>' + esc(s.school) + '</span>' + SVG.chevDown + '</button>';
+  if (s.schoolOpen) {
+    h += '<div style="position:absolute;top:44px;left:0;right:0;min-width:280px;z-index:20;background:#FFF;border:1px solid #E5E8EC;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,0.12);padding:4px 0">';
+    h += '<div style="padding:6px 8px 8px;border-bottom:1px solid #E5E8EC;margin-bottom:4px"><div style="position:relative;display:flex;align-items:center">' + SVG.search + '<input id="school-search" type="search" aria-label="Search schools" placeholder="Search schools…" autocomplete="off" value="' + esc(s.schoolQuery) + '" data-i="' + on(function (e) { set({ schoolQuery: e.target.value }); }) + '" style="width:100%;height:34px;padding:0 10px 0 30px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;font-family:inherit;color:#2D2A26;outline-color:#005CB9"></div></div>';
+    if (!matched.length) { h += '<div style="padding:8px 12px;font-size:14px;color:#6D6E71">No matching schools</div>'; }
+    matched.forEach(function (name) {
+      h += '<button type="button" data-h="' + on(function () { var first = paymentsFor(name)[0]; set({ school: name, schoolOpen: false, schoolQuery: '', selected: first ? [first.key] : [], open: {}, filters: emptyFilters(), openFilter: null }); }) + '" style="display:block;width:100%;text-align:left;border:0;padding:8px 12px;font-size:14px;color:#2D2A26;cursor:pointer;background:' + (name === s.school ? '#F1FAFE' : '#FFF') + '">' + esc(name) + '</button>';
+    });
+    h += '</div>';
+  }
+  h += '</div></div>';
+
+  h += '<div style="margin:32px 0;display:flex;flex-wrap:wrap;align-items:center;gap:12px"><div role="tablist" aria-label="Report view" style="display:inline-flex;gap:8px;align-items:center;background:#d1d5db;border-radius:8px;padding:3px;height:32px">';
+  h += '<button type="button" role="tab" aria-selected="' + isSummary + '" data-h="' + on(function () { set({ tab: 'summary' }); }) + '" style="' + (isSummary ? tabOn : tabOff) + '">' + SVG.list + 'Summary</button>';
+  h += '<button type="button" role="tab" aria-selected="' + !isSummary + '" data-h="' + on(function () { set({ tab: 'history' }); }) + '" style="' + (isSummary ? tabOff : tabOn) + '">' + SVG.check + L.history + '</button></div>';
+  h += '<button type="button" class="linkbtn" style="border:0;background:none;color:#005CB9;font-size:14px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:6px 8px">' + SVG.star + '<span>Set ' + (isSummary ? 'Summary' : L.history) + ' as default</span></button></div>';
+
+  if (isSummary) {
+    h += '<section aria-label="Selected payment" style="background:#F8F8FA;border-radius:12px;box-shadow:0 0 0 1px #d1d5db;display:flex;flex-wrap:wrap;align-items:stretch">';
+    h += '<div style="flex:1 1 380px;padding:16px;border-right:1px solid #d1d5db;display:flex;flex-direction:column;gap:4px"><span style="' + LABEL + '">' + L.date + '</span><div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px">';
+    if (sel.length === 1) { h += '<div style="display:flex;flex-direction:column"><span style="font-weight:600">' + mdy(sel[0].date) + '</span><span style="font-size:14px;color:#6D6E71">' + ref(sel[0]) + '</span></div>'; }
+    if (sel.length > 1) { h += '<button type="button" data-h="' + on(function () { setSel(all[0] ? [all[0].key] : []); }) + '" style="display:inline-flex;align-items:center;gap:6px;background:#F1FAFE;color:#005CB9;border:1px solid #C7EAFB;border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:600;cursor:pointer">' + plural(sel.length, L.unit[0], L.unit[1]) + ' selected ' + SVG.x + '</button>'; }
+    h += '<button type="button" class="ghostbtn" data-h="' + on(function () { set({ sheetOpen: true }); }) + '" style="' + BTN + 'background:transparent;padding:4px 10px">' + SVG.history + (sel.length > 1 ? 'Change' : L.more) + '</button></div></div>';
+    h += '<div style="flex:1 1 320px;padding:16px;border-right:1px solid #d1d5db;display:flex;flex-direction:column;gap:2px"><span style="' + LABEL + '">Events Included</span><div style="font-weight:600"><span style="font-weight:400;font-size:14px">From:</span> ' + (w ? mdy(w.from) : '—') + '</div><div style="font-weight:600"><span style="font-weight:400;font-size:14px">To:</span> ' + (w ? mdy(w.to) : '—') + '</div></div>';
+    h += '<div style="flex:0 1 260px;padding:16px;display:flex;flex-direction:column"><span style="' + LABEL + '">' + L.amount + '</span><span style="color:#008256;font-weight:600;font-size:30px;line-height:36px">' + money(total) + '</span>';
+    if (refunds.length) { h += '<span style="font-size:13px;color:#B4000D;display:inline-flex;align-items:center;gap:6px">' + SVG.refund.replace(/16/g, '12').replace('viewBox="0 0 12 12"', 'viewBox="0 0 16 16"') + 'Includes ' + plural(refunds.length, 'refund', 'refunds') + ' on previously paid events (' + money(sum(refunds)) + ')</span>'; }
+    h += '</div></section>';
+
+    h += '<div style="margin-top:32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">';
+    h += '<div style="' + CARD + '"><div style="' + CARD_T + '">Payable To</div>';
+    uniq(sel.map(function (p) { return p.payee; })).forEach(function (k) {
+      h += '<div style="margin-top:8px;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;font-size:18px;line-height:26px">' + esc(PAYEES[k].name) + '</span><span style="font-size:14px;color:#6D6E71;white-space:pre-line">' + esc(PAYEES[k].addr) + '</span></div>';
+    });
+    h += '</div>';
+    [['School Club/Fund', plural(funds.length, 'fund', 'funds'), funds, 'fund'], ['Events Paid', plural(events.length, 'event', 'events'), depts, 'dept']].forEach(function (c) {
+      h += '<div style="' + CARD + '"><div style="' + CARD_T + '">' + c[0] + '</div><span style="font-weight:600;font-size:22px;line-height:32px">' + c[1] + '</span><div style="display:flex;flex-direction:column;gap:4px;margin-top:8px;font-size:14px">';
+      c[2].forEach(function (v) { h += '<div style="display:flex;justify-content:space-between;gap:8px"><span style="color:#6D6E71">' + esc(v) + '</span><span style="font-weight:600">' + money(sum(lines.filter(function (l) { return l[c[3]] === v; }))) + '</span></div>'; });
+      h += '</div></div>';
+    });
+    h += '</div>';
+
+    h += '<section aria-label="' + L.breakdown + '" style="margin-top:32px;background:#FFF;border-radius:12px;box-shadow:0 0 0 1px rgba(45,42,38,0.1);padding:16px 0;font-size:14px">';
+    h += '<div style="padding:0 16px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:12px"><div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:16px;font-weight:500">' + L.breakdown + '</h2><p style="margin:0;color:#6D6E71">Drill down by selecting filters or clicking table rows. Amounts are what this ' + L.paid + ' paid for each event.</p></div><button type="button" class="ghostbtn" style="' + BTN + '">' + SVG.download + 'Export</button></div>';
+    h += '<div style="padding:16px 16px 0"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px">' + SVG.filter + '<span style="font-weight:600">Filter</span><span style="color:#6D6E71">Combine any filters to narrow the data, or go straight to a School Club/Fund on the right</span></div>';
+    h += '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">';
+    FILTERS.forEach(function (cfg) { h += filterHtml(cfg, lines, false); });
+    h += '<div style="display:flex;align-items:center;gap:8px;border-left:1px solid #d1d5db;padding-left:16px;margin-left:8px"><span style="font-size:12px;color:#6D6E71;text-transform:uppercase;font-weight:600;white-space:nowrap">or by School Club/Fund</span>' + filterHtml(FUND_FILTER, lines, true) + '</div></div>';
+    var pills = [];
+    FILTERS.concat([FUND_FILTER]).forEach(function (cfg) { s.filters[cfg.key].forEach(function (v) { pills.push([cfg, v]); }); });
+    if (pills.length) {
+      h += '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px">';
+      pills.forEach(function (p) {
+        h += '<span style="display:inline-flex;align-items:center;gap:6px;border:1px solid #d1d5db;border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:500">' + esc(p[0].pill + ': ' + p[1]) + '<button type="button" aria-label="Remove filter ' + esc(p[1]) + '" data-h="' + on(function () { setFilter(p[0].key, s.filters[p[0].key].filter(function (x) { return x !== p[1]; })); }) + '" style="border:0;background:none;padding:0;color:#6D6E71;cursor:pointer;display:inline-flex">' + SVG.x + '</button></span>';
+      });
+      h += '<button type="button" class="linkbtn" data-h="' + on(function () { set({ filters: emptyFilters(), openFilter: null, open: {} }); }) + '" style="border:0;background:none;padding:4px 0;font-size:12px;color:#005CB9;cursor:pointer">Clear all</button></div>';
+    }
+    h += '</div>';
+    h += '<div style="margin:24px 16px 16px;padding-top:16px;border-top:1px solid #e5e7eb;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">' + SVG.flag + '<span style="font-weight:600">Departments, Activities, Teams &amp; Events</span><span style="color:#6D6E71">Use filters above to drill down or compare across the hierarchy</span></div>';
+    h += '<button type="button" class="ghostbtn" data-h="' + on(function () { set({ open: allOpen ? {} : parents }); }) + '" style="' + BTN + '">' + SVG.expand + (allOpen ? 'Collapse All' : 'Expand All') + '</button></div>';
+    h += '<div class="tbl" style="padding:0 16px"><div role="table" aria-label="Breakdown by department, activity, team and event" style="min-width:760px">';
+    h += '<div role="row" style="' + GRID + 'border-bottom:2px solid #d1d5db;color:#6D6E71;text-transform:uppercase;font-size:12px;font-weight:600"><div role="columnheader" style="padding:12px 16px">Name</div><div role="columnheader" style="padding:12px 16px;text-align:right">Event Date</div><div role="columnheader" style="padding:12px 16px">School Club/Fund</div><div role="columnheader" style="padding:12px 16px;text-align:right">Amount</div></div>';
+    h += rowsHtml(shown, 0, '');
+    h += '<div role="row" style="' + GRID + 'border-bottom:0;border-top:2px solid #d1d5db;font-weight:600"><div role="cell" style="padding:10px 16px">Total</div><div role="cell"></div><div role="cell"></div><div role="cell" style="padding:10px 16px;text-align:right;color:#008256">' + money(sum(shown)) + '</div></div>';
+    h += '</div></div></section>';
+  } else {
+    h += '<p style="margin:0 0 12px">' + L.history + '</p><div class="tbl" style="background:#FFF;border-radius:8px;box-shadow:0 0 0 1px #e5e7eb"><div role="table" aria-label="' + L.history + '" style="min-width:900px;font-size:14px">';
+    h += '<div role="row" style="' + HIST + 'border-bottom:1px solid #e5e7eb;color:#6D6E71;font-size:12px;text-transform:uppercase;font-weight:600"><div role="columnheader" style="padding:16px">Amount</div><div role="columnheader" style="padding:16px">' + L.date + '</div>' + (ACH ? '' : '<div role="columnheader" style="padding:16px">Check #</div>') + '<div role="columnheader" style="padding:16px">Payable To</div><div role="columnheader" style="padding:16px">Events</div><div role="columnheader" style="padding:16px;display:flex;justify-content:flex-end"><span style="display:flex;align-items:center;gap:8px;width:192px"><span style="flex:1;border-top:1px solid #d1d5db"></span><span style="text-transform:none;font-weight:400">Download</span><span style="flex:1;border-top:1px solid #d1d5db"></span></span></div></div>';
+    all.forEach(function (p) {
+      var pl = linesOf([p.key]);
+      var pw = windowOf(pl);
+      h += '<div role="row" style="' + HIST + 'align-items:center;border-bottom:1px solid #e5e7eb"><div role="cell" style="padding:12px 16px;font-weight:600">' + money(sum(pl)) + '</div><div role="cell" style="padding:12px 16px">' + mdy(p.date) + '</div>' + (ACH ? '' : '<div role="cell" style="padding:12px 16px;color:#6D6E71;font-family:ui-monospace,Menlo,monospace;font-size:13px">' + p.no + '</div>') + '<div role="cell" style="padding:12px 16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(PAYEES[p.payee].name) + '</div><div role="cell" style="padding:12px 16px;color:#6D6E71;white-space:nowrap">' + short(pw.from) + ' – ' + short(pw.to) + '</div>';
+      h += '<div role="cell" style="padding:8px 16px;display:flex;align-items:center;justify-content:flex-end;gap:4px"><button type="button" data-h="' + on(function () { set({ selected: [p.key], tab: 'summary', open: {}, filters: emptyFilters(), openFilter: null }); }) + '" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:0;border-radius:6px;background:#F1F2F2;color:#2D2A26;font-size:14px;cursor:pointer">' + SVG.list.replace('margin-right:8px', 'margin:0') + 'View Summary</button><span style="color:#d1d5db;padding:0 8px">|</span><button type="button" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:0;border-radius:6px;background:#005CB9;color:#FFF;font-size:14px;cursor:pointer">' + SVG.file + 'Itemized</button></div></div>';
+    });
+    h += '</div></div><div style="text-align:center;font-size:14px;color:#6D6E71;padding:12px 0">' + L.noMore + '</div>';
+  }
+  h += '</main>';
+
+  if (s.sheetOpen) {
+    var closeH = on(function () { set({ sheetOpen: false }); });
+    h += '<button type="button" aria-label="Close panel" data-h="' + closeH + '" style="position:fixed;inset:0;z-index:90;border:0;padding:0;background:rgba(0,0,0,0.5);cursor:default"></button>';
+    h += '<aside role="dialog" aria-label="' + L.sheet + '" style="position:fixed;top:0;right:0;bottom:0;z-index:100;width:100%;max-width:768px;background:#FFF;box-shadow:-8px 0 24px rgba(0,0,0,0.15);display:flex;flex-direction:column">';
+    h += '<div style="padding:16px 16px 0;display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0;font-size:18px;font-weight:600">' + L.sheet + '</h2><button type="button" aria-label="Close" data-h="' + closeH + '" style="display:inline-flex;width:32px;height:32px;align-items:center;justify-content:center;color:#6D6E71;border:0;background:none;cursor:pointer">' + SVG.x + '</button></div>';
+    h += '<div style="flex:1;overflow-y:auto;padding-top:16px"><div style="padding:0 16px"><p style="margin:0 0 8px;font-size:14px;color:#6D6E71">Show ' + L.unit[1] + ' from last:</p><div style="display:inline-flex;gap:4px;border-radius:8px;background:#F1F2F2;padding:4px">';
+    [[7, '7 days'], [30, '30 days'], [90, '90 days']].forEach(function (r) {
+      var act = s.range === r[0];
+      h += '<button type="button" aria-pressed="' + act + '" data-h="' + on(function () { set({ range: r[0] }); }) + '" style="padding:4px 8px;border:0;border-radius:6px;font-size:14px;cursor:pointer;background:' + (act ? '#005CB9;color:#FFF' : 'transparent;color:#2D2A26') + '">' + r[1] + '</button>';
+    });
+    var allSel = inRange.length > 0 && inRange.every(function (p) { return s.selected.indexOf(p.key) !== -1; });
+    h += '</div></div><fieldset style="margin:16px 0 0;padding:0;border:0;display:flex;flex-direction:column"><legend style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">' + L.sheet + '</legend>';
+    h += '<div style="display:flex;align-items:center;padding:16px;border-bottom:1px solid #e5e7eb"><label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#6D6E71"><input type="checkbox"' + (allSel ? ' checked' : '') + ' data-c="' + on(function () { setSel(sel.length ? [] : inRange.map(function (p) { return p.key; })); }) + '" style="width:16px;height:16px;margin:0;accent-color:#005CB9"><span style="padding:0 16px">' + (sel.length ? 'Unselect all' : 'Select all') + '</span></label></div>';
+    inRange.forEach(function (p) {
+      var chk = s.selected.indexOf(p.key) !== -1;
+      var pl = linesOf([p.key]);
+      var pw = windowOf(pl);
+      h += '<label style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:16px;border-bottom:1px solid #e5e7eb;cursor:pointer;background:' + (chk ? '#F1FAFE' : '#FFF') + '"><span style="display:flex;align-items:center;gap:12px"><input type="checkbox"' + (chk ? ' checked' : '') + ' data-c="' + on(function () { setSel(chk ? s.selected.filter(function (k) { return k !== p.key; }) : s.selected.concat([p.key])); }) + '" style="width:16px;height:16px;margin:0;accent-color:#005CB9"><span style="display:flex;flex-direction:column"><span style="font-size:14px">' + mdy(p.date) + ' · ' + (ACH ? esc(PAYEES[p.payee].name) : 'Check #' + p.no) + '</span><span style="font-size:12px;color:#6D6E71">' + (ACH ? '' : esc(PAYEES[p.payee].name) + ' · ') + 'Events ' + short(pw.from) + ' – ' + short(pw.to) + '</span></span></span><span style="font-weight:600' + (chk ? ';color:#008256' : '') + '">' + money(sum(pl)) + '</span></label>';
+    });
+    h += '<div style="text-align:center;font-size:14px;color:#6D6E71;padding:12px 0">' + L.noMore + '</div></fieldset></div>';
+    h += '<div style="padding:16px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;font-size:14px"><span>' + sel.length + ' of ' + inRange.length + ' selected</span><span>Total: <span style="color:#008256;font-weight:600">' + money(total) + '</span></span></div></aside>';
+  }
+  document.getElementById('app').innerHTML = h;
+  var search = s.schoolOpen && document.getElementById('school-search');
+  if (search && search.focus) { search.focus(); search.setSelectionRange(search.value.length, search.value.length); }
+}
+document.addEventListener('input', function (e) {
+  var el = e.target.closest('[data-i]');
+  if (el) { handlers[+el.getAttribute('data-i')](e); }
+});
+
+document.addEventListener('click', function (e) {
+  var el = e.target.closest('[data-h]');
+  if (el) { handlers[+el.getAttribute('data-h')](); }
+});
+document.addEventListener('change', function (e) {
+  var el = e.target.closest('[data-c]');
+  if (el) { handlers[+el.getAttribute('data-c')](); }
+});
+render();
+</script>
+</body>
+</html>
