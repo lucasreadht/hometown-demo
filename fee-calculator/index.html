@@ -21,6 +21,12 @@
 :root[data-theme="dark"] { --page-bg: #f2f2f2; }
 html, body { background-color: var(--page-bg); overflow-x: hidden; }
 .p-0 { padding: 0; }
+.info-tip { position: relative; display: inline-block; vertical-align: middle; }
+.info-tip__icon { width: 18px; height: 18px; padding: 0; border: 1px solid #767676; border-radius: 50%; background: #fff; color: #555; font: 700 11px/16px Georgia, serif; font-style: italic; text-align: center; cursor: help; }
+.info-tip__icon:hover, .info-tip__icon:focus { border-color: #337ab7; color: #337ab7; outline: none; }
+.info-tip__text { visibility: hidden; opacity: 0; position: absolute; z-index: 1000; top: 26px; left: -8px; width: 280px; max-width: 80vw; padding: 8px 10px; border-radius: 4px; background: #333; color: #fff; font-size: 13px; font-weight: 400; line-height: 1.4; transition: opacity .15s; }
+.info-tip__text::before { content: ""; position: absolute; top: -5px; left: 12px; border: 5px solid transparent; border-top: 0; border-bottom-color: #333; }
+.info-tip:hover .info-tip__text, .info-tip__icon:focus + .info-tip__text { visibility: visible; opacity: 1; }
 
     body { font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; background-color: #f2f2f2; padding-bottom: 90px; }
     .form_hr { display: block; height: 1px; background: #d4d4e6; margin: 0 0 20px 40px; width: 100%; }
@@ -356,7 +362,7 @@ html, body { background-color: var(--page-bg); overflow-x: hidden; }
             </div>
 
             <div class="col-md-6 col-xs-12">
-              <h4>Estimated Revenue <small class="text-muted">(based on HomeTown Fee &amp; Card/Merchant Fee settings above)</small></h4>
+              <h4>Estimated Revenue <span class="info-tip"><button type="button" class="info-tip__icon" aria-label="About estimated revenue" aria-describedby="revenue_tip">i</button><span class="info-tip__text" id="revenue_tip" role="tooltip">This estimate is for one (1) ticket, based on the settings above. Actual revenue per ticket will change depending on cart size, because card processing fees are charged once per order, not per ticket.</span></span> <small class="text-muted">(based on HomeTown Fee &amp; Card/Merchant Fee settings above)</small></h4>
               <div class="form-horizontal">
                 <div class="form-group">
                   <label class="col-xs-6 col-md-5 control-label">Ticket Price Charged</label>
