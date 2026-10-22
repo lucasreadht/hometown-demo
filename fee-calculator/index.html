@@ -21,6 +21,15 @@
 :root[data-theme="dark"] { --page-bg: #f2f2f2; }
 html, body { background-color: var(--page-bg); overflow-x: hidden; }
 .p-0 { padding: 0; }
+/* Side-by-side columns stretch to equal height so both totals sit on the same line */
+@media (min-width: 992px) {
+  .calc-cols { display: flex; clear: both; width: 100%; }
+  .calc-col { display: flex; flex-direction: column; }
+  .calc-col .form-horizontal { flex: 1; display: flex; flex-direction: column; }
+  .calc-col .form-horizontal > hr { margin-top: auto; }
+  .calc-col .form-horizontal > hr ~ .form-group { display: flex; align-items: center; min-height: 54px; }
+  .calc-col .form-horizontal > hr ~ .form-group .control-label { padding-top: 0; }
+}
 .info-tip { position: relative; display: inline-block; vertical-align: middle; }
 .info-tip__icon { width: 18px; height: 18px; padding: 0; border: 1px solid #767676; border-radius: 50%; background: #fff; color: #555; font: 700 11px/16px Georgia, serif; font-style: italic; text-align: center; cursor: help; }
 .info-tip__icon:hover, .info-tip__icon:focus { border-color: #337ab7; color: #337ab7; outline: none; }
@@ -323,7 +332,8 @@ html, body { background-color: var(--page-bg); overflow-x: hidden; }
               </div>
             </div>
 
-            <div class="col-md-6 col-xs-12">
+            <div class="calc-cols">
+            <div class="col-md-6 col-xs-12 calc-col">
               <h4>Customer Checkout</h4>
               <div class="form-horizontal">
                 <div class="form-group">
@@ -358,11 +368,11 @@ html, body { background-color: var(--page-bg); overflow-x: hidden; }
               </div>
             </div>
 
-            <div class="col-md-6 col-xs-12">
+            <div class="col-md-6 col-xs-12 calc-col">
               <h4>Estimated Revenue</h4>
               <div class="form-horizontal">
                 <div class="form-group">
-                  <label class="col-xs-6 col-md-5 control-label">Ticket Price Charged</label>
+                  <label class="col-xs-6 col-md-5 control-label">Ticket Cost</label>
                   <div class="col-xs-6 col-md-4"><p class="form-control-static" id="calc_absorb_price"></p></div>
                 </div>
                 <div class="form-group">
@@ -383,6 +393,7 @@ html, body { background-color: var(--page-bg); overflow-x: hidden; }
                   <div class="col-xs-6 col-md-4"><p class="form-control-static" id="calc_absorb_payout" style="font-weight:700"></p></div>
                 </div>
               </div>
+            </div>
             </div>
 
           </div>
