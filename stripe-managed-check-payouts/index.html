@@ -25,7 +25,15 @@ button{font-family:inherit}
 <script>
 var DAY = 86400000;
 var TODAY = '2026-10-21';
-var SCHOOLS = ['Lincoln High School', 'Washington Middle School'];
+var ACH = false;
+var L = ACH ? {
+  type: 'Stripe Managed (ACH)', unit: ['ACH payment', 'ACH payments'], history: 'Payment History', date: 'Payment Date', amount: 'Payment Amount',
+  more: 'View More Payments', sheet: 'Payments Selection', noMore: 'No more payments', breakdown: 'Payment Breakdown', paid: 'ACH payment'
+} : {
+  type: 'Stripe Managed (Check)', unit: ['check', 'checks'], history: 'Check History', date: 'Check Date', amount: 'Check Amount',
+  more: 'View More Checks', sheet: 'Checks Selection', noMore: 'No more checks', breakdown: 'Check Breakdown', paid: 'check'
+};
+var SCHOOLS = ['Lincoln High School', 'Washington Middle School', 'Jefferson Middle School', 'Madison Elementary School', 'Roosevelt High School', 'Springfield Early College'];
 var PAYEES = {
   ath: { name: 'Lincoln High School Athletics', school: 'Lincoln High School', addr: '1200 Lincoln Ave\nSpringfield, OH 45501' },
   band: { name: 'Lincoln High School Band Boosters', school: 'Lincoln High School', addr: 'PO Box 418\nSpringfield, OH 45501' },
@@ -46,6 +54,7 @@ var LINES = [
   ['p1', 'Athletics', 'Volleyball', 'JV Volleyball', 'JV Volleyball vs. Riverside', '2026-10-07', 'Athletics', 164],
   ['p1', 'Athletics', 'Soccer', 'Girls Varsity Soccer', 'Girls Varsity Soccer vs. Eastview', '2026-10-06', 'Athletics', 296],
   ['p1', 'Concessions', 'Concessions', 'Concessions', 'Concessions 10/9 Football vs. Central', '2026-10-09', 'Concessions', 845.50],
+  ['p1', 'Athletics', 'Football', 'Varsity Football', 'Refund: Varsity Football vs. Valley View', '2026-09-25', 'Athletics', -72, true],
   ['p2', 'Fine Arts', 'Music', 'Marching Band', 'Band Night at Varsity Football', '2026-10-09', 'Band Boosters', 380],
   ['p2', 'Fine Arts', 'Music', 'Concert Band', 'Fall Concert', '2026-10-10', 'Band Boosters', 1125],
   ['p3', 'Athletics', 'Football', 'Varsity Football', 'Varsity Football vs. Westview', '2026-10-02', 'Athletics', 3910],
@@ -57,7 +66,7 @@ var LINES = [
   ['p5', 'Athletics', 'Volleyball', '7th Grade Volleyball', '7th Grade Volleyball vs. Madison Middle', '2026-10-07', 'Student Activities', 228],
   ['p6', 'Athletics', 'Football', '8th Grade Football', '8th Grade Football vs. Monroe Middle', '2026-09-24', 'Student Activities', 690]
 ].map(function (l) {
-  return { pay: l[0], dept: l[1], activity: l[2], team: l[3], event: l[4], date: l[5], fund: l[6], amount: l[7] };
+  return { pay: l[0], dept: l[1], activity: l[2], team: l[3], event: l[4], date: l[5], fund: l[6], amount: l[7], refund: !!l[8] };
 });
 var LEVELS = [
   { key: 'dept', icon: 'dept', color: '#E20010', child: ['activity', 'activities'] },
@@ -73,7 +82,7 @@ var FILTERS = [
 ];
 var FUND_FILTER = { key: 'fund', label: 'Select School Club/Fund', pill: 'SCHOOL CLUB/FUND' };
 var GRID = 'display:grid;grid-template-columns:minmax(280px,1fr) 150px 200px 140px;border-bottom:1px solid #e5e7eb;';
-var HIST = 'display:grid;grid-template-columns:140px 160px 130px minmax(200px,1fr) 150px 300px;';
+var HIST = 'display:grid;grid-template-columns:' + (ACH ? '140px 160px' : '140px 160px 130px') + ' minmax(200px,1fr) 150px 300px;';
 
 var SVG = {
   chevDown: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>',
@@ -93,6 +102,8 @@ var SVG = {
   dept: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="12" height="8" rx="1"/><path d="M6 5V3h4v2M2 8.5h12"/></svg>',
   activity: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 2h6v4a3 3 0 0 1-6 0V2zM5 3H3v1a2 2 0 0 0 2 2M11 3h2v1a2 2 0 0 1-2 2M8 9v3M5.5 14h5"/></svg>',
   team: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="5.5" r="2.5"/><path d="M1.5 13.5c.5-2.5 2.3-3.5 4.5-3.5s4 1 4.5 3.5"/><circle cx="11.5" cy="6" r="2"/><path d="M12 10c1.5.3 2.3 1.4 2.5 3"/></svg>',
+  search: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#6D6E71" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" style="position:absolute;left:10px"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>',
+  refund: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v3h3"/><path d="M3.5 6A5 5 0 1 1 3 9"/></svg>',
   event: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>'
 };
 
@@ -106,11 +117,11 @@ function uniq(arr) { return arr.filter(function (v, i) { return arr.indexOf(v) =
 function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
 function linesOf(keys) { return LINES.filter(function (l) { return keys.indexOf(l.pay) !== -1; }); }
 function paymentsFor(school) { return PAYMENTS.filter(function (p) { return PAYEES[p.payee].school === school; }).sort(function (a, b) { return ts(b.date) - ts(a.date); }); }
-function windowOf(lines) { var ds = lines.map(function (l) { return l.date; }).sort(); return ds.length ? { from: ds[0], to: ds[ds.length - 1] } : null; }
+function windowOf(lines) { var paid = lines.filter(function (l) { return !l.refund; }); var ds = (paid.length ? paid : lines).map(function (l) { return l.date; }).sort(); return ds.length ? { from: ds[0], to: ds[ds.length - 1] } : null; }
 function emptyFilters() { return { dept: [], activity: [], team: [], event: [], fund: [] }; }
 function applyFilters(lines, f) { return lines.filter(function (l) { return Object.keys(f).every(function (k) { return !f[k].length || f[k].indexOf(l[k]) !== -1; }); }); }
 
-var state = { school: SCHOOLS[0], schoolOpen: false, tab: 'summary', sheetOpen: false, range: 30, selected: [paymentsFor(SCHOOLS[0])[0].key], open: {}, filters: emptyFilters(), openFilter: null };
+var state = { school: SCHOOLS[0], schoolOpen: false, schoolQuery: '', tab: 'summary', sheetOpen: false, range: 30, selected: [paymentsFor(SCHOOLS[0])[0].key], open: {}, filters: emptyFilters(), openFilter: null };
 var handlers = [];
 function on(fn) { handlers.push(fn); return handlers.length - 1; }
 function set(patch) { Object.assign(state, patch); render(); }
@@ -152,20 +163,22 @@ function rowsHtml(lines, li, path) {
     var expanded = !isLeaf && !!state.open[key];
     var w = windowOf(sub);
     var funds = uniq(sub.map(function (l) { return l.fund; }));
-    var badge = lv.child ? plural(uniq(sub.map(function (l) { return l[LEVELS[li + 1].key]; })).length, lv.child[0], lv.child[1]) : '';
+    var isRefund = isLeaf && sub.every(function (l) { return l.refund; });
+    var amt = sum(sub);
+    var badge = isRefund ? 'Refund · previously paid event' : lv.child ? plural(uniq(sub.map(function (l) { return l[LEVELS[li + 1].key]; })).length, lv.child[0], lv.child[1]) : '';
     h += '<div role="row" class="brow" style="' + GRID + 'background:' + (li === 0 ? '#F8F8FA;font-weight:600' : '#FFFFFF') + '">';
     h += '<div role="cell" style="padding:8px 16px 8px ' + (li * 24 + 16) + 'px;min-width:0;display:flex;align-items:center"><span style="display:inline-flex;align-items:center;gap:8px;max-width:100%;min-width:0">';
     if (isLeaf) { h += '<span style="width:12px;flex-shrink:0"></span>'; }
     else {
       h += '<button type="button" data-h="' + on(function () { var o = Object.assign({}, state.open); o[key] = !o[key]; set({ open: o }); }) + '" aria-expanded="' + expanded + '" aria-label="' + (expanded ? 'Collapse ' : 'Expand ') + esc(v) + '" style="border:0;background:none;padding:0;width:12px;height:12px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#2D2A26">' + SVG.chevRight.replace('ROT', expanded ? 90 : 0) + '</button>';
     }
-    h += '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex-shrink:0;color:' + lv.color + '">' + SVG[lv.icon] + '</span>';
-    h += '<span style="display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(v) + '">' + esc(v) + '</span>';
-    if (badge) { h += '<span style="flex-shrink:0;white-space:nowrap;margin-left:4px;font-size:12px;font-weight:400;color:#6D6E71;background:#e5e7eb;padding:2px 8px;border-radius:9999px">' + badge + '</span>'; }
+    h += '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex-shrink:0;color:' + (isRefund ? '#B4000D' : lv.color) + '">' + SVG[isRefund ? 'refund' : lv.icon] + '</span>';
+    h += '<span style="display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' + (isRefund ? ';color:#B4000D' : '') + '" title="' + esc(v) + '">' + esc(v) + '</span>';
+    if (badge) { h += '<span style="flex-shrink:0;white-space:nowrap;margin-left:4px;font-size:12px;font-weight:400;padding:2px 8px;border-radius:9999px;' + (isRefund ? 'color:#B4000D;background:#FDECEC' : 'color:#6D6E71;background:#e5e7eb') + '">' + badge + '</span>'; }
     h += '</span></div>';
     h += '<div role="cell" style="padding:8px 16px;text-align:right;white-space:nowrap;color:#6D6E71">' + (w.from === w.to ? short(w.from) : short(w.from) + ' – ' + short(w.to)) + '</div>';
     h += '<div role="cell" style="padding:8px 16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#6D6E71">' + esc(funds.length === 1 ? funds[0] : plural(funds.length, 'fund', 'funds')) + '</div>';
-    h += '<div role="cell" style="padding:8px 16px;text-align:right;white-space:nowrap;font-weight:600;color:#005CB9">' + money(sum(sub)) + '</div></div>';
+    h += '<div role="cell" style="padding:8px 16px;text-align:right;white-space:nowrap;font-weight:600;color:' + (amt < 0 ? '#B4000D' : '#005CB9') + '">' + money(amt) + '</div></div>';
     if (expanded) { h += rowsHtml(sub, li + 1, key); }
   });
   return h;
@@ -198,11 +211,15 @@ function render() {
   var inRange = all.filter(function (p) { return ts(p.date) >= cutoff; });
   var funds = uniq(lines.map(function (l) { return l.fund; }));
   var depts = uniq(lines.map(function (l) { return l.dept; }));
-  var events = uniq(lines.map(function (l) { return l.event; }));
+  var events = uniq(lines.filter(function (l) { return !l.refund; }).map(function (l) { return l.event; }));
+  var refunds = lines.filter(function (l) { return l.refund; });
+  var q = s.schoolQuery.trim().toLowerCase();
+  var matched = SCHOOLS.filter(function (n) { return !q || n.toLowerCase().indexOf(q) !== -1; });
+  var ref = function (p) { return ACH ? 'ACH to ' + esc(PAYEES[p.payee].name) : 'Check #' + p.no; };
   var tabOn = 'display:inline-flex;align-items:center;height:26px;padding:0 10px;border:0;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;background:#FFF;color:#2D2A26;box-shadow:0 1px 2px rgba(0,0,0,0.12)';
   var tabOff = 'display:inline-flex;align-items:center;height:26px;padding:0 10px;border:0;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;background:transparent;color:#4b5563';
 
-  var h = '<div class="sample">Prototype with sample data. Stripe Managed (Check) Payout Reports.</div>';
+  var h = '<div class="sample">Prototype with sample data. ' + L.type + ' Payout Reports.</div>';
   h += '<header style="background:#2D2A26;color:#FFF;font-family:verdana,sans-serif"><nav aria-label="Box Office" style="max-width:1280px;margin:0 auto;padding:0 16px;display:flex;flex-wrap:wrap;align-items:center;min-height:48px">';
   ['Dashboard', 'District', 'Events', 'Reports', 'Websites', 'Fundraising', 'My Hometown', 'Settings'].forEach(function (n, i) {
     h += '<a class="navlink" href="#"' + (i === 0 ? ' style="background:#000"' : n === 'Reports' ? ' style="color:#9d9d9d"' : '') + '>' + n + '</a>';
@@ -214,11 +231,13 @@ function render() {
   h += '<div style="display:flex;align-items:center;gap:8px;font-size:14px;color:#6D6E71">' + SVG.clock + '<span>Last updated: Oct 21, 2026</span><span title="This report refreshes once daily from an overnight data pull. Payments sent after the most recent refresh will appear after the next day\'s refresh." style="display:inline-flex">' + SVG.info + '</span></div></div>';
 
   h += '<div style="margin-top:32px;display:flex;flex-wrap:wrap;align-items:center;gap:16px"><label for="school-picker" style="color:#6b7280;font-size:16px">School:</label><div style="position:relative;min-width:240px">';
-  h += '<button id="school-picker" type="button" data-h="' + on(function () { set({ schoolOpen: !s.schoolOpen }); }) + '" aria-expanded="' + s.schoolOpen + '" style="width:100%;height:40px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 12px;background:#FFF;border:1px solid #d1d5db;border-radius:6px;font-size:14px;color:#2D2A26;cursor:pointer"><span>' + esc(s.school) + '</span>' + SVG.chevDown + '</button>';
+  h += '<button id="school-picker" type="button" data-h="' + on(function () { set({ schoolOpen: !s.schoolOpen, schoolQuery: '' }); }) + '" aria-expanded="' + s.schoolOpen + '" style="width:100%;height:40px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 12px;background:#FFF;border:1px solid #d1d5db;border-radius:6px;font-size:14px;color:#2D2A26;cursor:pointer"><span>' + esc(s.school) + '</span>' + SVG.chevDown + '</button>';
   if (s.schoolOpen) {
-    h += '<div style="position:absolute;top:44px;left:0;right:0;z-index:20;background:#FFF;border:1px solid #E5E8EC;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,0.12);padding:4px 0">';
-    SCHOOLS.forEach(function (name) {
-      h += '<button type="button" data-h="' + on(function () { set({ school: name, schoolOpen: false, selected: [paymentsFor(name)[0].key], open: {}, filters: emptyFilters(), openFilter: null }); }) + '" style="display:block;width:100%;text-align:left;border:0;padding:8px 12px;font-size:14px;color:#2D2A26;cursor:pointer;background:' + (name === s.school ? '#F1FAFE' : '#FFF') + '">' + esc(name) + '</button>';
+    h += '<div style="position:absolute;top:44px;left:0;right:0;min-width:280px;z-index:20;background:#FFF;border:1px solid #E5E8EC;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,0.12);padding:4px 0">';
+    h += '<div style="padding:6px 8px 8px;border-bottom:1px solid #E5E8EC;margin-bottom:4px"><div style="position:relative;display:flex;align-items:center">' + SVG.search + '<input id="school-search" type="search" aria-label="Search schools" placeholder="Search schools…" autocomplete="off" value="' + esc(s.schoolQuery) + '" data-i="' + on(function (e) { set({ schoolQuery: e.target.value }); }) + '" style="width:100%;height:34px;padding:0 10px 0 30px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;font-family:inherit;color:#2D2A26;outline-color:#005CB9"></div></div>';
+    if (!matched.length) { h += '<div style="padding:8px 12px;font-size:14px;color:#6D6E71">No matching schools</div>'; }
+    matched.forEach(function (name) {
+      h += '<button type="button" data-h="' + on(function () { var first = paymentsFor(name)[0]; set({ school: name, schoolOpen: false, schoolQuery: '', selected: first ? [first.key] : [], open: {}, filters: emptyFilters(), openFilter: null }); }) + '" style="display:block;width:100%;text-align:left;border:0;padding:8px 12px;font-size:14px;color:#2D2A26;cursor:pointer;background:' + (name === s.school ? '#F1FAFE' : '#FFF') + '">' + esc(name) + '</button>';
     });
     h += '</div>';
   }
@@ -226,17 +245,19 @@ function render() {
 
   h += '<div style="margin:32px 0;display:flex;flex-wrap:wrap;align-items:center;gap:12px"><div role="tablist" aria-label="Report view" style="display:inline-flex;gap:8px;align-items:center;background:#d1d5db;border-radius:8px;padding:3px;height:32px">';
   h += '<button type="button" role="tab" aria-selected="' + isSummary + '" data-h="' + on(function () { set({ tab: 'summary' }); }) + '" style="' + (isSummary ? tabOn : tabOff) + '">' + SVG.list + 'Summary</button>';
-  h += '<button type="button" role="tab" aria-selected="' + !isSummary + '" data-h="' + on(function () { set({ tab: 'history' }); }) + '" style="' + (isSummary ? tabOff : tabOn) + '">' + SVG.check + 'Check History</button></div>';
-  h += '<button type="button" class="linkbtn" style="border:0;background:none;color:#005CB9;font-size:14px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:6px 8px">' + SVG.star + '<span>Set ' + (isSummary ? 'Summary' : 'Check History') + ' as default</span></button></div>';
+  h += '<button type="button" role="tab" aria-selected="' + !isSummary + '" data-h="' + on(function () { set({ tab: 'history' }); }) + '" style="' + (isSummary ? tabOff : tabOn) + '">' + SVG.check + L.history + '</button></div>';
+  h += '<button type="button" class="linkbtn" style="border:0;background:none;color:#005CB9;font-size:14px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:6px 8px">' + SVG.star + '<span>Set ' + (isSummary ? 'Summary' : L.history) + ' as default</span></button></div>';
 
   if (isSummary) {
-    h += '<section aria-label="Selected check" style="background:#F8F8FA;border-radius:12px;box-shadow:0 0 0 1px #d1d5db;display:flex;flex-wrap:wrap;align-items:stretch">';
-    h += '<div style="flex:1 1 380px;padding:16px;border-right:1px solid #d1d5db;display:flex;flex-direction:column;gap:4px"><span style="' + LABEL + '">Check Date</span><div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px">';
-    if (sel.length === 1) { h += '<div style="display:flex;flex-direction:column"><span style="font-weight:600">' + mdy(sel[0].date) + '</span><span style="font-size:14px;color:#6D6E71">Check #' + sel[0].no + '</span></div>'; }
-    if (sel.length > 1) { h += '<button type="button" data-h="' + on(function () { setSel([all[0].key]); }) + '" style="display:inline-flex;align-items:center;gap:6px;background:#F1FAFE;color:#005CB9;border:1px solid #C7EAFB;border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:600;cursor:pointer">' + plural(sel.length, 'check', 'checks') + ' selected ' + SVG.x + '</button>'; }
-    h += '<button type="button" class="ghostbtn" data-h="' + on(function () { set({ sheetOpen: true }); }) + '" style="' + BTN + 'background:transparent;padding:4px 10px">' + SVG.history + (sel.length > 1 ? 'Change' : 'View More Checks') + '</button></div></div>';
+    h += '<section aria-label="Selected payment" style="background:#F8F8FA;border-radius:12px;box-shadow:0 0 0 1px #d1d5db;display:flex;flex-wrap:wrap;align-items:stretch">';
+    h += '<div style="flex:1 1 380px;padding:16px;border-right:1px solid #d1d5db;display:flex;flex-direction:column;gap:4px"><span style="' + LABEL + '">' + L.date + '</span><div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px">';
+    if (sel.length === 1) { h += '<div style="display:flex;flex-direction:column"><span style="font-weight:600">' + mdy(sel[0].date) + '</span><span style="font-size:14px;color:#6D6E71">' + ref(sel[0]) + '</span></div>'; }
+    if (sel.length > 1) { h += '<button type="button" data-h="' + on(function () { setSel(all[0] ? [all[0].key] : []); }) + '" style="display:inline-flex;align-items:center;gap:6px;background:#F1FAFE;color:#005CB9;border:1px solid #C7EAFB;border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:600;cursor:pointer">' + plural(sel.length, L.unit[0], L.unit[1]) + ' selected ' + SVG.x + '</button>'; }
+    h += '<button type="button" class="ghostbtn" data-h="' + on(function () { set({ sheetOpen: true }); }) + '" style="' + BTN + 'background:transparent;padding:4px 10px">' + SVG.history + (sel.length > 1 ? 'Change' : L.more) + '</button></div></div>';
     h += '<div style="flex:1 1 320px;padding:16px;border-right:1px solid #d1d5db;display:flex;flex-direction:column;gap:2px"><span style="' + LABEL + '">Events Included</span><div style="font-weight:600"><span style="font-weight:400;font-size:14px">From:</span> ' + (w ? mdy(w.from) : '—') + '</div><div style="font-weight:600"><span style="font-weight:400;font-size:14px">To:</span> ' + (w ? mdy(w.to) : '—') + '</div></div>';
-    h += '<div style="flex:0 1 260px;padding:16px;display:flex;flex-direction:column"><span style="' + LABEL + '">Check Amount</span><span style="color:#008256;font-weight:600;font-size:30px;line-height:36px">' + money(total) + '</span></div></section>';
+    h += '<div style="flex:0 1 260px;padding:16px;display:flex;flex-direction:column"><span style="' + LABEL + '">' + L.amount + '</span><span style="color:#008256;font-weight:600;font-size:30px;line-height:36px">' + money(total) + '</span>';
+    if (refunds.length) { h += '<span style="font-size:13px;color:#B4000D;display:inline-flex;align-items:center;gap:6px">' + SVG.refund.replace(/16/g, '12').replace('viewBox="0 0 12 12"', 'viewBox="0 0 16 16"') + 'Includes ' + plural(refunds.length, 'refund', 'refunds') + ' on previously paid events (' + money(sum(refunds)) + ')</span>'; }
+    h += '</div></section>';
 
     h += '<div style="margin-top:32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">';
     h += '<div style="' + CARD + '"><div style="' + CARD_T + '">Payable To</div>';
@@ -251,8 +272,8 @@ function render() {
     });
     h += '</div>';
 
-    h += '<section aria-label="Check Breakdown" style="margin-top:32px;background:#FFF;border-radius:12px;box-shadow:0 0 0 1px rgba(45,42,38,0.1);padding:16px 0;font-size:14px">';
-    h += '<div style="padding:0 16px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:12px"><div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:16px;font-weight:500">Check Breakdown</h2><p style="margin:0;color:#6D6E71">Drill down by selecting filters or clicking table rows. Amounts are what this check paid for each event.</p></div><button type="button" class="ghostbtn" style="' + BTN + '">' + SVG.download + 'Export</button></div>';
+    h += '<section aria-label="' + L.breakdown + '" style="margin-top:32px;background:#FFF;border-radius:12px;box-shadow:0 0 0 1px rgba(45,42,38,0.1);padding:16px 0;font-size:14px">';
+    h += '<div style="padding:0 16px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:12px"><div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:16px;font-weight:500">' + L.breakdown + '</h2><p style="margin:0;color:#6D6E71">Drill down by selecting filters or clicking table rows. Amounts are what this ' + L.paid + ' paid for each event.</p></div><button type="button" class="ghostbtn" style="' + BTN + '">' + SVG.download + 'Export</button></div>';
     h += '<div style="padding:16px 16px 0"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px">' + SVG.filter + '<span style="font-weight:600">Filter</span><span style="color:#6D6E71">Combine any filters to narrow the data, or go straight to a School Club/Fund on the right</span></div>';
     h += '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">';
     FILTERS.forEach(function (cfg) { h += filterHtml(cfg, lines, false); });
@@ -275,42 +296,48 @@ function render() {
     h += '<div role="row" style="' + GRID + 'border-bottom:0;border-top:2px solid #d1d5db;font-weight:600"><div role="cell" style="padding:10px 16px">Total</div><div role="cell"></div><div role="cell"></div><div role="cell" style="padding:10px 16px;text-align:right;color:#008256">' + money(sum(shown)) + '</div></div>';
     h += '</div></div></section>';
   } else {
-    h += '<p style="margin:0 0 12px">Check History</p><div class="tbl" style="background:#FFF;border-radius:8px;box-shadow:0 0 0 1px #e5e7eb"><div role="table" aria-label="Check History" style="min-width:900px;font-size:14px">';
-    h += '<div role="row" style="' + HIST + 'border-bottom:1px solid #e5e7eb;color:#6D6E71;font-size:12px;text-transform:uppercase;font-weight:600"><div role="columnheader" style="padding:16px">Amount</div><div role="columnheader" style="padding:16px">Check Date</div><div role="columnheader" style="padding:16px">Check #</div><div role="columnheader" style="padding:16px">Payable To</div><div role="columnheader" style="padding:16px">Events</div><div role="columnheader" style="padding:16px;display:flex;justify-content:flex-end"><span style="display:flex;align-items:center;gap:8px;width:192px"><span style="flex:1;border-top:1px solid #d1d5db"></span><span style="text-transform:none;font-weight:400">Download</span><span style="flex:1;border-top:1px solid #d1d5db"></span></span></div></div>';
+    h += '<p style="margin:0 0 12px">' + L.history + '</p><div class="tbl" style="background:#FFF;border-radius:8px;box-shadow:0 0 0 1px #e5e7eb"><div role="table" aria-label="' + L.history + '" style="min-width:900px;font-size:14px">';
+    h += '<div role="row" style="' + HIST + 'border-bottom:1px solid #e5e7eb;color:#6D6E71;font-size:12px;text-transform:uppercase;font-weight:600"><div role="columnheader" style="padding:16px">Amount</div><div role="columnheader" style="padding:16px">' + L.date + '</div>' + (ACH ? '' : '<div role="columnheader" style="padding:16px">Check #</div>') + '<div role="columnheader" style="padding:16px">Payable To</div><div role="columnheader" style="padding:16px">Events</div><div role="columnheader" style="padding:16px;display:flex;justify-content:flex-end"><span style="display:flex;align-items:center;gap:8px;width:192px"><span style="flex:1;border-top:1px solid #d1d5db"></span><span style="text-transform:none;font-weight:400">Download</span><span style="flex:1;border-top:1px solid #d1d5db"></span></span></div></div>';
     all.forEach(function (p) {
       var pl = linesOf([p.key]);
       var pw = windowOf(pl);
-      h += '<div role="row" style="' + HIST + 'align-items:center;border-bottom:1px solid #e5e7eb"><div role="cell" style="padding:12px 16px;font-weight:600">' + money(sum(pl)) + '</div><div role="cell" style="padding:12px 16px">' + mdy(p.date) + '</div><div role="cell" style="padding:12px 16px;color:#6D6E71;font-family:ui-monospace,Menlo,monospace;font-size:13px">' + p.no + '</div><div role="cell" style="padding:12px 16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(PAYEES[p.payee].name) + '</div><div role="cell" style="padding:12px 16px;color:#6D6E71;white-space:nowrap">' + short(pw.from) + ' – ' + short(pw.to) + '</div>';
+      h += '<div role="row" style="' + HIST + 'align-items:center;border-bottom:1px solid #e5e7eb"><div role="cell" style="padding:12px 16px;font-weight:600">' + money(sum(pl)) + '</div><div role="cell" style="padding:12px 16px">' + mdy(p.date) + '</div>' + (ACH ? '' : '<div role="cell" style="padding:12px 16px;color:#6D6E71;font-family:ui-monospace,Menlo,monospace;font-size:13px">' + p.no + '</div>') + '<div role="cell" style="padding:12px 16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(PAYEES[p.payee].name) + '</div><div role="cell" style="padding:12px 16px;color:#6D6E71;white-space:nowrap">' + short(pw.from) + ' – ' + short(pw.to) + '</div>';
       h += '<div role="cell" style="padding:8px 16px;display:flex;align-items:center;justify-content:flex-end;gap:4px"><button type="button" data-h="' + on(function () { set({ selected: [p.key], tab: 'summary', open: {}, filters: emptyFilters(), openFilter: null }); }) + '" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:0;border-radius:6px;background:#F1F2F2;color:#2D2A26;font-size:14px;cursor:pointer">' + SVG.list.replace('margin-right:8px', 'margin:0') + 'View Summary</button><span style="color:#d1d5db;padding:0 8px">|</span><button type="button" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:0;border-radius:6px;background:#005CB9;color:#FFF;font-size:14px;cursor:pointer">' + SVG.file + 'Itemized</button></div></div>';
     });
-    h += '</div></div><div style="text-align:center;font-size:14px;color:#6D6E71;padding:12px 0">No more checks</div>';
+    h += '</div></div><div style="text-align:center;font-size:14px;color:#6D6E71;padding:12px 0">' + L.noMore + '</div>';
   }
   h += '</main>';
 
   if (s.sheetOpen) {
     var closeH = on(function () { set({ sheetOpen: false }); });
     h += '<button type="button" aria-label="Close panel" data-h="' + closeH + '" style="position:fixed;inset:0;z-index:90;border:0;padding:0;background:rgba(0,0,0,0.5);cursor:default"></button>';
-    h += '<aside role="dialog" aria-label="Checks Selection" style="position:fixed;top:0;right:0;bottom:0;z-index:100;width:100%;max-width:768px;background:#FFF;box-shadow:-8px 0 24px rgba(0,0,0,0.15);display:flex;flex-direction:column">';
-    h += '<div style="padding:16px 16px 0;display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0;font-size:18px;font-weight:600">Checks Selection</h2><button type="button" aria-label="Close" data-h="' + closeH + '" style="display:inline-flex;width:32px;height:32px;align-items:center;justify-content:center;color:#6D6E71;border:0;background:none;cursor:pointer">' + SVG.x + '</button></div>';
-    h += '<div style="flex:1;overflow-y:auto;padding-top:16px"><div style="padding:0 16px"><p style="margin:0 0 8px;font-size:14px;color:#6D6E71">Show checks from last:</p><div style="display:inline-flex;gap:4px;border-radius:8px;background:#F1F2F2;padding:4px">';
+    h += '<aside role="dialog" aria-label="' + L.sheet + '" style="position:fixed;top:0;right:0;bottom:0;z-index:100;width:100%;max-width:768px;background:#FFF;box-shadow:-8px 0 24px rgba(0,0,0,0.15);display:flex;flex-direction:column">';
+    h += '<div style="padding:16px 16px 0;display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0;font-size:18px;font-weight:600">' + L.sheet + '</h2><button type="button" aria-label="Close" data-h="' + closeH + '" style="display:inline-flex;width:32px;height:32px;align-items:center;justify-content:center;color:#6D6E71;border:0;background:none;cursor:pointer">' + SVG.x + '</button></div>';
+    h += '<div style="flex:1;overflow-y:auto;padding-top:16px"><div style="padding:0 16px"><p style="margin:0 0 8px;font-size:14px;color:#6D6E71">Show ' + L.unit[1] + ' from last:</p><div style="display:inline-flex;gap:4px;border-radius:8px;background:#F1F2F2;padding:4px">';
     [[7, '7 days'], [30, '30 days'], [90, '90 days']].forEach(function (r) {
       var act = s.range === r[0];
       h += '<button type="button" aria-pressed="' + act + '" data-h="' + on(function () { set({ range: r[0] }); }) + '" style="padding:4px 8px;border:0;border-radius:6px;font-size:14px;cursor:pointer;background:' + (act ? '#005CB9;color:#FFF' : 'transparent;color:#2D2A26') + '">' + r[1] + '</button>';
     });
     var allSel = inRange.length > 0 && inRange.every(function (p) { return s.selected.indexOf(p.key) !== -1; });
-    h += '</div></div><fieldset style="margin:16px 0 0;padding:0;border:0;display:flex;flex-direction:column"><legend style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Checks Selection</legend>';
+    h += '</div></div><fieldset style="margin:16px 0 0;padding:0;border:0;display:flex;flex-direction:column"><legend style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">' + L.sheet + '</legend>';
     h += '<div style="display:flex;align-items:center;padding:16px;border-bottom:1px solid #e5e7eb"><label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#6D6E71"><input type="checkbox"' + (allSel ? ' checked' : '') + ' data-c="' + on(function () { setSel(sel.length ? [] : inRange.map(function (p) { return p.key; })); }) + '" style="width:16px;height:16px;margin:0;accent-color:#005CB9"><span style="padding:0 16px">' + (sel.length ? 'Unselect all' : 'Select all') + '</span></label></div>';
     inRange.forEach(function (p) {
       var chk = s.selected.indexOf(p.key) !== -1;
       var pl = linesOf([p.key]);
       var pw = windowOf(pl);
-      h += '<label style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:16px;border-bottom:1px solid #e5e7eb;cursor:pointer;background:' + (chk ? '#F1FAFE' : '#FFF') + '"><span style="display:flex;align-items:center;gap:12px"><input type="checkbox"' + (chk ? ' checked' : '') + ' data-c="' + on(function () { setSel(chk ? s.selected.filter(function (k) { return k !== p.key; }) : s.selected.concat([p.key])); }) + '" style="width:16px;height:16px;margin:0;accent-color:#005CB9"><span style="display:flex;flex-direction:column"><span style="font-size:14px">' + mdy(p.date) + ' · Check #' + p.no + '</span><span style="font-size:12px;color:#6D6E71">' + esc(PAYEES[p.payee].name) + ' · Events ' + short(pw.from) + ' – ' + short(pw.to) + '</span></span></span><span style="font-weight:600' + (chk ? ';color:#008256' : '') + '">' + money(sum(pl)) + '</span></label>';
+      h += '<label style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:16px;border-bottom:1px solid #e5e7eb;cursor:pointer;background:' + (chk ? '#F1FAFE' : '#FFF') + '"><span style="display:flex;align-items:center;gap:12px"><input type="checkbox"' + (chk ? ' checked' : '') + ' data-c="' + on(function () { setSel(chk ? s.selected.filter(function (k) { return k !== p.key; }) : s.selected.concat([p.key])); }) + '" style="width:16px;height:16px;margin:0;accent-color:#005CB9"><span style="display:flex;flex-direction:column"><span style="font-size:14px">' + mdy(p.date) + ' · ' + (ACH ? esc(PAYEES[p.payee].name) : 'Check #' + p.no) + '</span><span style="font-size:12px;color:#6D6E71">' + (ACH ? '' : esc(PAYEES[p.payee].name) + ' · ') + 'Events ' + short(pw.from) + ' – ' + short(pw.to) + '</span></span></span><span style="font-weight:600' + (chk ? ';color:#008256' : '') + '">' + money(sum(pl)) + '</span></label>';
     });
-    h += '<div style="text-align:center;font-size:14px;color:#6D6E71;padding:12px 0">No more checks</div></fieldset></div>';
+    h += '<div style="text-align:center;font-size:14px;color:#6D6E71;padding:12px 0">' + L.noMore + '</div></fieldset></div>';
     h += '<div style="padding:16px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;font-size:14px"><span>' + sel.length + ' of ' + inRange.length + ' selected</span><span>Total: <span style="color:#008256;font-weight:600">' + money(total) + '</span></span></div></aside>';
   }
   document.getElementById('app').innerHTML = h;
+  var search = s.schoolOpen && document.getElementById('school-search');
+  if (search && search.focus) { search.focus(); search.setSelectionRange(search.value.length, search.value.length); }
 }
+document.addEventListener('input', function (e) {
+  var el = e.target.closest('[data-i]');
+  if (el) { handlers[+el.getAttribute('data-i')](e); }
+});
 
 document.addEventListener('click', function (e) {
   var el = e.target.closest('[data-h]');
