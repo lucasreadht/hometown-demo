@@ -119,7 +119,7 @@ html, body { background-color: var(--page-bg); overflow-x: hidden; }
           <h4 class="modal-title">&#9888; Custom Fees Warning</h4>
         </div>
         <div class="modal-body">
-          <p><b>This event has already sold tickets.</b> Please contact your box office administrator or HomeTown Support for assistance if any changes are needed.
+          <p><b>This event has already sold tickets.</b> Please contact your box office administrator or Hometown Support for assistance if any changes are needed.
           By making any changes, you understand that future orders for this event will have a different fee structure than previous orders, potentially
           confusing customers. The event sales report will show breakdowns of fees at the time of each order, but different final fee
           amounts will appear when comparing orders.</p>
@@ -151,7 +151,7 @@ html, body { background-color: var(--page-bg); overflow-x: hidden; }
               <div class="form-horizontal">
 
                 <div class="form-group">
-                  <label for="form_service_fee_customer" class="col-sm-6 control-label">HomeTown Fee</label>
+                  <label for="form_service_fee_customer" class="col-sm-6 control-label">Hometown Fee</label>
                   <div class="col-sm-6">
                     <select id="form_service_fee_customer" name="service_fee_customer" class="form-control" data-fee-chooser="true">
                       <option value="1" selected="selected">Pass Along (to customer)</option>
@@ -307,10 +307,7 @@ html, body { background-color: var(--page-bg); overflow-x: hidden; }
 
           <div class="row">
             <div class="col-xs-12 col-12">
-              <h3>Fee Calculator</h3>
-            </div>
-            <div class="col-xs-12 col-12">
-              <p>Your fans will see the following estimated* fees at checkout, based on the above settings. Use the <b>Ticket Cost</b> option to enter a sample ticket price.</p>
+              <h3>Fee Calculator <span class="info-tip"><button type="button" class="info-tip__icon" aria-label="About the fee calculator" aria-describedby="calc_tip">i</button><span class="info-tip__text" id="calc_tip" role="tooltip">Estimates for one (1) ticket, based on the settings above. Enter a sample price in Ticket Cost. Customer Checkout shows what fans pay, and Estimated Revenue shows what you keep. Hometown fees are charged per ticket, but card processing fees are charged once per order, so actual amounts will change depending on cart size.</span></span></h3>
             </div>
             <div class="col-xs-12 col-12">
               <div class="form-horizontal">
@@ -327,10 +324,10 @@ html, body { background-color: var(--page-bg); overflow-x: hidden; }
             </div>
 
             <div class="col-md-6 col-xs-12">
-              <h4>Customer Checkout <small class="text-muted">(as configured above)</small></h4>
+              <h4>Customer Checkout</h4>
               <div class="form-horizontal">
                 <div class="form-group">
-                  <label class="col-xs-6 col-md-5 control-label">HomeTown Fee</label>
+                  <label class="col-xs-6 col-md-5 control-label">Hometown Fee</label>
                   <div class="col-xs-6 col-md-4"><p class="form-control-static" id="calc_fee_htt"></p></div>
                 </div>
                 <div class="form-group">
@@ -362,14 +359,14 @@ html, body { background-color: var(--page-bg); overflow-x: hidden; }
             </div>
 
             <div class="col-md-6 col-xs-12">
-              <h4>Estimated Revenue <span class="info-tip"><button type="button" class="info-tip__icon" aria-label="About estimated revenue" aria-describedby="revenue_tip">i</button><span class="info-tip__text" id="revenue_tip" role="tooltip">This estimate is for one (1) ticket, based on the settings above. Actual revenue per ticket will change depending on cart size, because card processing fees are charged once per order, not per ticket.</span></span> <small class="text-muted">(based on HomeTown Fee &amp; Card/Merchant Fee settings above)</small></h4>
+              <h4>Estimated Revenue</h4>
               <div class="form-horizontal">
                 <div class="form-group">
                   <label class="col-xs-6 col-md-5 control-label">Ticket Price Charged</label>
                   <div class="col-xs-6 col-md-4"><p class="form-control-static" id="calc_absorb_price"></p></div>
                 </div>
                 <div class="form-group">
-                  <label class="col-xs-6 col-md-5 control-label" id="calc_absorb_htt_label">HomeTown Fee</label>
+                  <label class="col-xs-6 col-md-5 control-label" id="calc_absorb_htt_label">Hometown Fee</label>
                   <div class="col-xs-6 col-md-4"><p class="form-control-static" id="calc_absorb_htt"></p></div>
                 </div>
                 <div class="form-group">
@@ -388,9 +385,6 @@ html, body { background-color: var(--page-bg); overflow-x: hidden; }
               </div>
             </div>
 
-            <div class="col-xs-12 col-12">
-              <p style="font-size: 9pt;"><b>*</b> These are estimated costs for purposes of this display. HomeTown service fees are charged on a per ticket basis while credit card processing fees are charged on a per transaction basis.</p>
-            </div>
           </div>
 
           <div class="col-xs-12 col" style="padding-bottom: 100px;"></div>
@@ -569,7 +563,7 @@ html, body { background-color: var(--page-bg); overflow-x: hidden; }
 			$('#calc_fee_total').textContent = currencyFmt.format(rev + procFees + stripeFee);
 
 			// Payout column: driven by the same two dropdowns as the checkout column above.
-			// HomeTown Fee: org pays it unless "Pass Along" (or the customer's split share) shifts it to the fan.
+			// Hometown Fee: org pays it unless "Pass Along" (or the customer's split share) shifts it to the fan.
 			let orgHttFee = 0;
 			if (serviceFeeCustomer === '0') {
 				orgHttFee = HTT_FEE;
@@ -588,7 +582,7 @@ html, body { background-color: var(--page-bg); overflow-x: hidden; }
 			const optionalFees = boxFee + venueFee + otherFee;
 			const payout = sampPrice - orgHttFee - orgCcFee - optionalFees;
 
-			$('#calc_absorb_htt_label').textContent = serviceFeeCustomer === '1' ? 'HomeTown Fee (passed to fan)' : 'HomeTown Fee';
+			$('#calc_absorb_htt_label').textContent = serviceFeeCustomer === '1' ? 'Hometown Fee (passed to fan)' : 'Hometown Fee';
 			$('#calc_absorb_cc_label').textContent = ccAbsorbedByOrg ? 'Card Processing Fee' : 'Card Processing Fee (passed to fan)';
 			$('#calc_absorb_price').textContent = currencyFmt.format(sampPrice);
 			$('#calc_absorb_htt').textContent = '-' + currencyFmt.format(orgHttFee);
