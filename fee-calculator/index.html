@@ -580,14 +580,15 @@ html, body { background-color: var(--page-bg); overflow-x: hidden; }
 				? chargeAmount * (1 - STRIPE_FPCTINV) + STRIPE_FFIXED
 				: 0;
 			const optionalFees = boxFee + venueFee + otherFee;
-			const payout = sampPrice - orgHttFee - orgCcFee - optionalFees;
+			// Box office, venue and other fees are kept by the client
+			const payout = sampPrice - orgHttFee - orgCcFee + optionalFees;
 
 			$('#calc_absorb_htt_label').textContent = serviceFeeCustomer === '1' ? 'Hometown Fee (passed to fan)' : 'Hometown Fee';
 			$('#calc_absorb_cc_label').textContent = ccAbsorbedByOrg ? 'Card Processing Fee' : 'Card Processing Fee (passed to fan)';
 			$('#calc_absorb_price').textContent = currencyFmt.format(sampPrice);
 			$('#calc_absorb_htt').textContent = '-' + currencyFmt.format(orgHttFee);
 			$('#calc_absorb_cc').textContent = '-' + currencyFmt.format(orgCcFee);
-			$('#calc_absorb_optional').textContent = '-' + currencyFmt.format(optionalFees);
+			$('#calc_absorb_optional').textContent = '+' + currencyFmt.format(optionalFees);
 
 			// Hide revenue deductions that round to $0.00 (e.g. fees passed to the fan)
 			[['#calc_absorb_htt', orgHttFee], ['#calc_absorb_cc', orgCcFee], ['#calc_absorb_optional', optionalFees]].forEach(([sel, amt]) => {
