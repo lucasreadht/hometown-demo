@@ -588,6 +588,11 @@ html, body { background-color: var(--page-bg); overflow-x: hidden; }
 			$('#calc_absorb_htt').textContent = '-' + currencyFmt.format(orgHttFee);
 			$('#calc_absorb_cc').textContent = '-' + currencyFmt.format(orgCcFee);
 			$('#calc_absorb_optional').textContent = '-' + currencyFmt.format(optionalFees);
+
+			// Hide revenue deductions that round to $0.00 (e.g. fees passed to the fan)
+			[['#calc_absorb_htt', orgHttFee], ['#calc_absorb_cc', orgCcFee], ['#calc_absorb_optional', optionalFees]].forEach(([sel, amt]) => {
+				$(sel).closest('.form-group').style.display = Math.abs(amt) < 0.005 ? 'none' : '';
+			});
 			$('#calc_absorb_payout').textContent = currencyFmt.format(payout);
 		}
 
