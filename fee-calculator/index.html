@@ -562,6 +562,11 @@ html, body { background-color: var(--page-bg); overflow-x: hidden; }
 			$('#calc_fee_other').textContent = currencyFmt.format(otherFee);
 			$('#calc_fee_total').textContent = currencyFmt.format(rev + procFees + stripeFee);
 
+			// Hide checkout fees and taxes that round to $0.00
+			[['#calc_fee_htt', procFees], ['#calc_fee_cc', stripeFee], ['#calc_fee_tax', tax], ['#calc_fee_boxoffice', boxFee], ['#calc_fee_venue', venueFee], ['#calc_fee_other', otherFee]].forEach(([sel, amt]) => {
+				$(sel).closest('.form-group').style.display = Math.abs(amt) < 0.005 ? 'none' : '';
+			});
+
 			// Payout column: driven by the same two dropdowns as the checkout column above.
 			// Hometown Fee: org pays it unless "Pass Along" (or the customer's split share) shifts it to the fan.
 			let orgHttFee = 0;
