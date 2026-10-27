@@ -32,11 +32,12 @@ button { font: inherit; }
 .demo-bar-inner { max-width: 1240px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
 .demo-title { font-weight: 700; font-size: 15px; margin-right: auto; }
 .demo-title small { display: block; font-weight: 400; opacity: .75; font-size: 12px; }
-.seg { display: inline-flex; background: #47423c; border-radius: 6px; padding: 3px; gap: 2px; }
-.seg span { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; opacity: .7; padding: 6px 8px 0 6px; }
-.seg button { border: 0; background: transparent; color: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-.seg button[aria-pressed="true"] { background: #fff; color: var(--demo); font-weight: 600; }
-.reset { border: 1px solid #8a837b; background: transparent; color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+.seg { display: inline-flex; align-items: center; background: #1a1815; border: 1px solid #6b655d; border-radius: 8px; padding: 4px; gap: 4px; }
+.seg span { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; opacity: .85; padding: 0 6px; }
+.seg button { border: 1px solid #8a837b; background: #3d3934; color: #fff; padding: 6px 14px; border-radius: 5px; cursor: pointer; }
+.seg button:hover { background: #57524b; border-color: #c9c2b8; }
+.seg button[aria-pressed="true"] { background: #FFC700; border-color: #FFC700; color: #1a1815; font-weight: 700; box-shadow: 0 0 0 2px rgba(255,199,0,.35); }
+.reset { border: 1px solid #fff; background: #3d3934; color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
 
 .wrap { max-width: 1240px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
 @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
@@ -159,7 +160,7 @@ table.order .r { text-align: right; }
 
 <div class="demo-bar">
   <div class="demo-bar-inner">
-    <div class="demo-title">Checkout Going Back: Part 1 demo<small>Sample data. Box office screens match today's embed; dark bar and side panel are demo-only.</small></div>
+    <div class="demo-title">Checkout Going Back: Today vs Future<small>Sample data. Box office screens match today's embed; dark bar and side panel are demo-only.</small></div>
     <div class="seg" role="group" aria-label="Where the fan is">
       <span>Where</span>
       <button data-host="unified">events.hometown</button>
@@ -168,7 +169,7 @@ table.order .r { text-align: right; }
     <div class="seg" role="group" aria-label="Behavior">
       <span>Behavior</span>
       <button data-mode="today">Today</button>
-      <button data-mode="part1">Part 1</button>
+      <button data-mode="part1">Future</button>
     </div>
     <button class="reset" id="reset">Start over</button>
   </div>
@@ -192,7 +193,7 @@ table.order .r { text-align: right; }
         <li>Use the browser back arrow (top left of the frame).</li>
         <li>Select Checkout again without changing anything, or change General Admission to 1 first.</li>
         <li>Try Release Cart And Start Over.</li>
-        <li>Flip Today / Part 1 and compare.</li>
+        <li>Flip Today / Future and compare.</li>
       </ol>
     </div>
   </aside>
@@ -477,7 +478,7 @@ table.order .r { text-align: right; }
 
   function renderSide() {
     var left = s.expireAt ? s.expireAt - now() : null;
-    var tag = '<span class="mode-tag ' + s.mode + '">' + (s.mode === 'today' ? 'Today' : 'Part 1') + '</span>';
+    var tag = '<span class="mode-tag ' + s.mode + '">' + (s.mode === 'today' ? 'Today' : 'Future') + '</span>';
     var start = s.startPage === 'list' ? 'School event list' : 'None saved';
     document.getElementById('kv').innerHTML =
       '<dt>Behavior</dt><dd>' + tag + '</dd>' +
