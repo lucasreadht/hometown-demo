@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checkout Going Back</title>
+<link href="https://fonts.googleapis.com/css2?family=Exo:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --page: #eef1f3;
+  --ink: #101010;
+  --muted: #5c6670;
+  --line: #d8dcdf;
+  --panel: #ffffff;
+  --demo: #2d2a26;
+  --accent: #005cb9;
+  --today: #b3261e;
+  --today-bg: #fdecea;
+  --part1: #1e7b34;
+  --part1-bg: #e6f4ea;
+  --vbo-primary: #337ab7;
+  --vbo-primary-dark: #265a88;
+  --vbo-head: #318cdd;
+  --timer: #d6ffd6;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+button { font: inherit; }
+
+/* Demo controls (not part of the product) */
+.demo-bar { background: var(--demo); color: #fff; padding: 12px 16px; }
+.demo-bar-inner { max-width: 1240px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
+.demo-title { font-weight: 700; font-size: 15px; margin-right: auto; }
+.demo-title small { display: block; font-weight: 400; opacity: .75; font-size: 12px; }
+.seg { display: inline-flex; background: #47423c; border-radius: 6px; padding: 3px; gap: 2px; }
+.seg span { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; opacity: .7; padding: 6px 8px 0 6px; }
+.seg button { border: 0; background: transparent; color: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: #fff; color: var(--demo); font-weight: 600; }
+.reset { border: 1px solid #8a837b; background: transparent; color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
+
+/* Product frame */
+.frame { background: #fff; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.browser { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f4f5f6; border-bottom: 1px solid #e2e5e7; }
+.dots { display: flex; gap: 5px; }
+.dots i { width: 9px; height: 9px; border-radius: 50%; background: #d9dcdf; display: block; }
+.nav-back { border: 1px solid #cfd3d6; background: #fff; border-radius: 4px; padding: 2px 9px; cursor: pointer; color: #333; }
+.nav-back:disabled { opacity: .4; cursor: default; }
+.url { flex: 1; min-width: 0; background: #fff; border: 1px solid #dfe2e4; border-radius: 4px; padding: 3px 10px; font-size: 12px; color: #6b7175; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* events.hometown chrome */
+.ht-header { background: #005cb9; color: #fff; font-family: Exo, Arial, sans-serif; display: flex; align-items: center; gap: 22px; padding: 10px 18px; flex-wrap: wrap; }
+.ht-logo { font-weight: 700; font-size: 20px; letter-spacing: .02em; }
+.ht-nav { display: flex; gap: 18px; font-weight: 500; font-size: 14px; flex-wrap: wrap; }
+.ht-nav span { opacity: .95; }
+
+/* school site chrome */
+.school-header { background: #7a1f2b; color: #fff; padding: 14px 18px; display: flex; align-items: center; gap: 12px; }
+.school-crest { width: 34px; height: 34px; border-radius: 50%; background: #f2c14e; color: #7a1f2b; font-weight: 800; display: grid; place-items: center; }
+.school-name { font-weight: 700; font-size: 17px; }
+.school-sub { font-size: 12px; opacity: .85; }
+.school-body { padding: 14px 18px 18px; background: #faf8f5; }
+.school-body p { margin: 0 0 10px; color: #4a4a4a; font-size: 13px; }
+
+/* Box office iframe content (boxoffice embed styles) */
+.bo { position: relative; font-family: Arial, "Open Sans", sans-serif; font-size: 11pt; color: #101010; background: #fff; min-height: 520px; }
+.school-body .bo { border: 1px solid #e3ddd4; border-radius: 4px; }
+.bo-inner { padding: 22px 24px 28px; }
+.bo-timer { position: sticky; top: 0; z-index: 5; background: var(--timer); color: #000; padding: 9px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; }
+.bo-timer b { font-variant-numeric: tabular-nums; }
+.bo-timer .btn { margin-left: auto; }
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--vbo-primary-dark); background: var(--vbo-primary); color: #fff; border-radius: 4px; padding: 6px 12px; cursor: pointer; font-family: inherit; font-size: 14px; text-decoration: none; }
+.btn:hover { background: var(--vbo-primary-dark); }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.btn-lg { padding: 10px 18px; font-size: 16px; }
+.link { color: var(--vbo-primary); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: none; font-family: inherit; font-size: 14px; }
+.link:hover { text-decoration: underline; }
+.link-danger { color: #d9534f; }
+.flash { border-radius: 4px; padding: 10px 12px; margin-bottom: 16px; font-size: 14px; }
+.flash-info { background: #d9edf7; color: #31708f; border: 1px solid #bce8f1; }
+.flash-warn { background: #fcf8e3; color: #8a6d3b; border: 1px solid #faebcc; }
+
+/* list page */
+.list-title { font-size: 20pt; font-weight: 700; margin: 0 0 4px; }
+.list-sub { color: #666; margin: 0 0 18px; }
+.tile { display: flex; align-items: center; gap: 14px; border: 1px solid #e1e4e6; border-radius: 6px; padding: 12px 14px; margin-bottom: 10px; flex-wrap: wrap; }
+.tile-date { width: 54px; text-align: center; border-right: 1px solid #e1e4e6; padding-right: 12px; }
+.tile-date b { display: block; font-size: 20px; }
+.tile-date small { text-transform: uppercase; color: #777; font-size: 11px; }
+.tile-main { flex: 1; min-width: 160px; }
+.tile-main b { display: block; }
+.tile-main small { color: #666; }
+
+/* event page */
+.back-all { margin-bottom: 16px; }
+.event-head { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 14px; }
+.flyer { width: 120px; height: 120px; border-radius: 6px; background: linear-gradient(135deg, #7a1f2b, #b8434f); color: #f2c14e; display: grid; place-items: center; font-weight: 800; font-size: 13px; text-align: center; padding: 8px; }
+.public-event-title { font-size: 25pt; font-weight: 700; letter-spacing: -.02em; line-height: 1.05; margin: 0 0 .3em; }
+.detail { display: flex; gap: 10px; margin-bottom: 6px; color: #222; }
+.detail i { width: 18px; font-style: normal; color: #777; }
+table.tix { width: 100%; border-collapse: collapse; margin-top: 10px; }
+table.tix th { text-transform: uppercase; color: var(--vbo-head); font-size: 1.05rem; font-weight: bold; text-align: left; padding: 10px 4px; border-bottom: 2px solid #bcbec0; }
+table.tix th.r, table.tix td.r { text-align: right; }
+table.tix td { padding: 12px 4px; border-bottom: 1px solid #e5e9ec; vertical-align: middle; }
+table.tix td small { color: #777; display: block; }
+.input-number { border: 2px solid #ddd; display: inline-flex; border-radius: 4px; user-select: none; }
+.input-number button { width: 32px; height: 34px; border: 0; background: transparent; cursor: pointer; font-size: 18px; color: #333; }
+.input-number button:disabled { color: #bbb; cursor: default; }
+.input-number output { width: 2.2em; height: 34px; border: solid #d3d3d3; border-width: 0 2px; display: grid; place-items: center; font-weight: bold; font-size: 16pt; }
+.input-number.changed { border-color: #f0ad4e; }
+.totals { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 12px; border-top: 2px solid #bcbec0; gap: 12px; flex-wrap: wrap; }
+.totals b { font-size: 15px; }
+.cart-note { font-size: 13px; color: #555; margin-top: 8px; }
+
+/* checkout page */
+.co-title { font-size: 18pt; font-weight: 700; margin: 0 0 10px; }
+table.order { width: 100%; border-collapse: collapse; }
+table.order th { text-align: left; border-bottom: 2px solid #bcbec0; padding: 8px 4px; }
+table.order td { padding: 10px 4px; border-bottom: 1px solid #e5e9ec; }
+table.order .c { text-align: center; }
+table.order .r { text-align: right; }
+.order-total { text-align: right; font-weight: 700; font-size: 17px; margin: 14px 0 6px; }
+.collapsed { margin: 16px 0; padding: 12px 14px; background: #f6f7f8; border: 1px dashed #c9ced2; border-radius: 4px; color: #555; font-size: 13px; }
+.co-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 18px; padding-top: 14px; border-top: 1px solid #e5e9ec; }
+.co-actions .grow { margin-right: auto; }
+
+/* Behind the scenes panel (demo only) */
+.side { display: grid; gap: 12px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+.card h3 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: 13px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.what { border-left: 4px solid var(--muted); padding: 10px 12px; background: #f6f7f8; border-radius: 4px; font-size: 13px; }
+.what.today { border-color: var(--today); background: var(--today-bg); }
+.what.part1 { border-color: var(--part1); background: var(--part1-bg); }
+.what b { display: block; margin-bottom: 3px; }
+.held { font-size: 13px; }
+.held li { margin-bottom: 4px; }
+.empty { color: var(--muted); font-size: 13px; }
+.steps { margin: 0; padding-left: 18px; font-size: 13px; }
+.steps li { margin-bottom: 5px; }
+.mode-tag { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 3px; }
+.mode-tag.today { background: var(--today-bg); color: var(--today); }
+.mode-tag.part1 { background: var(--part1-bg); color: var(--part1); }
+@media (max-width: 560px) {
+  .bo-inner { padding: 18px 14px 22px; }
+  .public-event-title { font-size: 20pt; }
+  .flyer { width: 80px; height: 80px; font-size: 11px; }
+  .ht-nav { gap: 12px; font-size: 13px; }
+}
+</style>
+</head>
+<body>
+
+<div class="demo-bar">
+  <div class="demo-bar-inner">
+    <div class="demo-title">Checkout Going Back: Part 1 demo<small>Sample data. Box office screens match today's embed; dark bar and side panel are demo-only.</small></div>
+    <div class="seg" role="group" aria-label="Where the fan is">
+      <span>Where</span>
+      <button data-host="unified">events.hometown</button>
+      <button data-host="embed">School website</button>
+    </div>
+    <div class="seg" role="group" aria-label="Behavior">
+      <span>Behavior</span>
+      <button data-mode="today">Today</button>
+      <button data-mode="part1">Part 1</button>
+    </div>
+    <button class="reset" id="reset">Start over</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="frame" id="frame"></div>
+  <aside class="side">
+    <div class="card">
+      <h3>What just happened</h3>
+      <div id="what" class="what"><b>Pick tickets to start.</b>Then go to checkout, go back, and change the quantity.</div>
+    </div>
+    <div class="card">
+      <h3>Behind the scenes</h3>
+      <dl class="kv" id="kv"></dl>
+    </div>
+    <div class="card">
+      <h3>Held from earlier carts</h3>
+      <div id="held"></div>
+    </div>
+    <div class="card">
+      <h3>Try this</h3>
+      <ol class="steps">
+        <li>Add 2 General Admission and 1 Student, then Checkout.</li>
+        <li>Use the browser back arrow (top left of the frame).</li>
+        <li>Change General Admission to 1 and check out again.</li>
+        <li>Try Release Cart And Start Over.</li>
+        <li>Flip Today / Part 1 and compare.</li>
+      </ol>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  var TIMER_SECS = 7 * 60;
+  var CLEANUP_SECS = 2 * 60;
+  var TYPES = [
+    { id: 'ga', name: 'General Admission', price: 8, fee: 1.5 },
+    { id: 'stu', name: 'Student', price: 5, fee: 1.5 }
+  ];
+  var EVENT = {
+    name: 'Homecoming Football Game',
+    team: 'Varsity Football',
+    when: 'Friday, November 6, 2026 at 7:00 PM EST',
+    venue: 'Central High School Stadium',
+    address: '123 Main St, Dublin, OH 43017'
+  };
+  var LIST = [
+    { d: '06', m: 'Nov', name: 'Homecoming Football Game', sub: 'Varsity Football · 7:00 PM', live: true },
+    { d: '10', m: 'Nov', name: 'Volleyball vs. Riverside', sub: 'Varsity Volleyball · 6:00 PM' },
+    { d: '14', m: 'Nov', name: 'Fall Band Concert', sub: 'Performing Arts · 7:30 PM' }
+  ];
+
+  var s;
+  function fresh(host, mode) {
+    var start = host === 'embed' ? 'list' : 'event';
+    return {
+      host: host, mode: mode,
+      screen: start,
+      startPage: host === 'embed' ? 'list' : null,
+      cart: { ga: 0, stu: 0 },
+      pick: { ga: 0, stu: 0 },
+      cartId: null,
+      expireAt: null,
+      orphans: [],
+      released: 0,
+      history: [],
+      flash: null,
+      what: { cls: '', title: 'Pick tickets to start.', body: 'Then go to checkout, go back, and change the quantity.' }
+    };
+  }
+
+  function now() { return Math.floor(Date.now() / 1000); }
+  function count(c) { return c.ga + c.stu; }
+  function money(n) { return '$' + n.toFixed(2); }
+  function mmss(secs) { secs = Math.max(0, secs); return Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0'); }
+  function newId() { return Math.random().toString(16).slice(2, 10); }
+  function lineTotal(t, q) { return (t.price + t.fee) * q; }
+  function cartTotal(c) { return TYPES.reduce(function (sum, t) { return sum + lineTotal(t, c[t.id]); }, 0); }
+  function esc(x) { return String(x).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; }); }
+
+  function go(screen) {
+    if (s.screen !== screen) s.history.push(s.screen);
+    s.screen = screen;
+    if (screen === 'event') {
+      // Today: quantities always start at 0. Part 1: show what's already in the cart.
+      s.pick = s.mode === 'part1' ? { ga: s.cart.ga, stu: s.cart.stu } : { ga: 0, stu: 0 };
+    }
+  }
+
+  function back() {
+    if (!s.history.length) return;
+    s.flash = null;
+    var prev = s.history.pop();
+    s.screen = prev;
+    if (prev === 'event') s.pick = s.mode === 'part1' ? { ga: s.cart.ga, stu: s.cart.stu } : { ga: 0, stu: 0 };
+    s.what = s.screen === 'event'
+      ? (s.mode === 'part1'
+        ? { cls: 'part1', title: 'Back on the event page, cart kept.', body: 'Quantities show what is already in the cart, and the button reads Update Cart.' }
+        : { cls: 'today', title: 'Back on the event page, cart forgotten.', body: 'Every quantity shows 0, even though tickets are still held. Only the timer and View Cart hint that a cart exists.' })
+      : s.what;
+    render();
+  }
+
+  function submitEvent() {
+    var hadCart = count(s.cart) > 0;
+    var picked = { ga: s.pick.ga, stu: s.pick.stu };
+
+    if (s.mode === 'today') {
+      if (count(picked) === 0) return;
+      if (hadCart) {
+        // Single-event cart is wiped and rebuilt: old holds are orphaned until the cleanup job removes them.
+        s.orphans.push({ ga: s.cart.ga, stu: s.cart.stu, until: s.expireAt + CLEANUP_SECS });
+        var lost = TYPES.filter(function (t) { return s.cart[t.id] > 0 && picked[t.id] === 0; }).map(function (t) { return t.name; });
+        s.what = {
+          cls: 'today',
+          title: 'Cart wiped and rebuilt.',
+          body: 'New cart ID, timer restarted at 7:00. The ' + count(s.cart) + ' tickets from the old cart are still held for other fans until cleanup.' +
+            (lost.length ? ' ' + lost.join(' and ') + ' dropped because it showed 0.' : '')
+        };
+      } else {
+        s.what = { cls: '', title: 'Tickets reserved.', body: 'Cart created and the 7:00 timer started.' };
+      }
+      s.cart = picked;
+      s.cartId = newId();
+      s.expireAt = now() + TIMER_SECS;
+    } else {
+      if (!hadCart) {
+        if (count(picked) === 0) return;
+        s.cart = picked;
+        s.cartId = newId();
+        s.expireAt = now() + TIMER_SECS;
+        s.what = { cls: '', title: 'Tickets reserved.', body: 'Cart created and the 7:00 timer started.' };
+      } else {
+        var dropped = 0;
+        TYPES.forEach(function (t) { if (picked[t.id] < s.cart[t.id]) dropped += s.cart[t.id] - picked[t.id]; });
+        s.released += dropped;
+        s.cart = picked;
+        if (count(picked) === 0) {
+          s.cartId = null;
+          s.expireAt = null;
+          s.flash = { kind: 'info', text: 'Your cart is empty. Your tickets were released.' };
+          s.what = { cls: 'part1', title: 'Cart emptied with Update Cart.', body: dropped + ' ticket' + (dropped === 1 ? '' : 's') + ' released to other fans right away. The fan stays on the event page.' };
+          s.pick = { ga: 0, stu: 0 };
+          render();
+          return;
+        }
+        s.what = {
+          cls: 'part1',
+          title: 'Cart updated in place.',
+          body: 'Same cart, timer kept counting.' + (dropped ? ' ' + dropped + ' ticket' + (dropped === 1 ? '' : 's') + ' released to other fans right away.' : '')
+        };
+      }
+    }
+    s.flash = null;
+    go('checkout');
+    render();
+  }
+
+  function releaseCart() {
+    s.released += count(s.cart);
+    s.cart = { ga: 0, stu: 0 };
+    s.cartId = null;
+    s.expireAt = null;
+    s.history = [];
+    if (s.mode === 'part1') {
+      s.screen = 'event';
+      s.pick = { ga: 0, stu: 0 };
+      s.flash = { kind: 'info', text: 'Your cart was released. Pick tickets to start over.' };
+      s.what = { cls: 'part1', title: 'Released, back to the same event.', body: 'All held tickets go back on sale, and the fan lands on the event they were buying, however they arrived.' };
+    } else {
+      s.screen = 'list';
+      s.flash = null;
+      s.what = s.host === 'embed'
+        ? { cls: 'today', title: 'Released, sent to the saved start page.', body: 'The fan started on the school’s event list, so that is where they land, not the football game.' }
+        : { cls: 'today', title: 'Released, sent to all events.', body: 'The fan came straight to the event from events.hometown, so no start page was saved. They land on the list of every event.' };
+    }
+    render();
+  }
+
+  function moreEvents() {
+    s.flash = null;
+    go('list');
+    s.what = { cls: '', title: 'More Events.', body: 'Opens the event list. The cart and timer stay. Open the football game again to see how the event page treats the cart.' };
+    render();
+  }
+
+  function expire() {
+    s.cart = { ga: 0, stu: 0 };
+    s.cartId = null;
+    s.expireAt = null;
+    s.history = [];
+    s.screen = s.startPage === 'list' || s.mode === 'today' ? 'list' : 'event';
+    s.flash = { kind: 'warn', text: 'Your ticket reservation has expired. Please perform a new search.' };
+    s.what = { cls: '', title: 'Timer ran out.', body: 'Held tickets released and the cart cleared.' };
+    render();
+  }
+
+  // ---------- rendering ----------
+  function stepper(id) {
+    var v = s.pick[id];
+    var changed = s.mode === 'part1' && count(s.cart) > 0 && v !== s.cart[id];
+    return '<div class="input-number' + (changed ? ' changed' : '') + '">' +
+      '<button aria-label="decrease quantity" data-step="' + id + '" data-d="-1"' + (v <= 0 ? ' disabled' : '') + '>−</button>' +
+      '<output aria-live="polite">' + v + '</output>' +
+      '<button aria-label="increase quantity" data-step="' + id + '" data-d="1"' + (v >= 10 ? ' disabled' : '') + '>+</button></div>';
+  }
+
+  function timerBar() {
+    if (!s.expireAt) return '';
+    var left = s.expireAt - now();
+    var viewCart = s.screen !== 'checkout' ? '<button class="btn" data-act="viewcart">View Cart</button>' : '';
+    return '<div class="bo-timer" role="alert">Tickets reserved. Complete your order in <b id="tleft">' + mmss(left) + '</b>' + viewCart + '</div>';
+  }
+
+  function flash() {
+    if (!s.flash) return '';
+    return '<div class="flash flash-' + s.flash.kind + '">' + esc(s.flash.text) + '</div>';
+  }
+
+  function listScreen() {
+    var title = s.host === 'embed' ? 'Central High School Athletics' : 'All Events';
+    var sub = s.host === 'embed' ? 'Upcoming events' : 'Central High School';
+    return '<div class="bo-inner">' + flash() +
+      '<h2 class="list-title">' + title + '</h2><p class="list-sub">' + sub + '</p>' +
+      LIST.map(function (e, i) {
+        return '<div class="tile"><div class="tile-date"><b>' + e.d + '</b><small>' + e.m + '</small></div>' +
+          '<div class="tile-main"><b>' + esc(e.name) + '</b><small>' + esc(e.sub) + '</small></div>' +
+          (e.live ? '<button class="btn" data-act="open">Buy Tickets</button>' : '<button class="btn" disabled title="Only the football game is set up in this demo">Buy Tickets</button>') +
+          '</div>';
+      }).join('') + '</div>';
+  }
+
+  function eventScreen() {
+    var hasCart = count(s.cart) > 0;
+    var isUpdate = s.mode === 'part1' && hasCart;
+    var total = cartTotal(s.pick);
+    var canSubmit = isUpdate ? true : count(s.pick) > 0;
+    var backAll = s.startPage === 'list' ? '<div class="back-all"><button class="btn" data-act="list">‹ Back to All Events</button></div>' : '';
+    var rows = TYPES.map(function (t) {
+      return '<tr><td>' + t.name + '<small>' + money(t.price) + ' + ' + money(t.fee) + ' fee</small></td>' +
+        '<td>' + money(t.price) + '</td><td class="r">' + stepper(t.id) + '</td></tr>';
+    }).join('');
+    var note = '';
+    if (hasCart && s.mode === 'part1') note = '<div class="cart-note">Showing the ' + count(s.cart) + ' tickets already in your cart. Change a quantity and select Update Cart.</div>';
+    var btnLabel = isUpdate ? 'Update Cart' : 'Checkout';
+    return '<div class="bo-inner">' + flash() + backAll +
+      '<div class="event-head"><div class="flyer">CENTRAL<br>HOMECOMING</div><div>' +
+      '<div style="color:#666;font-weight:bold;margin-bottom:2px">' + EVENT.team + '</div>' +
+      '<h2 class="public-event-title">' + EVENT.name + '</h2>' +
+      '<div class="detail"><i>📅</i><b>' + EVENT.when + '</b></div>' +
+      '<div class="detail"><i>📍</i><span><b>' + EVENT.venue + '</b><br>' + EVENT.address + '</span></div>' +
+      '</div></div>' +
+      '<table class="tix"><thead><tr><th>Item</th><th>Price</th><th class="r">Quantity</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<div class="totals"><b>Total</b><b>' + (count(s.pick) ? money(total) : (isUpdate ? money(0) : 'Please select items')) + '</b></div>' + note +
+      '<div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="btn btn-lg" data-act="submit"' + (canSubmit ? '' : ' disabled') + '>' + btnLabel + ' ›</button></div>' +
+      '</div>';
+  }
+
+  function checkoutScreen() {
+    var rows = TYPES.filter(function (t) { return s.cart[t.id] > 0; }).map(function (t) {
+      return '<tr><td>' + EVENT.name + '<br><small style="color:#666">' + t.name + '</small></td><td class="c">' + s.cart[t.id] + '</td><td class="r">' + money(lineTotal(t, s.cart[t.id])) + '</td></tr>';
+    }).join('');
+    return '<div class="bo-inner">' +
+      '<h3 class="co-title">Review your order</h3>' +
+      '<table class="order"><thead><tr><th>Item</th><th class="c">Quantity</th><th class="r">Total Price</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<div class="order-total">Order Total: ' + money(cartTotal(s.cart)) + '</div>' +
+      '<div class="collapsed">Promotion code, donation, contact information (Homer Townes, homer.townes@hometown.com) and payment fields appear here. Not shown in this demo.</div>' +
+      '<div class="order-total">Order Total<br>' + count(s.cart) + ' Item(s): ' + money(cartTotal(s.cart)) + '</div>' +
+      '<div class="co-actions">' +
+      '<button class="btn grow" data-act="more">‹ More Events</button>' +
+      '<button class="link link-danger" data-act="release">✕ Release Cart And Start Over</button>' +
+      '<button class="btn btn-lg" disabled title="Not part of this demo">Submit Order ›</button>' +
+      '</div></div>';
+  }
+
+  function screenHtml() {
+    if (s.screen === 'list') return listScreen();
+    if (s.screen === 'checkout') return checkoutScreen();
+    return eventScreen();
+  }
+
+  function urlText() {
+    var path = s.screen === 'list' ? (s.host === 'embed' ? 'tickets' : 'all') : s.screen === 'checkout' ? 'checkout' : 'homecoming-football';
+    return s.host === 'embed'
+      ? 'centralhighathletics.org/tickets' + (s.screen === 'list' ? '' : ' › box office: ' + path)
+      : 'events.hometownticketing.com/boxoffice/centralhs/' + path;
+  }
+
+  function render() {
+    document.querySelectorAll('[data-host]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.host === s.host)); });
+    document.querySelectorAll('[data-mode]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.mode === s.mode)); });
+
+    var bo = '<div class="bo">' + timerBar() + screenHtml() + '</div>';
+    var chrome = s.host === 'unified'
+      ? '<div class="ht-header"><span class="ht-logo">HOMETOWN</span><nav class="ht-nav"><span>Search</span><span>My Tickets</span><span>My Passes</span><span>My Transfers</span></nav></div>' + bo
+      : '<div class="school-header"><div class="school-crest">C</div><div><div class="school-name">Central High School Athletics</div><div class="school-sub">Home of the Cardinals</div></div></div>' +
+        '<div class="school-body"><p>Buy tickets for upcoming Cardinals events below.</p>' + bo + '</div>';
+    document.getElementById('frame').innerHTML =
+      '<div class="browser"><div class="dots"><i></i><i></i><i></i></div>' +
+      '<button class="nav-back" data-act="back" title="Browser back"' + (s.history.length ? '' : ' disabled') + '>←</button>' +
+      '<div class="url">' + esc(urlText()) + '</div></div>' + chrome;
+
+    var w = document.getElementById('what');
+    w.className = 'what ' + s.what.cls;
+    w.innerHTML = '<b>' + esc(s.what.title) + '</b>' + esc(s.what.body);
+    renderSide();
+  }
+
+  function renderSide() {
+    var left = s.expireAt ? s.expireAt - now() : null;
+    var tag = '<span class="mode-tag ' + s.mode + '">' + (s.mode === 'today' ? 'Today' : 'Part 1') + '</span>';
+    var start = s.startPage === 'list' ? 'School event list' : 'None saved';
+    document.getElementById('kv').innerHTML =
+      '<dt>Behavior</dt><dd>' + tag + '</dd>' +
+      '<dt>In cart</dt><dd>' + (count(s.cart) ? s.cart.ga + ' GA, ' + s.cart.stu + ' Student' : 'Empty') + '</dd>' +
+      '<dt>Cart ID</dt><dd>' + (s.cartId || 'None') + '</dd>' +
+      '<dt>Timer</dt><dd id="kvt">' + (left !== null ? mmss(left) : 'Not running') + '</dd>' +
+      '<dt>Start page</dt><dd>' + start + '</dd>' +
+      '<dt>Released to others</dt><dd>' + s.released + '</dd>';
+
+    var t = now();
+    var active = s.orphans.filter(function (o) { return o.until > t; });
+    document.getElementById('held').innerHTML = active.length
+      ? '<ul class="held" style="margin:0;padding-left:18px">' + active.map(function (o) {
+          return '<li><b>' + (o.ga + o.stu) + ' tickets</b> no one can buy for ' + mmss(o.until - t) + ' more</li>';
+        }).join('') + '</ul>'
+      : '<div class="empty">None. ' + (s.mode === 'today' ? 'Re-add tickets after going back to see this fill up.' : 'Part 1 releases dropped tickets right away.') + '</div>';
+  }
+
+  // ---------- events ----------
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b || b.disabled) return;
+    if (b.dataset.host) { s = fresh(b.dataset.host, s.mode); render(); return; }
+    if (b.dataset.mode) { s = fresh(s.host, b.dataset.mode); render(); return; }
+    if (b.id === 'reset') { s = fresh(s.host, s.mode); render(); return; }
+    if (b.dataset.step) {
+      var id = b.dataset.step;
+      s.pick[id] = Math.max(0, Math.min(10, s.pick[id] + Number(b.dataset.d)));
+      render();
+      return;
+    }
+    switch (b.dataset.act) {
+      case 'back': back(); break;
+      case 'open': s.flash = null; go('event'); s.what = count(s.cart)
+        ? (s.mode === 'part1'
+          ? { cls: 'part1', title: 'Event page shows the cart.', body: 'Quantities match the cart. Change one and select Update Cart.' }
+          : { cls: 'today', title: 'Event page forgets the cart.', body: 'Quantities show 0 even though tickets are held.' })
+        : { cls: '', title: 'Event page.', body: 'Pick quantities and select Checkout.' };
+        render(); break;
+      case 'list': s.flash = null; go('list'); render(); break;
+      case 'viewcart': s.flash = null; go('checkout'); render(); break;
+      case 'submit': submitEvent(); break;
+      case 'more': moreEvents(); break;
+      case 'release': releaseCart(); break;
+    }
+  });
+
+  setInterval(function () {
+    if (s.expireAt && now() >= s.expireAt) { expire(); return; }
+    var el = document.getElementById('tleft');
+    if (el && s.expireAt) el.textContent = mmss(s.expireAt - now());
+    renderSide();
+  }, 1000);
+
+  s = fresh('unified', 'today');
+  render();
+})();
+</script>
+</body>
+</html>
