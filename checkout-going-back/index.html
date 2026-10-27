@@ -57,11 +57,11 @@ button { font: inherit; }
 .ht-nav span { opacity: .95; }
 
 /* school site chrome */
-.school-header { background: #7a1f2b; color: #fff; padding: 14px 18px; display: flex; align-items: center; gap: 12px; }
-.school-crest { width: 34px; height: 34px; border-radius: 50%; background: #f2c14e; color: #7a1f2b; font-weight: 800; display: grid; place-items: center; }
+.school-header { background: #203731; color: #fff; padding: 14px 18px; display: flex; align-items: center; gap: 12px; }
+.school-crest { display: grid; place-items: center; }
 .school-name { font-weight: 700; font-size: 17px; }
 .school-sub { font-size: 12px; opacity: .85; }
-.school-body { padding: 14px 18px 18px; background: #faf8f5; }
+.school-body { padding: 14px 18px 18px; background: #f7f5ec; }
 .school-body p { margin: 0 0 10px; color: #4a4a4a; font-size: 13px; }
 
 /* Box office iframe content (boxoffice embed styles) */
@@ -96,7 +96,7 @@ button { font: inherit; }
 /* event page */
 .back-all { margin-bottom: 16px; }
 .event-head { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 14px; }
-.flyer { width: 120px; height: 120px; border-radius: 6px; background: linear-gradient(135deg, #7a1f2b, #b8434f); color: #f2c14e; display: grid; place-items: center; font-weight: 800; font-size: 13px; text-align: center; padding: 8px; }
+.flyer { width: 120px; height: 120px; border-radius: 6px; background: #203731; color: #FFB612; gap: 4px; display: grid; place-content: center; justify-items: center; font-weight: 800; font-size: 13px; text-align: center; padding: 8px; }
 .public-event-title { font-size: 25pt; font-weight: 700; letter-spacing: -.02em; line-height: 1.05; margin: 0 0 .3em; }
 .detail { display: flex; gap: 10px; margin-bottom: 6px; color: #222; }
 .detail i { width: 18px; font-style: normal; color: #777; }
@@ -207,8 +207,8 @@ table.order .r { text-align: right; }
     name: 'Homecoming Football Game',
     team: 'Varsity Football',
     when: 'Friday, November 6, 2026 at 7:00 PM EST',
-    venue: 'Central High School Stadium',
-    address: '123 Main St, Dublin, OH 43017'
+    venue: 'Hamster Stadium',
+    address: 'Birmingham, AL'
   };
   var LIST = [
     { d: '06', m: 'Nov', name: 'Homecoming Football Game', sub: 'Varsity Football · 7:00 PM', live: true },
@@ -385,8 +385,8 @@ table.order .r { text-align: right; }
   }
 
   function listScreen() {
-    var title = s.host === 'embed' ? 'Central High School Athletics' : 'All Events';
-    var sub = s.host === 'embed' ? 'Upcoming events' : 'Central High School';
+    var title = s.host === 'embed' ? 'Birmingham High School Athletics' : 'All Events';
+    var sub = s.host === 'embed' ? 'Upcoming events' : 'Birmingham High School';
     return '<div class="bo-inner">' + flash() +
       '<h2 class="list-title">' + title + '</h2><p class="list-sub">' + sub + '</p>' +
       LIST.map(function (e, i) {
@@ -411,7 +411,7 @@ table.order .r { text-align: right; }
     if (hasCart && s.mode === 'part1') note = '<div class="cart-note">Showing the ' + count(s.cart) + ' tickets already in your cart. Change a quantity and select Update Cart.</div>';
     var btnLabel = isUpdate ? 'Update Cart' : 'Checkout';
     return '<div class="bo-inner">' + flash() + backAll +
-      '<div class="event-head"><div class="flyer">CENTRAL<br>HOMECOMING</div><div>' +
+      '<div class="event-head"><div class="flyer"><svg viewBox="0 0 120 130" width="56" height="61" aria-hidden="true"><path fill="#203731" fill-rule="evenodd" stroke="#FFB612" stroke-width="7" stroke-linejoin="round" paint-order="stroke" d="M12 12 H66 C90 12 101 25 101 41 C101 52 95 59 86 62 C99 66 106 76 106 89 C106 108 93 118 68 118 H12 V104 H24 V26 H12 Z M42 28 H62 C72 28 77 33 77 41 C77 49 72 54 62 54 H42 Z M42 70 H64 C75 70 81 76 81 86 C81 96 75 102 64 102 H42 Z"/></svg><span>HOMECOMING</span></div><div>' +
       '<div style="color:#666;font-weight:bold;margin-bottom:2px">' + EVENT.team + '</div>' +
       '<h2 class="public-event-title">' + EVENT.name + '</h2>' +
       '<div class="detail"><i>📅</i><b>' + EVENT.when + '</b></div>' +
@@ -449,8 +449,8 @@ table.order .r { text-align: right; }
   function urlText() {
     var path = s.screen === 'list' ? (s.host === 'embed' ? 'tickets' : 'all') : s.screen === 'checkout' ? 'checkout' : 'homecoming-football';
     return s.host === 'embed'
-      ? 'centralhighathletics.org/tickets' + (s.screen === 'list' ? '' : ' › box office: ' + path)
-      : 'events.hometownticketing.com/boxoffice/centralhs/' + path;
+      ? 'birminghamhamsters.org/tickets' + (s.screen === 'list' ? '' : ' › box office: ' + path)
+      : 'events.hometownticketing.com/boxoffice/birminghamhs/' + path;
   }
 
   function render() {
@@ -460,8 +460,8 @@ table.order .r { text-align: right; }
     var bo = '<div class="bo">' + timerBar() + screenHtml() + '</div>';
     var chrome = s.host === 'unified'
       ? '<div class="ht-header"><span class="ht-logo">HOMETOWN</span><nav class="ht-nav"><span>Search</span><span>My Tickets</span><span>My Passes</span><span>My Transfers</span></nav></div>' + bo
-      : '<div class="school-header"><div class="school-crest">C</div><div><div class="school-name">Central High School Athletics</div><div class="school-sub">Home of the Cardinals</div></div></div>' +
-        '<div class="school-body"><p>Buy tickets for upcoming Cardinals events below.</p>' + bo + '</div>';
+      : '<div class="school-header"><div class="school-crest"><svg viewBox="0 0 120 130" width="34" height="37" aria-hidden="true"><path fill="#203731" fill-rule="evenodd" stroke="#FFB612" stroke-width="7" stroke-linejoin="round" paint-order="stroke" d="M12 12 H66 C90 12 101 25 101 41 C101 52 95 59 86 62 C99 66 106 76 106 89 C106 108 93 118 68 118 H12 V104 H24 V26 H12 Z M42 28 H62 C72 28 77 33 77 41 C77 49 72 54 62 54 H42 Z M42 70 H64 C75 70 81 76 81 86 C81 96 75 102 64 102 H42 Z"/></svg></div><div><div class="school-name">Birmingham High School Athletics</div><div class="school-sub">Home of the Hamsters</div></div></div>' +
+        '<div class="school-body"><p>Buy tickets for upcoming Hamsters events below.</p>' + bo + '</div>';
     document.getElementById('frame').innerHTML =
       '<div class="browser"><div class="dots"><i></i><i></i><i></i></div>' +
       '<button class="nav-back" data-act="back" title="Browser back"' + (s.history.length ? '' : ' disabled') + '>←</button>' +
