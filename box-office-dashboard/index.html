@@ -1,0 +1,623 @@
+<title>Box Office Dashboard Mockup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: legacy Box Office admin dashboard (boxoffice templates/admin/index.php), Bootstrap 3 panels, single light look like the real product */
+:root {
+  --page: #ffffff;
+  --ink: #333333;
+  --muted: #6c757d;
+  --nav: #000000;
+  --panel-head: #3a3a3c;
+  --panel-border: #b6b7bb;
+  --rule: #d1d2d4;
+  --card-border: #e1e5e9;
+  --bar: #2c5ab8;
+  --line: #7baa58;
+  --success: #5cb85c;
+  --success-border: #4cae4c;
+  --primary: #337ab7;
+  --primary-border: #2e6da4;
+  --team: #245580;
+  --green: #54ae56;
+  --yellow: #ffe526;
+  --red: #ee1b22;
+  --unpub: #fae5e9;
+  --mock: #fff8d6;
+  --mock-ink: #5c4a00;
+  --mock-line: #f0e2a0;
+  --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --nav-font: Verdana, Geneva, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--page); color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.42857; }
+svg.i { width: 1em; height: 1em; fill: currentColor; vertical-align: -0.125em; }
+
+/* Mockup controls (not part of the product) */
+.mock-flag { background: var(--mock); color: var(--mock-ink); font-size: 12px; padding-block: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); border-bottom: 1px solid var(--mock-line); }
+.mock-inner { max-width: 1280px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.mock-inner strong { font-weight: 600; }
+.variants { display: flex; flex-wrap: wrap; gap: 4px; }
+.variants button { font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid #d9c56a; background: #fffdf0; color: var(--mock-ink); cursor: pointer; }
+.variants button[aria-pressed="true"] { background: var(--mock-ink); border-color: var(--mock-ink); color: #fff; }
+.variants button:focus-visible { outline: 2px solid #005fcc; outline-offset: 2px; }
+#variant-note { flex-basis: 100%; }
+
+/* Top nav */
+.topnav { background: var(--nav); font-family: var(--nav-font); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.topnav ul { list-style: none; margin: 0 auto; padding: 0; max-width: 1280px; display: flex; flex-wrap: wrap; align-items: center; }
+.topnav li a { display: block; color: #fff; text-decoration: none; font-size: 13px; padding: 15px 14px; }
+.topnav li a.active { background: #262626; }
+.topnav li a:hover { background: #1a1a1a; }
+.topnav li.spacer { flex: 1; }
+
+.container { max-width: 1280px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 40px; }
+
+/* Header row */
+.dashboard-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border-bottom: 2px solid var(--rule); padding: 10px 0 12px; }
+.dashboard-logo { height: 52px; width: auto; }
+.dashboard-header h1 { margin: 0; font-size: 30px; font-weight: 500; flex: 2; min-width: 0; }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 14px; line-height: 1.42857; padding: 6px 12px; border-radius: 4px; border: 1px solid transparent; cursor: pointer; text-decoration: none; white-space: nowrap; }
+.btn-success { background: var(--success); border-color: var(--success-border); color: #fff; }
+.btn:focus-visible { outline: 2px solid #005fcc; outline-offset: 2px; }
+.caret { display: inline-block; width: 0; height: 0; border-top: 4px solid; border-right: 4px solid transparent; border-left: 4px solid transparent; margin-left: 2px; }
+
+/* v3 Quick Actions (shown instead of Event Wizard / New Event buttons) */
+.quick-actions { margin: 16px 0 8px; padding: 0 10px; }
+.qa-label { font-size: 13px; color: var(--muted); margin: 0 0 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.qa-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.qa-tile { display: flex; align-items: center; gap: 12px; padding: 14px 20px; background: #fff; border: 1px solid #dee2e6; border-radius: 6px; color: inherit; flex: 1; min-width: 220px; max-width: 320px; text-align: left; cursor: pointer; font: inherit; text-decoration: none; }
+.qa-tile:hover { background: #f8f9fa; }
+.qa-tile:focus-visible { outline: 2px solid #005fcc; outline-offset: 2px; }
+.qa-icon { font-size: 22px; color: #5b7fcb; flex: 0 0 auto; }
+.qa-title { font-weight: 600; font-size: 14px; color: #343a40; }
+.qa-sub { font-size: 12px; color: var(--muted); }
+
+/* Panels */
+.panel { background: #fff; border-radius: 4px; box-shadow: 0 1px 1px rgba(0,0,0,.05); margin-bottom: 20px; }
+.panel-inverse { border: 2px solid var(--panel-border); }
+.panel-inverse > .panel-heading { background: var(--panel-head); color: #fff; padding: 10px 15px; border-radius: 2px 2px 0 0; }
+.panel-title { margin: 0; font-size: 16px; font-weight: 500; }
+.panel-body { padding: 15px; }
+
+.summary-row { margin: 25px 0; padding: 0 10px; border-bottom: 2px solid var(--rule); }
+.summary-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.collapse-btn { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 1px solid #6b6b6e; color: #fff; font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 4px; cursor: pointer; }
+.collapse-btn:hover { background: #4a4a4d; }
+.collapse-btn:focus-visible { outline: 2px solid #80bdff; outline-offset: 2px; }
+.collapse-btn svg { transition: transform .2s ease; }
+.collapse-btn[aria-expanded="false"] svg { transform: rotate(-90deg); }
+.filtered-by { font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+.filtered-by b { color: var(--ink); font-weight: 600; }
+
+/* Chart */
+.chart-wrap { overflow-x: auto; }
+#chart { position: relative; min-width: 640px; }
+#chart svg { display: block; width: 100%; height: 240px; font-family: var(--font); }
+.ax text { font-size: 13px; fill: #333; }
+.ax-label { font-size: 13px; fill: #333; }
+.lbl-bar { font-size: 12px; fill: var(--bar); font-weight: 600; }
+.lbl-line { font-size: 12px; fill: var(--line); font-weight: 600; paint-order: stroke; stroke: #fff; stroke-width: 3px; }
+.empty-msg { font-size: 14px; fill: var(--muted); }
+.hit { fill: transparent; cursor: pointer; }
+.hit:hover { fill: rgba(0,0,0,.04); }
+.legend { display: flex; justify-content: center; gap: 16px; margin-top: 8px; }
+.legend button { display: inline-flex; align-items: center; gap: 8px; background: none; border: 0; font: inherit; font-size: 14px; color: inherit; cursor: pointer; padding: 2px 0; }
+.legend button[aria-pressed="false"] { opacity: .6; }
+.legend button:focus-visible { outline: 2px solid #005fcc; outline-offset: 2px; border-radius: 4px; }
+.tip { position: absolute; pointer-events: none; background: #fff; border: 1px solid #ccc; box-shadow: 0 2px 6px rgba(0,0,0,.15); font-size: 12px; border-collapse: collapse; }
+.tip th { background: #757575; color: #fff; padding: 3px 8px; text-align: left; }
+.tip td { padding: 3px 8px; border-top: 1px solid #eee; }
+.tip td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.sw { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; }
+#chart-summary { text-align: center; margin-top: 12px; }
+.summary-tooltip { position: relative; display: inline-block; margin-left: 6px; color: var(--muted); cursor: help; }
+.summary-tooltip::after { content: attr(data-tooltip); position: absolute; left: 50%; transform: translateX(-50%); bottom: 125%; background: #000; color: #fff; padding: 8px 10px; border-radius: 4px; width: 280px; max-width: 80vw; font-size: 12px; line-height: 1.3; opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 10; }
+.summary-tooltip:hover::after, .summary-tooltip:focus::after { opacity: 1; }
+
+/* Filters */
+.filters-row.shared { margin: 25px 0 0; padding: 0 10px; }
+.filters-row.shared .panel { margin-bottom: 0; }
+.filters { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 6px; align-items: center; }
+.search { display: flex; width: 25%; min-width: 220px; margin-right: auto; }
+.search span { display: flex; align-items: center; padding: 6px 12px; background: #eee; border: 1px solid #ccc; border-right: 0; border-radius: 4px 0 0 4px; color: #555; }
+.search input { flex: 1; min-width: 0; font: inherit; padding: 6px 12px; border: 1px solid #ccc; border-radius: 0 4px 4px 0; background: #fff; color: #555; }
+.dd { position: relative; }
+.dd-menu { position: absolute; top: calc(100% + 2px); right: 0; z-index: 30; min-width: 220px; max-width: 80vw; background: #fff; border: 1px solid rgba(0,0,0,.15); border-radius: 4px; box-shadow: 0 6px 12px rgba(0,0,0,.175); padding: 5px 0; margin: 0; list-style: none; }
+.dd-menu button { display: block; width: 100%; text-align: left; background: none; border: 0; font: inherit; color: #333; padding: 4px 20px; cursor: pointer; white-space: nowrap; }
+.dd-menu button:hover, .dd-menu button:focus-visible { background: #f5f5f5; outline: none; }
+.dd-menu button[aria-checked="true"] { font-weight: 700; }
+.dd-menu .dd-msg { padding: 4px 20px; color: var(--muted); font-size: 13px; white-space: nowrap; }
+.dd-menu .divider { height: 1px; margin: 5px 0; background: #e5e5e5; }
+.clear-filters { background: none; border: 0; color: #fff; text-decoration: underline; font: inherit; font-size: 13px; cursor: pointer; padding: 6px 4px; }
+
+/* Event columns */
+.events { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 30px; align-items: start; padding: 0 10px; }
+.events.shared { margin-top: 20px; }
+.no-events { grid-column: 1 / -1; text-align: center; font-weight: 700; margin: 10px 0 30px; }
+.col-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.col-head .name { font-size: 13px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.badge { background: #f8f9fa; color: var(--muted); font-size: 10px; font-weight: 600; padding: 0 6px; border-radius: 4px; border: 1px solid #e9ecef; height: 18px; min-width: 18px; display: flex; align-items: center; justify-content: center; }
+.panel-status { padding: 5px; display: flex; flex-direction: column; gap: 6px; }
+.card { border-radius: 12px; border: 1px solid var(--card-border); box-shadow: 0 2px 8px rgba(0,0,0,.08); background: #fff; padding: 12px; transition: box-shadow .2s ease; }
+.card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.12); }
+.card.unpub { background: var(--unpub); }
+.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding-bottom: 3px; border-bottom: 1px solid #f1f1f1; }
+.type { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; color: #666; }
+.type svg { font-size: 14px; }
+.flags { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.kebab { border: 0; background: transparent; color: var(--muted); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+.kebab:hover { background: #f8f9fa; }
+.ev-name { display: block; font-size: 16px; font-weight: 600; color: #1a1a1a; text-decoration: none; line-height: 1.3; margin-bottom: 8px; overflow-wrap: break-word; }
+.ev-name:hover { color: #2c5aa0; }
+.team { color: var(--team); font-size: 12px; font-weight: 500; margin-bottom: 4px; line-height: 1.2; }
+.when { color: var(--muted); font-size: 11px; line-height: 1.2; margin-bottom: 8px; }
+.when svg { font-size: 10px; margin-right: 3px; }
+.progress { height: 6px; background: #f1f3f4; border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+.progress div { height: 100%; }
+.child { margin-top: 8px; padding: 6px 0 0; border-top: 1px solid #e9ecef; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--muted); font-size: 11px; font-weight: 500; }
+
+@media (max-width: 991px) { .events { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) {
+  .events { grid-template-columns: 1fr; }
+  .search { width: 100%; }
+  .filters .dd, .filters .dd .btn { width: 100%; justify-content: space-between; }
+  .dashboard-header h1 { font-size: 22px; }
+  .summary-row, .filters-row.shared, .quick-actions { padding: 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4V7zm6 1v8h6V8H9z"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2zM5 9v10h14V9H5z"/></symbol>
+    <symbol id="i-calplus" viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2zM5 9v10h14V9H5zm6 1.5h2v2.5h2.5v2H13v2.5h-2V15H8.5v-2H11v-2.5z"/></symbol>
+    <symbol id="i-calcheck" viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2zM5 9v10h14V9H5zm10.3 1.8 1.4 1.4-5.2 5.2-3.2-3.2 1.4-1.4 1.8 1.8 3.8-3.8z"/></symbol>
+    <symbol id="i-calo" viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2zM5 9v10h14V9H5zm2 2h4v4H7v-4z"/></symbol>
+    <symbol id="i-tags" viewBox="0 0 24 24"><path d="M2 3h8.6l9.7 9.7-7.6 7.6L3 10.6V3zm4 2.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM12.4 3h2l9.6 9.7-7.6 7.6-1-1 6.6-6.6L12.4 3z"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 2h12a1 1 0 0 1 1 1v19l-7-4.5L5 22V3a1 1 0 0 1 1-1z"/></symbol>
+    <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 3h7v7h-2V6.4l-8.3 8.3-1.4-1.4L17.6 5H14V3zM5 5h6v2H5v12h12v-6h2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 2.5a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15zM11 7h2v4.6l3.2 2-1 1.7L11 12.7V7z"/></symbol>
+    <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="19" r="2.2"/></symbol>
+    <symbol id="i-eyeslash" viewBox="0 0 24 24"><path d="M2.3 3.7 3.7 2.3l18 18-1.4 1.4-3.3-3.3A11 11 0 0 1 12 19.5C6.5 19.5 2.6 15.5 1 12c.8-1.7 2.1-3.6 3.9-5L2.3 3.7zM8.4 9.8a4 4 0 0 0 5.8 5.8l-1.5-1.5a2 2 0 0 1-2.8-2.8L8.4 9.8zM12 4.5c5.5 0 9.4 4 11 7.5-.6 1.3-1.5 2.7-2.7 4l-3.4-3.4A5 5 0 0 0 11 6.6L9.1 4.8c.9-.2 1.9-.3 2.9-.3z"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M8 2h8v2l-1 1v5l3 3v2h-5v7l-1 1-1-1v-7H6v-2l3-3V5L8 4V2z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h1zm2 0h6V7a3 3 0 0 0-6 0v3z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><path d="M10 3a7 7 0 0 1 5.6 11.2l5.1 5.1-1.4 1.4-5.1-5.1A7 7 0 1 1 10 3zm0 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm-1 8v7h2v-7h-2zm0-3v2h2V7h-2z"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 1.4-1.4L12 12.2l4.6-4.6L18 9l-6 6z"/></symbol>
+    <pattern id="bar-stripes" patternUnits="userSpaceOnUse" width="14" height="14">
+      <rect width="14" height="14" fill="#2c5ab8"></rect>
+      <path d="M-14,14 l28,-28 M0,14 l28,-28 M14,14 l28,-28" stroke="#fff"></path>
+    </pattern>
+  </defs>
+</svg>
+
+<div class="mock-flag">
+  <div class="mock-inner">
+    <span><strong>Mockup</strong> with made-up data. Birmingham Unified Schools is a demo client.</span>
+    <span class="variants" role="group" aria-label="Mockup version">
+      <button type="button" data-v="current">Today</button>
+      <button type="button" data-v="collapse">Idea 1: Collapsed chart</button>
+      <button type="button" data-v="filters">Idea 2: Shared filters</button>
+      <button type="button" data-v="both">Both</button>
+    </span>
+    <span id="variant-note"></span>
+  </div>
+</div>
+
+<nav class="topnav" aria-label="Main">
+  <ul>
+    <li><a href="#" class="active">Dashboard</a></li>
+    <li><a href="#">District</a></li>
+    <li><a href="#">Events</a></li>
+    <li><a href="#">Reports</a></li>
+    <li><a href="#">Websites</a></li>
+    <li><a href="#">Fundraising</a></li>
+    <li class="spacer"></li>
+    <li><a href="#">My Hometown</a></li>
+    <li><a href="#">Settings</a></li>
+    <li><a href="#">Log out</a></li>
+  </ul>
+</nav>
+
+<main class="container">
+  <div class="dashboard-header">
+    <svg class="dashboard-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 130" role="img" aria-label="Birmingham Unified Schools logo">
+      <path fill="#203731" fill-rule="evenodd" stroke="#FFC700" stroke-width="7" stroke-linejoin="round" paint-order="stroke"
+        d="M12 12 H66 C90 12 101 25 101 41 C101 52 95 59 86 62 C99 66 106 76 106 89 C106 108 93 118 68 118 H12 V104 H24 V26 H12 Z
+           M42 28 H62 C72 28 77 33 77 41 C77 49 72 54 62 54 H42 Z
+           M42 70 H64 C75 70 81 76 81 86 C81 96 75 102 64 102 H42 Z"/>
+    </svg>
+    <h1>Birmingham Unified Schools</h1>
+  </div>
+
+  <div class="quick-actions">
+    <p class="qa-label">Quick Actions</p>
+    <div class="qa-row">
+      <a class="qa-tile" href="#">
+        <svg class="i qa-icon"><use href="#i-calplus"/></svg>
+        <div><div class="qa-title">Create New Event</div><div class="qa-sub">Single game or event</div></div>
+      </a>
+      <button type="button" class="qa-tile">
+        <svg class="i qa-icon"><use href="#i-calcheck"/></svg>
+        <div><div class="qa-title">Manage Schedules</div><div class="qa-sub">Build &amp; edit team schedules</div></div>
+      </button>
+    </div>
+  </div>
+
+  <div class="filters-row" id="filters-row">
+    <div class="panel panel-inverse">
+      <div class="panel-heading filters">
+        <div class="search"><span><svg class="i"><use href="#i-search"/></svg></span><input id="event-search" type="text" placeholder="search by event name" aria-label="search by event name"></div>
+        <button type="button" class="clear-filters" id="clear-filters" hidden>Clear filters</button>
+        <div class="dd" data-key="school"></div>
+        <div class="dd" data-key="team"></div>
+        <div class="dd" data-key="dept"></div>
+        <div class="dd" data-key="type"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-row" id="summary-row">
+    <div class="panel panel-inverse">
+      <div class="panel-heading summary-head">
+        <h2 class="panel-title">Ticket Sale Summary - Last 30 Days</h2>
+        <button type="button" class="collapse-btn" id="collapse-btn" aria-expanded="true" aria-controls="summary-body" hidden><svg class="i"><use href="#i-chev"/></svg><span>Hide chart</span></button>
+      </div>
+      <div class="panel-body" id="summary-body">
+        <p class="filtered-by" id="filtered-by" hidden></p>
+        <div class="chart-wrap"><div id="chart" role="img" aria-label="Tickets sold per day as bars and total revenue per day as a line, last 30 days"></div></div>
+        <div class="legend" role="group" aria-label="Chart series">
+          <button type="button" id="lg-bar" aria-pressed="true"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="1" y="1" width="16" height="16" rx="2" fill="url(#bar-stripes)" stroke="#2c5ab8"/></svg>Ticket Sales</button>
+          <button type="button" id="lg-line" aria-pressed="true"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="1" y="1" width="16" height="16" rx="2" fill="#7baa58"/></svg>Total Revenue</button>
+        </div>
+        <div id="chart-summary"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="events" id="events"></div>
+</main>
+
+<script>
+// ---------- Made-up sales, 09/28/2026 to 10/27/2026 ----------
+// Each stream is one team's ticket sales. Varsity football on Fridays drives the spikes; 10/16 is Homecoming.
+const H = 'Birmingham High School', M = 'Birmingham Middle School', J = 'Birmingham Junior High School', E = 'Birmingham Elementary School';
+const streams = [
+  // dow = typical tickets Mon..Sun; ramp = presale that grows daily from a start day
+  { school: H, team: 'Football - Varsity Boys', dept: 'Athletics', price: 9, dow: [10, 25, 45, 120, 420, 20, 5], hc: 1.6 },
+  { school: H, team: 'Volleyball - Varsity Girls', dept: 'Athletics', price: 6, dow: [5, 40, 8, 50, 5, 60, 0] },
+  { school: H, team: 'Hamster Marching Band', dept: 'Fine Arts', price: 8, ramp: [16, 3] },
+  { school: M, team: 'Football - 8th Grade', dept: 'Athletics', price: 5, dow: [3, 6, 20, 90, 4, 2, 0] },
+  { school: M, team: 'Volleyball - 7th & 8th Grade', dept: 'Athletics', price: 4, dow: [2, 30, 3, 4, 2, 0, 0] },
+  { school: M, team: 'Choir', dept: 'Fine Arts', price: 5, ramp: [20, 1] },
+  { school: J, team: 'Football - 9th Grade', dept: 'Athletics', price: 5, dow: [2, 4, 15, 70, 3, 1, 0] },
+  { school: J, team: 'Basketball - JV Boys', dept: 'Athletics', price: 5, ramp: [18, 2] },
+  { school: J, team: 'Basketball - JV Girls', dept: 'Athletics', price: 5, ramp: [20, 1] },
+  { school: E, team: 'Music', dept: 'Fine Arts', price: 3, ramp: [15, 1] },
+  { school: H, team: '', dept: 'Athletics', price: 75, ramp: [12, 1], type: 'Season Passes' },
+  { school: H, team: 'Basketball - Varsity Boys', dept: 'Athletics', price: 60, ramp: [19, 2], type: 'Season Ticket' },
+];
+streams.forEach(s => { s.type ||= 'Ticketed Event'; });
+
+// Event types as the real filter lists them (everything except Event Registration), with each type's card label and icon
+const typeMeta = {
+  'Ticketed Event': { status: 'Ticketed', icon: 'ticket', color: '#1976d2' },
+  'Schedule Only': { status: 'Non-Ticketed', icon: 'calo', color: '#00796b' },
+  'Season Passes': { status: 'Season Pass', icon: 'tags', color: '#f57c00' },
+  'External Ticketing': { status: 'Externally Ticketed', icon: 'ext', color: '#7b1fa2' },
+  'Season Ticket': { status: 'Season Tickets', icon: 'bookmark', color: '#f9a825' },
+};
+const weekMult = [1, 1.1, 1.15, 0.95, 1.05];
+const start = new Date(2026, 8, 28);
+const DAYS = 30;
+streams.forEach((s, si) => {
+  s.daily = Array.from({ length: DAYS }, (_, i) => {
+    const jitter = 1 + (((i * 37 + si * 11) % 7) - 3) / 20;
+    let t;
+    if (s.ramp) t = i >= s.ramp[0] ? s.ramp[1] * (i - s.ramp[0] + 1) * (i % 7 === 6 ? 0.4 : 1) : 0;
+    else t = s.dow[i % 7] * weekMult[Math.floor(i / 7)] * (Math.floor(i / 7) === 2 ? (s.hc || 1) : 1);
+    return Math.round(t * jitter);
+  });
+});
+
+// ---------- Upcoming events (grouped by school like the real dashboard). Today is Tue 10/27/2026; DST ends 11/1. ----------
+const events = [
+  { school: H, dept: 'Athletics', type: 'Season Passes', name: '2026-27 Winter Sports All-Access Pass', team: '', when: 'In 9 Days • 11/05 @ 12:00 AM CST', pct: 38 },
+  { school: H, dept: 'Athletics', type: 'Season Ticket', name: 'Varsity Boys Basketball Reserved Seats', team: 'Basketball - Varsity Boys', when: 'In 16 Days • 11/12 @ 7:00 PM CST', pct: 52 },
+  { school: H, dept: 'Athletics', type: 'External Ticketing', name: 'Varsity Football at Capital City', team: 'Football - Varsity Boys', when: 'In 17 Days • 11/13 @ 7:00 PM CST', pct: null },
+  { school: H, dept: 'Athletics', type: 'Ticketed Event', name: 'Varsity Volleyball vs. Shelbyville', team: 'Volleyball - Varsity Girls', when: 'Today @ 6:00 PM CDT', pct: 46 },
+  { school: H, dept: 'Fine Arts', type: 'Ticketed Event', name: 'Fall Band Concert', team: 'Hamster Marching Band', when: 'Tomorrow • 10/28 @ 7:00 PM CDT', pct: 21 },
+  { school: H, dept: 'Athletics', type: 'Ticketed Event', name: 'Varsity Football vs. Springfield', team: 'Football - Varsity Boys', when: 'In 3 Days • 10/30 @ 7:00 PM CDT', pct: 81, flags: ['pin'] },
+  { school: H, dept: 'Fine Arts', type: 'Ticketed Event', name: 'Fall Play: Our Town', team: 'Theatre', when: 'In 9 Days • 11/05 @ 7:00 PM CST', pct: 0, unpub: true },
+  { school: H, dept: 'Athletics', type: 'Ticketed Event', name: 'Senior Night: Varsity Football vs. Capital City', team: 'Football - Varsity Boys', when: 'In 10 Days • 11/06 @ 7:00 PM CST', pct: 14 },
+  { school: M, dept: 'Athletics', type: 'Ticketed Event', name: '8th Grade Football vs. Springfield Middle', team: 'Football - 8th Grade', when: 'Tomorrow • 10/28 @ 5:30 PM CDT', pct: 58 },
+  { school: M, dept: 'Athletics', type: 'Ticketed Event', name: 'Volleyball Tri-Match', team: 'Volleyball - 7th & 8th Grade', when: 'In 2 Days • 10/29 @ 4:30 PM CDT', pct: 29, children: 3 },
+  { school: M, dept: 'Fine Arts', type: 'Ticketed Event', name: 'Choir Fall Showcase', team: 'Choir', when: 'In 6 Days • 11/02 @ 6:30 PM CST', pct: 9 },
+  { school: J, dept: 'Athletics', type: 'Ticketed Event', name: '9th Grade Football vs. Shelbyville', team: 'Football - 9th Grade', when: 'In 2 Days • 10/29 @ 6:00 PM CDT', pct: 67 },
+  { school: J, dept: 'Athletics', type: 'Ticketed Event', name: 'Boys Basketball Jamboree', team: 'Basketball - JV Boys', when: 'In 5 Days • 11/01 @ 1:00 PM CST', pct: 34, flags: ['lock'] },
+  { school: J, dept: 'Athletics', type: 'Ticketed Event', name: 'Girls Basketball Jamboree', team: 'Basketball - JV Girls', when: 'In 5 Days • 11/01 @ 3:00 PM CST', pct: 18 },
+  { school: E, dept: 'Activities', type: 'Schedule Only', name: 'Fall Festival', team: '', when: 'In 4 Days • 10/31 @ 10:00 AM CDT', pct: null },
+  { school: E, dept: 'Fine Arts', type: 'Ticketed Event', name: '5th Grade Music Program', team: 'Music', when: 'In 8 Days • 11/04 @ 6:00 PM CST', pct: 12 },
+];
+
+// ---------- Filters (same four dropdowns as the real page) ----------
+const schools = [H, M, J, E];
+const teamsBySchool = {};
+[...streams, ...events].forEach(x => { if (x.team) (teamsBySchool[x.school] ||= new Set()).add(x.team); });
+const filterDefs = {
+  school: { label: 'school', options: () => schools },
+  team: { label: 'team', options: () => (filters.school ? [...teamsBySchool[filters.school]].sort() : null) },
+  dept: { label: 'department', options: () => ['Activities', 'Athletics', 'Fine Arts'] },
+  type: { label: 'event type', options: () => Object.keys(typeMeta) },
+};
+const filters = { school: null, team: null, dept: null, type: null };
+let variant = 'current';
+let chartOpen = true;
+const show = { bar: true, line: true };
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const chartUsesFilters = () => variant === 'filters' || variant === 'both';
+const activeFilters = () => Object.entries(filters).filter(([, v]) => v);
+
+// The real event type dropdown shows each type's icon beside its name
+const typeIcon = (key, o, onButton) => key === 'type' && typeMeta[o]
+  ? `<svg class="i" style="color:${onButton ? '#fff' : typeMeta[o].color};margin-right:6px"><use href="#i-${typeMeta[o].icon}"/></svg>` : '';
+
+function renderDropdowns() {
+  document.querySelectorAll('.dd').forEach(dd => {
+    const key = dd.dataset.key, def = filterDefs[key];
+    const open = dd.classList.contains('open');
+    const opts = def.options();
+    const items = opts === null
+      ? `<li class="dd-msg">Select a school first</li>`
+      : `<li><button type="button" role="menuitemradio" aria-checked="${!filters[key]}" data-val="">All ${def.label}s</button></li><li class="divider" role="separator"></li>` +
+        opts.map(o => `<li><button type="button" role="menuitemradio" aria-checked="${filters[key] === o}" data-val="${esc(o)}">${typeIcon(key, o)}${esc(o)}</button></li>`).join('');
+    dd.innerHTML = `<button type="button" class="btn btn-success" aria-haspopup="true" aria-expanded="${open}">${filters[key] ? typeIcon(key, filters[key], true) : ''}${esc(filters[key] || 'Filter by ' + def.label)} <span class="caret"></span></button>` +
+      (open ? `<ul class="dd-menu" role="menu">${items}</ul>` : '');
+  });
+  document.getElementById('clear-filters').hidden = activeFilters().length === 0;
+}
+
+document.addEventListener('click', e => {
+  const dd = e.target.closest('.dd');
+  const opt = e.target.closest('.dd-menu button');
+  if (opt) {
+    const key = dd.dataset.key;
+    filters[key] = opt.dataset.val || null;
+    if (key === 'school') filters.team = null;
+    dd.classList.remove('open');
+    update();
+    dd.querySelector('.btn').focus();
+    return;
+  }
+  const wasOpen = dd && dd.classList.contains('open');
+  document.querySelectorAll('.dd.open').forEach(d => d.classList.remove('open'));
+  if (dd && e.target.closest('.btn') && !wasOpen) dd.classList.add('open');
+  renderDropdowns();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.querySelector('.dd.open')) {
+    const dd = document.querySelector('.dd.open');
+    dd.classList.remove('open'); renderDropdowns(); dd.querySelector('.btn').focus();
+  }
+});
+document.getElementById('clear-filters').addEventListener('click', () => {
+  Object.keys(filters).forEach(k => (filters[k] = null)); update();
+});
+
+// ---------- Chart ----------
+function chartData() {
+  const f = chartUsesFilters() ? filters : {};
+  const picked = streams.filter(s =>
+    (!f.school || s.school === f.school) && (!f.team || s.team === f.team) &&
+    (!f.dept || s.dept === f.dept) && (!f.type || s.type === f.type));
+  return Array.from({ length: DAYS }, (_, i) => {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    return {
+      date: d,
+      tickets: picked.reduce((n, s) => n + s.daily[i], 0),
+      revenue: picked.reduce((n, s) => n + s.daily[i] * s.price, 0),
+    };
+  });
+}
+
+const fmtDate = d => String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
+const money = v => '$' + Math.round(v).toLocaleString('en-US');
+const NS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs, parent) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); if (parent) parent.appendChild(n); return n; };
+function niceStep(max, ticks) {
+  const raw = Math.max(1, max) / ticks, pow = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / pow;
+  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * pow;
+}
+
+function draw() {
+  const data = chartData();
+  const host = document.getElementById('chart');
+  host.innerHTML = '';
+  const W = Math.max(640, host.clientWidth), Ht = 240;
+  const m = { top: 22, right: 78, bottom: 30, left: 62 };
+  const iw = W - m.left - m.right, ih = Ht - m.top - m.bottom;
+  const svg = el('svg', { viewBox: `0 0 ${W} ${Ht}`, 'aria-hidden': 'true' }, host);
+  const g = el('g', { transform: `translate(${m.left},${m.top})` }, svg);
+
+  const tMax = Math.max(...data.map(d => d.tickets)), rMax = Math.max(...data.map(d => d.revenue));
+  const yStep = niceStep(tMax, 5), yMax = Math.max(yStep, Math.ceil(tMax / yStep) * yStep);
+  const y2Step = niceStep(rMax * 1.08, 5), y2Max = Math.max(y2Step, Math.ceil(rMax * 1.08 / y2Step) * y2Step);
+  const step = iw / data.length;
+  const x = i => step * i + step / 2;
+  const y = v => ih - (v / yMax) * ih;
+  const y2 = v => ih - (v / y2Max) * ih;
+
+  const ga = el('g', { class: 'ax' }, g);
+  for (let v = 0; v <= yMax; v += yStep) {
+    el('line', { x1: 0, x2: iw, y1: y(v), y2: y(v), stroke: '#eee' }, ga);
+    el('text', { x: -8, y: y(v) + 4, 'text-anchor': 'end' }, ga).textContent = v;
+  }
+  for (let v = 0; v <= y2Max; v += y2Step) el('text', { x: iw + 8, y: y2(v) + 4 }, ga).textContent = money(v);
+  el('line', { x1: 0, x2: 0, y1: 0, y2: ih, stroke: '#aaa' }, ga);
+  el('line', { x1: iw, x2: iw, y1: 0, y2: ih, stroke: '#aaa' }, ga);
+  el('line', { x1: 0, x2: iw, y1: ih, y2: ih, stroke: '#aaa' }, ga);
+  el('text', { class: 'ax-label', transform: `translate(${-48},${ih / 2}) rotate(-90)`, 'text-anchor': 'middle' }, g).textContent = 'Tickets sold';
+  el('text', { class: 'ax-label', transform: `translate(${iw + 68},${ih / 2}) rotate(90)`, 'text-anchor': 'middle' }, g).textContent = 'Total revenue (USD)';
+
+  const every = Math.ceil(data.length / 15), last = data.length - 1;
+  data.forEach((d, i) => {
+    if ((i % every === 0 && last - i >= every) || i === last) {
+      el('line', { x1: x(i), x2: x(i), y1: ih, y2: ih + 5, stroke: '#aaa' }, ga);
+      el('text', { x: x(i), y: ih + 19, 'text-anchor': 'middle' }, ga).textContent = fmtDate(d.date);
+    }
+  });
+
+  if (tMax === 0) {
+    el('text', { class: 'empty-msg', x: iw / 2, y: ih / 2, 'text-anchor': 'middle' }, g).textContent = 'No ticket sales in the last 30 days for these filters.';
+  } else {
+    if (show.bar) {
+      const bw = step * 0.3;
+      data.forEach((d, i) => {
+        if (!d.tickets) return;
+        el('rect', { x: x(i) - bw / 2, y: y(d.tickets), width: bw, height: ih - y(d.tickets), fill: 'url(#bar-stripes)' }, g);
+        el('text', { class: 'lbl-bar', x: x(i), y: y(d.tickets) - 5, 'text-anchor': 'middle' }, g).textContent = d.tickets;
+      });
+    }
+    if (show.line) {
+      const pts = data.map((d, i) => [x(i), y2(d.revenue)]);
+      let p = `M${pts[0][0]},${pts[0][1]}`;
+      for (let i = 0; i < pts.length - 1; i++) {
+        const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+        const c1 = [p1[0] + (p2[0] - p0[0]) / 6, Math.min(ih, p1[1] + (p2[1] - p0[1]) / 6)];
+        const c2 = [p2[0] - (p3[0] - p1[0]) / 6, Math.min(ih, p2[1] - (p3[1] - p1[1]) / 6)];
+        p += ` C${c1[0]},${c1[1]} ${c2[0]},${c2[1]} ${p2[0]},${p2[1]}`;
+      }
+      el('path', { d: p, fill: 'none', stroke: '#7baa58', 'stroke-width': 1.5 }, g);
+      pts.forEach(([px, py]) => el('circle', { cx: px, cy: py, r: 2.5, fill: '#7baa58' }, g));
+      // the real chart labels only the first revenue point
+      el('text', { class: 'lbl-line', x: pts[0][0] - 6, y: pts[0][1] - 22 }, g).textContent = money(data[0].revenue);
+    }
+  }
+
+  const tip = document.createElement('table');
+  tip.className = 'tip'; tip.hidden = true; host.appendChild(tip);
+  data.forEach((d, i) => {
+    const r = el('rect', { class: 'hit', x: step * i, y: 0, width: step, height: ih }, g);
+    r.addEventListener('mouseenter', () => {
+      tip.innerHTML = `<tr><th colspan="2">${fmtDate(d.date)}</th></tr>` +
+        (show.line ? `<tr><td><span class="sw" style="background:#7baa58"></span>Total Revenue</td><td>${money(d.revenue)}</td></tr>` : '') +
+        (show.bar ? `<tr><td><span class="sw" style="background:#2c5ab8"></span>Ticket Sales</td><td>${d.tickets}</td></tr>` : '');
+      tip.hidden = false;
+      const left = (m.left + x(i)) / W * host.clientWidth;
+      tip.style.left = (i > data.length * 0.7 ? left - tip.offsetWidth - 14 : left + 14) + 'px';
+      tip.style.top = '30px';
+    });
+    r.addEventListener('mouseleave', () => { tip.hidden = true; });
+  });
+
+  // Summary line, same wording as the real page
+  const totalTickets = data.reduce((s, d) => s + d.tickets, 0);
+  const totalRevenue = data.reduce((s, d) => s + d.revenue, 0);
+  const peak = data.reduce((a, b) => (b.tickets > a.tickets ? b : a));
+  const tipMsg = 'For visualization purposes only. Not intended for auditing. Refer to official detailed reports for actual ticket sales.';
+  document.getElementById('chart-summary').innerHTML =
+    `Last 30 days: ${totalTickets.toLocaleString('en-US')} tickets sold; total revenue ${money(totalRevenue)}` +
+    (totalTickets ? `. Peak on ${fmtDate(peak.date)} with ${peak.tickets.toLocaleString('en-US')} tickets.` : '.') +
+    ` <span class="summary-tooltip" tabindex="0" role="img" aria-label="${tipMsg}" data-tooltip="${tipMsg}"><svg class="i"><use href="#i-info"/></svg></span>`;
+}
+
+function toggleSeries(key, btn) {
+  show[key] = !show[key];
+  btn.setAttribute('aria-pressed', String(show[key]));
+  draw();
+}
+document.getElementById('lg-bar').addEventListener('click', e => toggleSeries('bar', e.currentTarget));
+document.getElementById('lg-line').addEventListener('click', e => toggleSeries('line', e.currentTarget));
+window.addEventListener('resize', () => { if (chartOpen) draw(); });
+
+// ---------- Events ----------
+const flagIcon = {
+  pin: '<svg class="i" style="color:#28a745" role="img" aria-label="Pinned event"><title>Pinned event</title><use href="#i-pin"/></svg>',
+  lock: '<svg class="i" style="color:#6c757d" role="img" aria-label="Private event"><title>Private event</title><use href="#i-lock"/></svg>',
+  unpub: '<svg class="i" style="color:#dc3545" role="img" aria-label="Unpublished Event"><title>Event is not published</title><use href="#i-eyeslash"/></svg>',
+};
+const statusColor = p => (p < 33.3 ? 'var(--red)' : p < 66.6 ? 'var(--yellow)' : 'var(--green)');
+
+function renderEvents() {
+  const q = document.getElementById('event-search').value.trim().toLowerCase();
+  const list = events.filter(e =>
+    (!filters.school || e.school === filters.school) && (!filters.team || e.team === filters.team) &&
+    (!filters.dept || e.dept === filters.dept) && (!filters.type || e.type === filters.type) &&
+    (q.length < 4 || e.name.toLowerCase().includes(q)));
+  const cols = schools.map(s => ({ name: s, events: list.filter(e => e.school === s) })).filter(c => c.events.length);
+  document.getElementById('events').innerHTML = cols.length ? cols.map(s => `
+    <div class="panel panel-inverse">
+      <div class="panel-heading"><h3 class="panel-title col-head"><span class="name">${esc(s.name)}</span><span class="badge">${s.events.length}</span></h3></div>
+      <div class="panel-status">
+        ${s.events.map(e => {
+          const flags = [...(e.unpub ? ['unpub'] : []), ...(e.flags || [])].map(f => flagIcon[f]).join('');
+          const shown = e.pct === null ? null : Math.min(100, Math.max(2, e.pct));
+          const tm = typeMeta[e.type];
+          return `
+          <div class="card${e.unpub ? ' unpub' : ''}">
+            <div class="card-top">
+              <div class="type"><svg class="i" style="color:${tm.color}"><use href="#i-${tm.icon}"/></svg>${tm.status}</div>
+              <div class="flags">${flags}<button type="button" class="kebab" aria-label="Event options"><svg class="i"><use href="#i-dots"/></svg></button></div>
+            </div>
+            <a class="ev-name" href="#">${esc(e.name)}</a>
+            ${e.team ? `<div class="team">${esc(e.team)}</div>` : ''}
+            <div class="when"><svg class="i"><use href="#i-clock"/></svg>${e.when}</div>
+            ${shown === null ? '' : `<div class="progress" role="progressbar" aria-valuenow="${e.pct}" aria-valuemin="0" aria-valuemax="100" aria-label="${e.pct}% sold"><div style="width:${shown}%;background:${statusColor(shown)}"></div></div>`}
+            ${e.children ? `<div class="child"><svg class="i"><use href="#i-cal"/></svg>View ${e.children} child events<svg class="i"><use href="#i-chev"/></svg></div>` : ''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`).join('') : '<p class="no-events">No upcoming events currently in the box office.</p>';
+}
+document.getElementById('event-search').addEventListener('input', renderEvents);
+
+// ---------- Collapse (idea 1) ----------
+const collapseBtn = document.getElementById('collapse-btn');
+function setChartOpen(open) {
+  chartOpen = open;
+  document.getElementById('summary-body').hidden = !open;
+  collapseBtn.setAttribute('aria-expanded', String(open));
+  collapseBtn.querySelector('span').textContent = open ? 'Hide chart' : 'Show chart';
+  if (open) draw();
+}
+collapseBtn.addEventListener('click', () => setChartOpen(!chartOpen));
+
+// ---------- Versions ----------
+const notes = {
+  current: 'Today: the filters only change the event cards. The chart always shows every school.',
+  collapse: 'Idea 1: the chart starts collapsed. Track how often admins click "Show chart" to see if anyone misses it.',
+  filters: 'Idea 2: the filter bar stays where it is, below the chart, and now drives both the chart and the event cards. Try picking a school, then a team.',
+  both: 'Both: shared filters below the chart, chart collapsed by default. Filters still apply to the event cards while the chart is hidden.',
+};
+function setVariant(v) {
+  variant = v;
+  document.querySelectorAll('.variants button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+  document.getElementById('variant-note').textContent = notes[v];
+  const main = document.querySelector('main'), fr = document.getElementById('filters-row'), sr = document.getElementById('summary-row');
+  main.insertBefore(fr, document.getElementById('events'));
+  const collapsible = v === 'collapse' || v === 'both';
+  collapseBtn.hidden = !collapsible;
+  setChartOpen(!collapsible);
+  update();
+}
+document.querySelectorAll('.variants button').forEach(b => b.addEventListener('click', () => setVariant(b.dataset.v)));
+
+function update() {
+  renderDropdowns();
+  renderEvents();
+  const fb = document.getElementById('filtered-by');
+  const act = activeFilters();
+  fb.hidden = !(chartUsesFilters() && act.length);
+  fb.innerHTML = 'Showing sales for: ' + act.map(([, v]) => `<b>${esc(v)}</b>`).join(' · ');
+  if (chartOpen) draw();
+}
+
+const startVariant = { current: 1, collapse: 1, filters: 1, both: 1 }[location.hash.slice(1)] ? location.hash.slice(1) : 'current';
+setVariant(startVariant);
+</script>
