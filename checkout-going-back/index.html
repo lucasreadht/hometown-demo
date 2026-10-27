@@ -59,6 +59,7 @@ button { font: inherit; }
 /* school site chrome */
 .school-header { background: #203731; color: #fff; padding: 14px 18px; display: flex; align-items: center; gap: 12px; }
 .school-crest { display: grid; place-items: center; }
+.school-mascot { margin-left: auto; width: 58px; height: auto; }
 .school-name { font-weight: 700; font-size: 17px; }
 .school-sub { font-size: 12px; opacity: .85; }
 .school-body { padding: 14px 18px 18px; background: #f7f5ec; }
@@ -96,7 +97,7 @@ button { font: inherit; }
 /* event page */
 .back-all { margin-bottom: 16px; }
 .event-head { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 14px; }
-.flyer { width: 120px; height: 120px; border-radius: 6px; background: #203731; color: #FFB612; gap: 4px; display: grid; place-content: center; justify-items: center; font-weight: 800; font-size: 13px; text-align: center; padding: 8px; }
+.flyer { width: 120px; height: 120px; border-radius: 6px; background: #f7f5ec; border: 2px solid #203731; color: #203731; color: #FFB612; gap: 4px; display: grid; place-content: center; justify-items: center; font-weight: 800; font-size: 13px; text-align: center; padding: 8px; }
 .public-event-title { font-size: 25pt; font-weight: 700; letter-spacing: -.02em; line-height: 1.05; margin: 0 0 .3em; }
 .detail { display: flex; gap: 10px; margin-bottom: 6px; color: #222; }
 .detail i { width: 18px; font-style: normal; color: #777; }
@@ -149,6 +150,7 @@ table.order .r { text-align: right; }
   .bo-inner { padding: 18px 14px 22px; }
   .public-event-title { font-size: 20pt; }
   .flyer { width: 80px; height: 80px; font-size: 11px; }
+  .flyer img { width: 58px; height: auto; }
   .ht-nav { gap: 12px; font-size: 13px; }
 }
 </style>
@@ -411,7 +413,7 @@ table.order .r { text-align: right; }
     if (hasCart && s.mode === 'part1') note = '<div class="cart-note">Showing the ' + count(s.cart) + ' tickets already in your cart. Change a quantity and select Update Cart.</div>';
     var btnLabel = isUpdate ? 'Update Cart' : 'Checkout';
     return '<div class="bo-inner">' + flash() + backAll +
-      '<div class="event-head"><div class="flyer"><svg viewBox="0 0 120 130" width="56" height="61" aria-hidden="true"><path fill="#203731" fill-rule="evenodd" stroke="#FFB612" stroke-width="7" stroke-linejoin="round" paint-order="stroke" d="M12 12 H66 C90 12 101 25 101 41 C101 52 95 59 86 62 C99 66 106 76 106 89 C106 108 93 118 68 118 H12 V104 H24 V26 H12 Z M42 28 H62 C72 28 77 33 77 41 C77 49 72 54 62 54 H42 Z M42 70 H64 C75 70 81 76 81 86 C81 96 75 102 64 102 H42 Z"/></svg><span>HOMECOMING</span></div><div>' +
+      '<div class="event-head"><div class="flyer"><img src="bhs-hamster-logo.png" alt="Birmingham Hamsters mascot" width="96" height="95"><span>HOMECOMING</span></div><div>' +
       '<div style="color:#666;font-weight:bold;margin-bottom:2px">' + EVENT.team + '</div>' +
       '<h2 class="public-event-title">' + EVENT.name + '</h2>' +
       '<div class="detail"><i>📅</i><b>' + EVENT.when + '</b></div>' +
@@ -460,7 +462,7 @@ table.order .r { text-align: right; }
     var bo = '<div class="bo">' + timerBar() + screenHtml() + '</div>';
     var chrome = s.host === 'unified'
       ? '<div class="ht-header"><span class="ht-logo">HOMETOWN</span><nav class="ht-nav"><span>Search</span><span>My Tickets</span><span>My Passes</span><span>My Transfers</span></nav></div>' + bo
-      : '<div class="school-header"><div class="school-crest"><svg viewBox="0 0 120 130" width="34" height="37" aria-hidden="true"><path fill="#203731" fill-rule="evenodd" stroke="#FFB612" stroke-width="7" stroke-linejoin="round" paint-order="stroke" d="M12 12 H66 C90 12 101 25 101 41 C101 52 95 59 86 62 C99 66 106 76 106 89 C106 108 93 118 68 118 H12 V104 H24 V26 H12 Z M42 28 H62 C72 28 77 33 77 41 C77 49 72 54 62 54 H42 Z M42 70 H64 C75 70 81 76 81 86 C81 96 75 102 64 102 H42 Z"/></svg></div><div><div class="school-name">Birmingham High School Athletics</div><div class="school-sub">Home of the Hamsters</div></div></div>' +
+      : '<div class="school-header"><div class="school-crest"><img src="bhs-monogram.svg" alt="BHS monogram" width="44" height="47"></div><div><div class="school-name">Birmingham High School Athletics</div><div class="school-sub">Home of the Hamsters</div></div><img class="school-mascot" src="bhs-hamster-logo.png" alt="Birmingham Hamsters mascot" width="58" height="57"></div>' +
         '<div class="school-body"><p>Buy tickets for upcoming Hamsters events below.</p>' + bo + '</div>';
     document.getElementById('frame').innerHTML =
       '<div class="browser"><div class="dots"><i></i><i></i><i></i></div>' +
