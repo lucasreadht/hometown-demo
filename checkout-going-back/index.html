@@ -184,15 +184,11 @@ table.order .r { text-align: right; }
       <dl class="kv" id="kv"></dl>
     </div>
     <div class="card">
-      <h3>Held from earlier carts</h3>
-      <div id="held"></div>
-    </div>
-    <div class="card">
       <h3>Try this</h3>
       <ol class="steps">
-        <li>Add 2 General Admission and 1 Student, then Checkout.</li>
+        <li>Add 2 General Admission, then Checkout.</li>
         <li>Use the browser back arrow (top left of the frame).</li>
-        <li>Change General Admission to 1 and check out again.</li>
+        <li>Select Checkout again without changing anything, or change General Admission to 1 first.</li>
         <li>Try Release Cart And Start Over.</li>
         <li>Flip Today / Part 1 and compare.</li>
       </ol>
@@ -203,7 +199,6 @@ table.order .r { text-align: right; }
 <script>
 (function () {
   var TIMER_SECS = 7 * 60;
-  var CLEANUP_SECS = 2 * 60;
   var TYPES = [
     { id: 'ga', name: 'General Admission', price: 8, fee: 1.5 },
     { id: 'stu', name: 'Student', price: 5, fee: 1.5 }
@@ -230,9 +225,9 @@ table.order .r { text-align: right; }
       startPage: host === 'embed' ? 'list' : null,
       cart: { ga: 0, stu: 0 },
       pick: { ga: 0, stu: 0 },
+      lastPick: { ga: 0, stu: 0 },
       cartId: null,
       expireAt: null,
-      orphans: [],
       released: 0,
       history: [],
       flash: null,
@@ -263,11 +258,12 @@ table.order .r { text-align: right; }
     s.flash = null;
     var prev = s.history.pop();
     s.screen = prev;
-    if (prev === 'event') s.pick = s.mode === 'part1' ? { ga: s.cart.ga, stu: s.cart.stu } : { ga: 0, stu: 0 };
+    // Today: the browser restores what the fan last picked. Part 1: the page shows what's in the cart.
+    if (prev === 'event') s.pick = s.mode === 'part1' ? { ga: s.cart.ga, stu: s.cart.stu } : { ga: s.lastPick.ga, stu: s.lastPick.stu };
     s.what = s.screen === 'event'
       ? (s.mode === 'part1'
-        ? { cls: 'part1', title: 'Back on the event page, cart kept.', body: 'Quantities show what is already in the cart, and the button reads Update Cart.' }
-        : { cls: 'today', title: 'Back on the event page, cart forgotten.', body: 'Every quantity shows 0, even though tickets are still held. Only the timer and View Cart hint that a cart exists.' })
+        ? { cls: 'part1', title: 'Back on the event page, cart kept.', body: 'Quantities show what is in the cart, and the button reads Update Cart. Checking out again replaces the quantities instead of adding to them.' }
+        : { cls: 'today', title: 'Back on the event page.', body: 'The browser restores the tickets the fan already picked, so it looks like their cart. But Checkout adds these on top of what is already held.' })
       : s.what;
     render();
   }
@@ -276,23 +272,23 @@ table.order .r { text-align: right; }
     var hadCart = count(s.cart) > 0;
     var picked = { ga: s.pick.ga, stu: s.pick.stu };
 
+    s.lastPick = { ga: picked.ga, stu: picked.stu };
     if (s.mode === 'today') {
       if (count(picked) === 0) return;
       if (hadCart) {
-        // Single-event cart is wiped and rebuilt: old holds are orphaned until the cleanup job removes them.
-        s.orphans.push({ ga: s.cart.ga, stu: s.cart.stu, until: s.expireAt + CLEANUP_SECS });
-        var lost = TYPES.filter(function (t) { return s.cart[t.id] > 0 && picked[t.id] === 0; }).map(function (t) { return t.name; });
+        // Checkout adds the selection on top of the tickets already held, and restarts the timer.
+        var before = count(s.cart);
+        s.cart = { ga: s.cart.ga + picked.ga, stu: s.cart.stu + picked.stu };
         s.what = {
           cls: 'today',
-          title: 'Cart wiped and rebuilt.',
-          body: 'New cart ID, timer restarted at 7:00. The ' + count(s.cart) + ' tickets from the old cart are still held for other fans until cleanup.' +
-            (lost.length ? ' ' + lost.join(' and ') + ' dropped because it showed 0.' : '')
+          title: 'Added on top: ' + before + ' + ' + count(picked) + ' = ' + count(s.cart) + ' tickets.',
+          body: 'The fan meant to keep or change their order, but the box office added the selection to what was already held. The timer restarted at 7:00. To fix it, they have to Release Cart and start over.'
         };
       } else {
+        s.cart = picked;
+        s.cartId = newId();
         s.what = { cls: '', title: 'Tickets reserved.', body: 'Cart created and the 7:00 timer started.' };
       }
-      s.cart = picked;
-      s.cartId = newId();
       s.expireAt = now() + TIMER_SECS;
     } else {
       if (!hadCart) {
@@ -488,14 +484,6 @@ table.order .r { text-align: right; }
       '<dt>Timer</dt><dd id="kvt">' + (left !== null ? mmss(left) : 'Not running') + '</dd>' +
       '<dt>Start page</dt><dd>' + start + '</dd>' +
       '<dt>Released to others</dt><dd>' + s.released + '</dd>';
-
-    var t = now();
-    var active = s.orphans.filter(function (o) { return o.until > t; });
-    document.getElementById('held').innerHTML = active.length
-      ? '<ul class="held" style="margin:0;padding-left:18px">' + active.map(function (o) {
-          return '<li><b>' + (o.ga + o.stu) + ' tickets</b> no one can buy for ' + mmss(o.until - t) + ' more</li>';
-        }).join('') + '</ul>'
-      : '<div class="empty">None. ' + (s.mode === 'today' ? 'Re-add tickets after going back to see this fill up.' : 'Part 1 releases dropped tickets right away.') + '</div>';
   }
 
   // ---------- events ----------
