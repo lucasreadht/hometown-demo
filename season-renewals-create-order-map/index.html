@@ -1,0 +1,2101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Season Renewals Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Exo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+body{margin:0;background:#F7F7F7}
+a{color:#005CB9}a:hover{color:#00488E}
+[hidden]{display:none !important}
+.demo-bar{display:none !important}
+.flow-card{all:unset;box-sizing:border-box;cursor:pointer;background:#FFFFFF;border-radius:12px;box-shadow:0 0 0 1px rgba(45,42,38,0.1);padding:24px;display:flex;flex-direction:column;gap:12px;font-family:Exo,sans-serif;font-size:15px;line-height:1.5;color:#2D2A26}
+.flow-card:hover{box-shadow:0 0 0 2px #005CB9}
+.flow-card:focus-visible{outline:3px solid #005CB9;outline-offset:2px}
+.flow-card strong{font-size:18px;font-weight:600}
+.flow-tag{align-self:flex-start;font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px}
+.flow-go{margin-top:auto;color:#005CB9;font-weight:600}
+#demo-chip{position:fixed;left:calc(12px + env(safe-area-inset-left, 0px));bottom:calc(12px + env(safe-area-inset-bottom, 0px));z-index:2500;display:flex;gap:10px;align-items:center;padding:6px 8px 6px 12px;border-radius:999px;background:#2D2A26;color:#FFFFFF;font:13px Exo,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+#demo-chip button{font:600 12px Exo,sans-serif;color:#2D2A26;background:#FFFFFF;border:0;border-radius:999px;padding:4px 10px;cursor:pointer}
+body:not(.setup-hometown) .hometown-only{display:none !important}
+#track.off main > :not(:first-child):not(.state-note){display:none !important}
+#review.locked [data-manage], #review.locked [data-contact], #review.locked .rv-edit{display:none !important}
+.state-note{background:#F1FAFE;border:1px solid #005CB9;border-radius:8px;padding:16px 20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-family:Exo,sans-serif;font-size:15px;color:#2D2A26}
+.state-note .tag{font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px;background:#005CB9;color:#FFFFFF}
+.state-note.warn{background:#FFF8E0;border-color:#E0AF00}
+.state-note.warn .tag{background:#6B5300}
+.adv-panel{box-sizing:border-box;width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;display:flex;gap:12px;align-items:center}
+@media (min-width:992px){.adv-panel{width:49%}}
+.btn-success-sm{flex:0 0 auto;min-width:84px;text-align:center;background:#008A00;color:#fff !important;text-decoration:none !important;font-size:12px;padding:5px 10px;border-radius:3px}
+.btn-success-sm:hover{background:#006b00}
+#renew-panel-btn{background:#005CB9}
+#renew-panel-btn:hover{background:#00488E}
+.new-tag{font-size:11px;font-weight:600;vertical-align:middle;padding:2px 8px;border-radius:999px;background:#F1FAFE;color:#005CB9;border:1px solid #005CB9}
+.demo-opt{font-family:ui-monospace,Menlo,monospace;color:#6d6e71;margin-left:8px}
+.demo-bar .seg{display:inline-flex;gap:0}
+.demo-bar .seg button{border-radius:0}
+.demo-bar .seg button:first-child{border-radius:4px 0 0 4px}
+.demo-bar .seg button:last-child{border-radius:0 4px 4px 0}
+.demo-bar .seg button.on{background:#2d2a26;border-color:#2d2a26;color:#fff}
+.demo-bar{position:sticky;top:0;z-index:2000;display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px 16px;background:#fff;border-bottom:1px dashed #ced4da;font:12px Verdana,Geneva,sans-serif}
+.demo-bar .lbl{font-family:ui-monospace,Menlo,monospace;color:#6d6e71;margin-right:6px}
+.demo-bar button{display:flex;gap:6px;align-items:center;padding:5px 10px;border-radius:4px;font:12px Verdana,Geneva,sans-serif;cursor:pointer;border:1px solid #ced4da;background:#fff;color:#2d2a26}
+.demo-bar button b{font-family:ui-monospace,Menlo,monospace}
+.demo-bar button[aria-current="step"]{background:#2d2a26;border-color:#2d2a26;color:#fff}
+.src-opt{display:flex;gap:14px;align-items:flex-start;padding:16px;border-radius:8px;cursor:pointer;border:2px solid #E5E9EC;background:#FFFFFF}
+.src-opt.on{border-color:#005CB9;background:#F1FAFE}
+#map-screen{background:#fff;font-family:Verdana,Geneva,sans-serif;color:#212529;min-height:100vh}
+#map-screen a{color:#005cb9;text-decoration:none}#map-screen a:hover{color:#003764;text-decoration:underline}
+#map-screen input,#map-screen select,#map-screen button{font-family:inherit}
+
+body{margin:0;background:#fff;font-family:Verdana,Geneva,sans-serif;color:#212529;}
+a{color:#005cb9;text-decoration:none;}a:hover{color:#003764;text-decoration:underline;}
+input,select,button{font-family:inherit;}
+.leaflet-container{background:#f4f6f8;font-family:Verdana,Geneva,sans-serif;}
+.seat-x{color:#fff;font-weight:700;text-align:center;pointer-events:none;line-height:1;}
+.seat-label{color:#6d6e71;font-size:9px;text-align:center;pointer-events:none;white-space:nowrap;}
+.seat-col{color:#2d2a26;font-size:11px;font-weight:700;text-align:center;pointer-events:none;}
+
+/* Manage seats panel (renewal list + tracking) */
+.mg-back{position:fixed;inset:0;z-index:3000;background:rgba(45,42,38,.45);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px}
+.mg{width:100%;max-width:880px;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.25);font-family:Exo,sans-serif;color:#2D2A26;display:flex;flex-direction:column}
+.mg-head{display:flex;gap:12px;align-items:flex-start;padding:20px 24px;border-bottom:1px solid #E5E9EC}
+.mg-head h2{margin:0;font-size:20px;font-weight:600}
+.mg-head p{margin:4px 0 0;font-size:14px;color:#6D6E71}
+.mg-x{margin-left:auto;background:none;border:0;font-size:24px;line-height:1;color:#6D6E71;cursor:pointer}
+.mg-body{padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+.mg-seat{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid #E5E9EC;border-radius:8px;font-size:15px}
+.mg-seat input{width:18px;height:18px;accent-color:#005CB9}
+.mg-tag{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px}
+.mg-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:flex-end;padding:16px 24px;border-top:1px solid #E5E9EC}
+.btn{font-family:Exo,sans-serif;font-size:14px;font-weight:500;padding:8px 14px;border:0;border-radius:6px;cursor:pointer;box-shadow:0 0 0 1px #d1d5db;color:#2D2A26;background:#fff}
+.btn-primary{box-shadow:none;color:#fff;background:#005CB9}
+.btn-danger{box-shadow:none;border:1px solid #E20010;color:#B5000D;background:#fff}
+.btn-danger-solid{box-shadow:none;color:#fff;background:#B5000D}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.mg-confirm{border:2px solid #E20010;border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px;font-size:15px;line-height:1.5}
+.mg-note{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.mg-note input{margin-top:2px;width:18px;height:18px;accent-color:#005CB9}
+#rmap{height:420px;border:1px solid #c8c8c8;border-radius:6px}
+.rlegend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#495057}
+.rlegend span{display:flex;gap:6px;align-items:center}
+.rlegend i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:4000;background:#2D2A26;color:#fff;font:14px Exo,sans-serif;padding:12px 18px;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.3);max-width:calc(100% - 32px)}
+.add-f{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600}
+.add-f input,.add-f select{font-family:Exo,sans-serif;font-size:15px;font-weight:400;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff}
+.link-box{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.link-box input{flex:1 1 260px;min-width:0;font-family:ui-monospace,Menlo,monospace;font-size:12px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;background:#F7F7F7;color:#2D2A26}
+.cur-dot{width:14px !important;height:14px !important;border-radius:50%;background:#ff69b4 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='5' r='3' fill='white'/%3E%3Cpath d='M2.5 15c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5z' fill='white'/%3E%3C/svg%3E") center/9px no-repeat;display:inline-block;flex:0 0 auto}
+.seat-cur{pointer-events:none;display:flex;align-items:center;justify-content:center}
+.mng-link{font-family:Exo,sans-serif;font-size:14px;background:none;border:0;color:#005CB9;font-weight:600;cursor:pointer;white-space:nowrap;padding:0}
+</style>
+</head>
+<body>
+<nav class="demo-bar" aria-label="Demo steps">
+  <span class="lbl">ENTRY</span>
+  <button data-go="event"><b>0</b>Season event page</button>
+  <span class="demo-opt">OPENS</span>
+  <span class="seg" id="opt-entry"><button data-v="home" class="on">Renewals home</button><button data-v="straight">Straight to step</button></span>
+  <span class="demo-opt">STATE</span>
+  <span class="seg" id="opt-state"><button data-v="new">Not started</button><button data-v="pending">Waiting approval</button><button data-v="scheduled">Scheduled</button><button data-v="open" class="on">Open (Oct 20)</button></span>
+  <span class="demo-opt">SET UP BY</span>
+  <span class="seg" id="opt-setup"><button data-v="client" class="on">Client</button><button data-v="hometown">Hometown</button></span>
+  <span class="lbl" style="margin-left:8px">RENEWALS</span>
+  <button data-go="hub"><b>H</b>Renewals home</button>
+  <button data-go="start"><b>1C</b>Start renewals</button>
+  <button data-go="review"><b>1C</b>Review the list</button>
+  <button data-go="window"><b>1B</b>Renewal window</button>
+  <button data-go="track"><b>1B</b>Track renewals</button>
+  <button data-go="approval"><b>1F</b>Client approval</button>
+  <span class="lbl" style="margin-left:8px">CREATE ORDER</span>
+  <button data-go="map"><b>A</b>Seat map with owner info</button>
+</nav>
+
+<section class="screen" id="landing" hidden>
+<div style="min-height:100vh;background:#F7F7F7;font-family:Exo,sans-serif;color:#2D2A26;display:flex;align-items:center;justify-content:center;padding-block:48px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));box-sizing:border-box">
+  <div style="max-width:880px;width:100%;display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6D6E71">Season Renewals · 2027-28 Men's Basketball Season Tickets</span>
+      <h1 style="margin:0;font-size:28px;line-height:36px;font-weight:600;text-wrap:balance">Who is setting up renewals?</h1>
+      <p style="margin:0;font-size:16px;color:#6D6E71;max-width:62ch">Both start from the season event page with nothing set up yet. Lincoln High School Athletics is the client.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
+      <button type="button" class="flow-card" data-flow="client">
+        <span class="flow-tag" style="background:#E6F4EE;color:#006644">Client view</span>
+        <strong>The athletic director sets it up</strong>
+        <span>Build the list from last season, fix what's flagged, set the dates, approve and schedule. Then track renewals, release holds and move seats.</span>
+        <span class="flow-go">Start as the client →</span>
+      </button>
+      <button type="button" class="flow-card" data-flow="hometown">
+        <span class="flow-tag" style="background:#F1FAFE;color:#005CB9">Hometown view</span>
+        <strong>Hometown builds it for the client</strong>
+        <span>Hometown staff build the list and dates, then send it to the client. The client approves or requests changes, and nothing goes out until they approve.</span>
+        <span class="flow-go">Start as Hometown →</span>
+      </button>
+    </div>
+    <a href="#map" style="align-self:flex-start;font-size:14px">Also in this demo: Create Order seat map with owner info</a>
+  </div>
+</div>
+</section>
+
+<section class="screen" id="event" hidden>
+<div style="min-height:100vh;background:#F7F7F7;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#333;font-size:14px">
+  <header style="background: #000000; color: #FFFFFF; font-family: verdana, sans-serif">
+    <nav aria-label="Box Office" style="max-width: 1280px; margin: 0 auto; padding: 0 16px; display: flex; flex-wrap: wrap; align-items: center; min-height: 48px; font-size: 14px">
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Dashboard</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">District</a>
+      <a href="#" style="color: #9d9d9d; text-decoration: none; padding: 14px 20px; white-space: nowrap">Events</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Reports</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Websites</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Fundraising</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">My Hometown</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Settings</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap; margin-left: auto">Log out</a>
+    </nav>
+  </header>
+  <div style="max-width:1280px;margin:0 auto;padding:24px 16px 80px;box-sizing:border-box">
+    <div style="font-size:13px;color:#6D6E71;margin-bottom:6px">Events</div>
+    <h1 style="margin:0 0 4px;font-size:24px;font-weight:600">2027-28 Men's Basketball Season Tickets</h1>
+    <p style="margin:0 0 20px;color:#6D6E71">Season Ticket · Reserved seating · Lincoln Fieldhouse</p>
+    <div style="border:2px solid #b6b7bb;border-radius:4px;background:#fff">
+      <div style="background:#3a3a3c;color:#fff;padding:10px 15px"><h2 style="margin:0;font-size:16px;font-weight:500">Advanced Event Options</h2></div>
+      <div style="padding:15px;display:flex;flex-wrap:wrap;gap:12px 2%">
+        <div class="adv-panel"><div style="flex:1;min-width:0"><h3 style="margin:0 0 2px;font-size:15pt;font-weight:700">Event Codes</h3><p style="margin:0;font-size:10px;color:grey">Presale codes, passcodes or promocodes</p></div><a href="#" class="btn-success-sm">Manage</a></div><div class="adv-panel"><div style="flex:1;min-width:0"><h3 style="margin:0 0 2px;font-size:15pt;font-weight:700">Capacity Manager</h3><p style="margin:0;font-size:10px;color:grey">Manage venue capacity and distancing tools</p></div><a href="#" class="btn-success-sm">Manage</a></div><div class="adv-panel"><div style="flex:1;min-width:0"><h3 style="margin:0 0 2px;font-size:15pt;font-weight:700">Custom Fee Structure</h3><p style="margin:0;font-size:10px;color:grey">Profit center from ticketing or absorb the fees - it's your call</p></div><a href="#" class="btn-success-sm">Edit</a></div><div class="adv-panel"><div style="flex:1;min-width:0"><h3 style="margin:0 0 2px;font-size:15pt;font-weight:700">Custom Event Terms</h3><p style="margin:0;font-size:10px;color:grey">Manage event terms</p></div><a href="#" class="btn-success-sm">Edit</a></div><div class="adv-panel"><div style="flex:1;min-width:0"><h3 style="margin:0 0 2px;font-size:15pt;font-weight:700">Order Confirmation</h3><p style="margin:0;font-size:10px;color:grey">Edit messages and add attachments to order confirmation email</p></div><a href="#" class="btn-success-sm">Edit</a></div><div class="adv-panel"><div style="flex:1;min-width:0"><h3 style="margin:0 0 2px;font-size:15pt;font-weight:700">Print Ready Tickets</h3><p style="margin:0;font-size:10px;color:grey">Download Report (CSV)</p></div><a href="#" class="btn-success-sm">Export</a></div><div class="adv-panel" id="renew-panel" style="outline:2px dashed #005CB9;outline-offset:2px"><div style="flex:1;min-width:0"><h3 style="margin:0 0 2px;font-size:15pt;font-weight:700">Season Renewals <span class="new-tag">New</span></h3><p style="margin:0;font-size:10px;color:grey"><span id="renew-panel-sub"></span></p></div><a href="#" class="btn-success-sm" id="renew-panel-btn"></a></div><p style="flex-basis:100%;margin:4px 0 0;font-size:12px;color:#6D6E71">Season Renewals replaces five panels shown here today: Upload Renewals, Generate Renewal List, Renewal Tool, Resend Renewals and Export Renewal Holds. It only shows on Season Ticket events with a reserved seat map (today's panels also show on Season Pass and single reserved events).</p>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="screen" id="hub" hidden>
+<div style="min-height:100vh;font-family:Exo,sans-serif;color:#2D2A26;background:#F7F7F7">
+  <header style="background: #000000; color: #FFFFFF; font-family: verdana, sans-serif">
+    <nav aria-label="Box Office" style="max-width: 1280px; margin: 0 auto; padding: 0 16px; display: flex; flex-wrap: wrap; align-items: center; min-height: 48px; font-size: 14px">
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Dashboard</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">District</a>
+      <a href="#" style="color: #9d9d9d; text-decoration: none; padding: 14px 20px; white-space: nowrap">Events</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Reports</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Websites</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Fundraising</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">My Hometown</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Settings</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap; margin-left: auto">Log out</a>
+    </nav>
+  </header>
+  <main style="padding:32px 16px 64px;max-width:1280px;box-sizing:border-box;margin:0 auto;display:flex;flex-direction:column;gap:24px">
+    <div style="font-size:14px;color:#6D6E71">Events / 2027-28 Men's Basketball Season Tickets / Renewals</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <h1 style="margin:0;font-size:24px;line-height:32px;font-weight:600">Season Renewals</h1>
+      <p style="margin:0;font-size:16px;color:#6D6E71">Give last season's ticket holders the first chance at their seats.</p>
+    </div>
+    <section style="background:#FFFFFF;border-radius:12px;box-shadow:0 0 0 1px rgba(45,42,38,0.1);padding:16px 24px;display:flex;gap:24px;flex-wrap:wrap;font-size:14px">
+      <span><span style="color:#6D6E71">This season</span><br><strong>2027-28 Men's Basketball Season Tickets</strong></span>
+      <span><span style="color:#6D6E71">Seat map</span><br><strong>Lincoln Fieldhouse · North and South Bleachers</strong></span>
+      <span id="hub-from-wrap"><span style="color:#6D6E71">Renewing from</span><br><strong id="hub-from"></strong></span>
+    </section>
+    <div id="hub-steps" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px"></div>
+  </main>
+</div>
+</section>
+
+<section class="screen" id="start" hidden>
+<div style="min-height: 1000px; font-family: Exo, sans-serif; color: #2D2A26; background: #F7F7F7; display: flex; flex-direction: column">
+  <header style="background: #000000; color: #FFFFFF; font-family: verdana, sans-serif">
+    <nav aria-label="Box Office" style="max-width: 1280px; margin: 0 auto; padding: 0 16px; display: flex; flex-wrap: wrap; align-items: center; min-height: 48px; font-size: 14px">
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Dashboard</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">District</a>
+      <a href="#" style="color: #9d9d9d; text-decoration: none; padding: 14px 20px; white-space: nowrap">Events</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Reports</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Websites</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Fundraising</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">My Hometown</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Settings</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap; margin-left: auto">Log out</a>
+    </nav>
+  </header>
+  <main style="padding: 32px 16px 64px; max-width: 1280px; box-sizing: border-box; width: 100%; margin: 0 auto">
+      <div style="max-width: 880px; display: flex; flex-direction: column; gap: 24px">
+        <div style="font-size: 14px; color: #6D6E71">Events / 2027-28 Men's Basketball Season Tickets / Renewals</div>
+        <div class="hometown-only">
+          <div style="background: #F1FAFE; border: 1px solid #005CB9; border-radius: 8px; padding: 16px 20px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap">
+            <span style="font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #005CB9; color: #FFFFFF">Hometown view</span>
+            <span style="font-size: 15px; flex: 1 1 400px">You're setting this up for Lincoln High School Athletics. They'll review and approve it before anything goes to customers.</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <h1 style="margin: 0; font-size: 24px; line-height: 32px; font-weight: 600">Start Season Ticket Renewals</h1>
+          <p style="margin: 0; font-size: 16px; color: #6D6E71">Give last season's ticket holders the first chance at their seats.</p>
+        </div>
+
+        <section style="background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 24px; display: flex; flex-direction: column; gap: 16px">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600">Who's on the renewal list?</h2>
+          <label class="src-opt" data-src="last">
+            <input type="radio" name="source" value="last" checked style="margin-top: 4px; width: 18px; height: 18px; accent-color: #005CB9">
+            <span style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1">
+              <span style="font-weight: 600; font-size: 16px">Last season's ticket holders</span>
+              <span style="font-size: 14px; color: #6D6E71">We build the list from everyone who bought these season tickets last year, with their seats and contact info.</span>
+              <span style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 6px">
+                <select aria-label="Last season's event" style="font-family: Exo, sans-serif; font-size: 14px; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #FFFFFF; color: #2D2A26">
+                  <option>2026-27 Men's Basketball Season Tickets</option>
+                  <option>Basketball Reserved Season Pass</option>
+                </select>
+                <span style="font-size: 14px; color: #2D2A26"><span data-stat="customers"></span> customers · <span data-stat="seats"></span> seats</span>
+              </span>
+            </span>
+          </label>
+          <label class="src-opt" data-src="file">
+            <input type="radio" name="source" value="file" style="margin-top: 4px; width: 18px; height: 18px; accent-color: #005CB9">
+            <span style="display: flex; flex-direction: column; gap: 6px">
+              <span style="font-weight: 600; font-size: 16px">Import a file</span>
+              <span style="font-size: 14px; color: #6D6E71">For ticket holders from before you sold with Hometown. You'll review it on the same screen.</span>
+            </span>
+          </label>
+        </section>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap">
+          <a href="#" style="font-size: 14px; font-weight: 500; padding: 8px 16px; border: 0; box-shadow: 0 0 0 1px #d1d5db; border-radius: 6px; color: #2D2A26; text-decoration: none; background: #FFFFFF">Cancel</a>
+          <a href="#review" id="main-cta" style="font-size: 14px; font-weight: 500; padding: 8px 16px; border-radius: 6px; color: #FFFFFF; text-decoration: none; background: #005CB9">Build Renewal List</a>
+        </div>
+      </div>
+    </main>
+</div>
+</section>
+<section class="screen" id="review" hidden>
+<div style="min-height: 1240px; font-family: Exo, sans-serif; color: #2D2A26; background: #F7F7F7; display: flex; flex-direction: column">
+  <header style="background: #000000; color: #FFFFFF; font-family: verdana, sans-serif">
+    <nav aria-label="Box Office" style="max-width: 1280px; margin: 0 auto; padding: 0 16px; display: flex; flex-wrap: wrap; align-items: center; min-height: 48px; font-size: 14px">
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Dashboard</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">District</a>
+      <a href="#" style="color: #9d9d9d; text-decoration: none; padding: 14px 20px; white-space: nowrap">Events</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Reports</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Websites</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Fundraising</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">My Hometown</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Settings</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap; margin-left: auto">Log out</a>
+    </nav>
+  </header>
+  <main style="padding: 32px 16px 64px; display: flex; flex-direction: column; gap: 24px; max-width: 1280px; box-sizing: border-box; width: 100%; margin: 0 auto">
+    <div style="font-size: 14px; color: #6D6E71">Events / 2027-28 Men's Basketball Season Tickets / Renewals</div>
+
+    <ol aria-label="Steps" style="list-style: none; margin: 0; padding: 0; display: flex; gap: 8px; flex-wrap: wrap; font-size: 14px">
+      <li style="padding: 6px 14px; border-radius: 999px; background: #E6F4EE; color: #006644; font-weight: 600">1. Build list</li>
+      <li style="padding: 6px 14px; border-radius: 999px; background: #005CB9; color: #FFFFFF; font-weight: 600">2. Review</li>
+      <li style="padding: 6px 14px; border-radius: 999px; background: #FFFFFF; border: 1px solid #E5E9EC; color: #6D6E71">3. Set dates</li>
+      <li style="padding: 6px 14px; border-radius: 999px; background: #FFFFFF; border: 1px solid #E5E9EC; color: #6D6E71">4. Launch</li>
+    </ol>
+
+    <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap">
+      <div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1">
+        <h1 style="margin: 0; font-size: 24px; line-height: 32px; font-weight: 600">Review Your Renewal List</h1>
+        <p style="margin: 0; font-size: 16px; color: #6D6E71">Built from 2026-27 Men's Basketball Season Tickets. Changes save as you go.</p>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+      <div style="background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 16px 20px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 14px; color: #6D6E71">Customers</span><span style="font-size: 24px; line-height: 32px; font-weight: 600"><span data-stat="customers"></span></span>
+      </div>
+      <div style="background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 16px 20px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 14px; color: #6D6E71">Seats</span><span style="font-size: 24px; line-height: 32px; font-weight: 600"><span data-stat="seats"></span></span>
+      </div>
+      <div style="background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 16px 20px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 14px; color: #6D6E71">Comp seats</span><span style="font-size: 24px; line-height: 32px; font-weight: 600"><span data-stat="comps"></span></span>
+      </div>
+      <div style="background: #FFF8E0; border: 1px solid #E0AF00; border-radius: 8px; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 14px; color: #6B5300">Need attention</span><span style="font-size: 24px; line-height: 32px; font-weight: 600; color: #6B5300"><span data-stat="attention"></span></span>
+      </div>
+    </div>
+
+    <section style="background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 24px; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600">Match Ticket Levels</h2>
+        <p style="margin: 0; font-size: 14px; color: #6D6E71">Customers renew at this season's price for the matched ticket level.</p>
+      </div>
+      <div style="overflow-x: auto">
+        <table style="width: 100%; border-collapse: collapse; font-size: 15px; min-width: 640px">
+          <thead>
+            <tr style="text-align: left; color: #6D6E71; font-size: 13px">
+              <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">LAST SEASON</th>
+              <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">SEATS</th>
+              <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">THIS SEASON</th>
+              <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">PRICE</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding: 12px; border-bottom: 1px solid #e5e7eb">Adult Reserved</td>
+              <td style="padding: 12px; border-bottom: 1px solid #e5e7eb">812</td>
+              <td style="padding: 12px; border-bottom: 1px solid #e5e7eb"><select aria-label="This season ticket level for Adult Reserved" style="font-family: Exo, sans-serif; font-size: 14px; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; background: #FFFFFF"><option>Adult Reserved</option></select></td>
+              <td style="padding: 12px; border-bottom: 1px solid #e5e7eb">$125</td>
+            </tr>
+            <tr>
+              <td style="padding: 12px; border-bottom: 1px solid #e5e7eb">Student Reserved</td>
+              <td style="padding: 12px; border-bottom: 1px solid #e5e7eb">164</td>
+              <td style="padding: 12px; border-bottom: 1px solid #e5e7eb"><select aria-label="This season ticket level for Student Reserved" style="font-family: Exo, sans-serif; font-size: 14px; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; background: #FFFFFF"><option>Student Reserved</option></select></td>
+              <td style="padding: 12px; border-bottom: 1px solid #e5e7eb">$60</td>
+            </tr>
+            <tr>
+              <td style="padding: 12px; border-bottom: 1px solid #e5e7eb">Senior Reserved</td>
+              <td style="padding: 12px; border-bottom: 1px solid #e5e7eb">110</td>
+              <td style="padding: 12px; border-bottom: 1px solid #e5e7eb"><select aria-label="This season ticket level for Senior Reserved" style="font-family: Exo, sans-serif; font-size: 14px; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; background: #FFFFFF"><option>Senior Reserved</option></select></td>
+              <td style="padding: 12px; border-bottom: 1px solid #e5e7eb">$60</td>
+            </tr>
+            <tr style="background: #FFF8E0">
+              <td style="padding: 12px">Chairback Club</td>
+              <td style="padding: 12px">18</td>
+              <td style="padding: 12px"><select aria-label="This season ticket level for Chairback Club" style="font-family: Exo, sans-serif; font-size: 14px; padding: 6px 10px; border: 1px solid #E0AF00; border-radius: 6px; background: #FFFFFF"><option>Choose a ticket level</option><option>Club Seats</option></select></td>
+              <td style="padding: 12px; color: #6B5300; font-weight: 600">No match yet</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section style="background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 24px; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600; flex-grow: 1">Customers</h2>
+        <label style="display: flex; flex-direction: column; font-size: 13px; color: #6D6E71">
+          <span style="position: absolute; left: -9999px">Search customers</span>
+          <input type="search" placeholder="Search name, email or seat" style="font-family: Exo, sans-serif; font-size: 14px; padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; width: 260px">
+        </label>
+        <button type="button" style="font-family: Exo, sans-serif; font-size: 14px; font-weight: 500; padding: 8px 14px; border: 0; box-shadow: 0 0 0 1px #d1d5db; border-radius: 6px; color: #2D2A26; background: #FFFFFF; cursor: pointer">Import File</button>
+        <button type="button" style="font-family: Exo, sans-serif; font-size: 14px; font-weight: 500; padding: 8px 14px; border: 0; border-radius: 6px; color: #FFFFFF; background: #005CB9; cursor: pointer">Add Customer</button>
+      </div>
+      <div role="tablist" aria-label="Filter customers" style="display: flex; gap: 8px; flex-wrap: wrap; font-size: 14px">
+        <button type="button" role="tab" aria-selected="true" style="font-family: Exo, sans-serif; font-size: 14px; padding: 6px 14px; border-radius: 999px; border: 1px solid #005CB9; background: #F1FAFE; color: #005CB9; font-weight: 600">All 412</button>
+        <button type="button" role="tab" aria-selected="false" style="font-family: Exo, sans-serif; font-size: 14px; padding: 6px 14px; border-radius: 999px; border: 1px solid #d1d5db; background: #FFFFFF; color: #2D2A26">Need attention 4</button>
+        <button type="button" role="tab" aria-selected="false" style="font-family: Exo, sans-serif; font-size: 14px; padding: 6px 14px; border-radius: 999px; border: 1px solid #d1d5db; background: #FFFFFF; color: #2D2A26">Comp seats 6</button>
+        <button type="button" role="tab" aria-selected="false" style="font-family: Exo, sans-serif; font-size: 14px; padding: 6px 14px; border-radius: 999px; border: 1px solid #d1d5db; background: #FFFFFF; color: #2D2A26">Text only 23</button>
+      </div>
+      <div style="overflow-x: auto">
+        <table style="width: 100%; border-collapse: collapse; font-size: 15px; min-width: 900px">
+          <thead>
+            <tr style="text-align: left; color: #6D6E71; font-size: 13px">
+              <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">CUSTOMER</th>
+              <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">CONTACT</th>
+              <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">SEATS</th>
+              <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">TICKET LEVEL</th>
+              <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">RENEWAL PRICE</th>
+              <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600"><span style="position: absolute; left: -9999px">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="vertical-align: top">
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600">Homer Townes</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px; line-height: 1.5">homer.townes@hometown.com<br>(866) 488-4849</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; font-size: 13px">
+                  <span style="padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px">North Bleachers · C · 39</span>
+                  <span style="padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px">North Bleachers · C · 40</span>
+                  <span style="padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px">North Bleachers · C · 41</span>
+                  <span style="padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px">North Bleachers · C · 42</span>
+                </div>
+              </td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">Adult Reserved</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">$500</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb"><button type="button" style="font-family: Exo, sans-serif; font-size: 14px; background: none; border: 0; color: #005CB9; font-weight: 600; cursor: pointer">Edit</button></td>
+            </tr>
+            <tr style="vertical-align: top">
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600">Coach Ray Alvarez</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px; line-height: 1.5">ralvarez@lincolnhs.org</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; font-size: 13px">
+                  <span style="padding: 4px 8px; border: 1px solid #008256; background: #E6F4EE; color: #006644; border-radius: 6px">North Bleachers · A · 41 · Comp</span>
+                  <span style="padding: 4px 8px; border: 1px solid #008256; background: #E6F4EE; color: #006644; border-radius: 6px">North Bleachers · A · 42 · Comp</span>
+                </div>
+              </td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">Adult Reserved</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">$0</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb"><button type="button" style="font-family: Exo, sans-serif; font-size: 14px; background: none; border: 0; color: #005CB9; font-weight: 600; cursor: pointer">Edit</button></td>
+            </tr>
+            <tr style="vertical-align: top">
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600">Jenna Morales</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px; line-height: 1.5">jmorales@example.com</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; font-size: 13px">
+                  <span style="padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px">North Bleachers · C · 37</span>
+                  <span style="padding: 4px 8px; border: 1px solid #008256; background: #E6F4EE; color: #006644; border-radius: 6px">North Bleachers · C · 38 · Comp</span>
+                </div>
+              </td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">Student Reserved</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">$60</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb"><button type="button" style="font-family: Exo, sans-serif; font-size: 14px; background: none; border: 0; color: #005CB9; font-weight: 600; cursor: pointer">Edit</button></td>
+            </tr>
+            <tr style="vertical-align: top">
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600">Marcus Lee</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px; line-height: 1.5">(614) 555-0142<br><span style="font-size: 12px; padding: 2px 8px; border-radius: 999px; background: #F1F2F2; color: #2D2A26">Text only</span></td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; font-size: 13px">
+                  <span style="padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px">North Bleachers · F · 33</span>
+                  <span style="padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px">North Bleachers · F · 34</span>
+                </div>
+              </td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">Senior Reserved</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">$120</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb"><button type="button" style="font-family: Exo, sans-serif; font-size: 14px; background: none; border: 0; color: #005CB9; font-weight: 600; cursor: pointer">Edit</button></td>
+            </tr>
+            <tr style="vertical-align: top; background: #FFF8E0">
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600">Dana Whitfield</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px; line-height: 1.5">dwhitfield@example.com</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">
+                <div style="display: flex; flex-direction: column; gap: 8px">
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap; font-size: 13px">
+                    <span style="padding: 4px 8px; border: 1px solid #d1d5db; background: #FFFFFF; border-radius: 6px">North Bleachers · B · 27</span>
+                    <span style="padding: 4px 8px; border: 1px dashed #E0AF00; background: #FFFFFF; border-radius: 6px">North Bleachers · B · 26</span>
+                  </div>
+                  <span style="font-size: 13px; color: #6B5300">Seat North Bleachers · B · 26 isn't on this season's seat map.</span>
+                </div>
+              </td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">Adult Reserved</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">$250</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb"><button type="button" style="font-family: Exo, sans-serif; font-size: 14px; background: none; border: 0; color: #005CB9; font-weight: 600; cursor: pointer; white-space: nowrap">Choose Seat</button></td>
+            </tr>
+            <tr style="vertical-align: top; background: #FFF8E0">
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600">Priya Shah</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px; line-height: 1.5; color: #6B5300">No email or mobile number</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; font-size: 13px">
+                  <span style="padding: 4px 8px; border: 1px solid #d1d5db; background: #FFFFFF; border-radius: 6px">North Bleachers · D · 29</span>
+                </div>
+              </td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">Adult Reserved</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb">$125</td>
+              <td style="padding: 14px 12px; border-bottom: 1px solid #e5e7eb"><button type="button" style="font-family: Exo, sans-serif; font-size: 14px; background: none; border: 0; color: #005CB9; font-weight: 600; cursor: pointer; white-space: nowrap">Add Contact</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin: 0; font-size: 14px; color: #6D6E71"><span data-stat="showing"></span> Rows that need attention don't stop the rest of the list from saving.</p>
+    </section>
+
+    <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap">
+      <a href="#start" style="font-size: 14px; font-weight: 500; padding: 8px 16px; border: 0; box-shadow: 0 0 0 1px #d1d5db; border-radius: 6px; color: #2D2A26; text-decoration: none; background: #FFFFFF">Back</a>
+      <a href="#window" style="font-size: 14px; font-weight: 500; padding: 8px 16px; border-radius: 6px; color: #FFFFFF; text-decoration: none; background: #005CB9">Continue to Dates</a>
+    </div>
+  </main>
+</div>
+</section>
+<section class="screen" id="window" hidden>
+<div style="min-height: 1100px; font-family: Exo, sans-serif; color: #2D2A26; background: #F7F7F7; display: flex; flex-direction: column">
+  <header style="background: #000000; color: #FFFFFF; font-family: verdana, sans-serif">
+    <nav aria-label="Box Office" style="max-width: 1280px; margin: 0 auto; padding: 0 16px; display: flex; flex-wrap: wrap; align-items: center; min-height: 48px; font-size: 14px">
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Dashboard</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">District</a>
+      <a href="#" style="color: #9d9d9d; text-decoration: none; padding: 14px 20px; white-space: nowrap">Events</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Reports</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Websites</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Fundraising</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">My Hometown</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Settings</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap; margin-left: auto">Log out</a>
+    </nav>
+  </header>
+  <main style="padding: 32px 16px 64px; display: flex; flex-direction: column; gap: 24px; max-width: 1280px; box-sizing: border-box; width: 100%; margin: 0 auto">
+    <div style="font-size: 14px; color: #6D6E71">Events / 2027-28 Men's Basketball Season Tickets / Renewals</div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <h1 style="margin: 0; font-size: 24px; line-height: 32px; font-weight: 600">Set Renewal Dates</h1>
+      <p style="margin: 0; font-size: 16px; color: #6D6E71"><span data-stat="customers"></span> customers · <span data-stat="seats"></span> seats on your renewal list. Emails, texts and reminders go out on these dates automatically.</p>
+    </div>
+
+    <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start">
+      <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+        <section style="background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 24px; display: flex; flex-direction: column; gap: 20px">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600">Dates</h2>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Renewals open
+              <input type="text" value="Tue, Oct 5, 2027 · 9:00 am" style="font-family: Exo, sans-serif; font-size: 15px; font-weight: 400; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Renewal deadline
+              <input type="text" value="Fri, Oct 29, 2027 · 11:59 pm" style="font-family: Exo, sans-serif; font-size: 15px; font-weight: 400; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px">
+            </label>
+          </div>
+          <fieldset style="border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px">
+            <legend style="font-size: 14px; font-weight: 600; padding: 0; margin-bottom: 10px">Reminders to customers who haven't renewed</legend>
+            <label style="display: flex; gap: 10px; align-items: center; font-size: 15px"><input type="checkbox" checked style="width: 18px; height: 18px; accent-color: #005CB9"> 7 days before the deadline</label>
+            <label style="display: flex; gap: 10px; align-items: center; font-size: 15px"><input type="checkbox" checked style="width: 18px; height: 18px; accent-color: #005CB9"> 3 days before the deadline</label>
+            <label style="display: flex; gap: 10px; align-items: center; font-size: 15px"><input type="checkbox" checked style="width: 18px; height: 18px; accent-color: #005CB9"> 1 day before the deadline</label>
+            <button type="button" style="align-self: flex-start; font-family: Exo, sans-serif; font-size: 14px; background: none; border: 0; padding: 4px 0; color: #005CB9; font-weight: 600; cursor: pointer">+ Add Reminder</button>
+          </fieldset>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 24px; display: flex; flex-direction: column; gap: 20px">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600">Seats That Aren't Renewed</h2>
+          
+          <p style="margin: 0; font-size: 15px; line-height: 1.5">At the deadline, seats that weren't renewed are released and go on sale to everyone. You can release them sooner from Track renewals.</p>
+          
+          
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 24px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600">Message to Customers</h2>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Add a note (optional)
+            <textarea rows="4" style="font-family: Exo, sans-serif; font-size: 15px; font-weight: 400; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; resize: vertical">Thank you for cheering on the Lincoln Lions. Your seats are saved for you through the deadline.</textarea>
+          </label>
+          <p style="margin: 0; font-size: 13px; color: #6D6E71">Your note goes at the top of the renewal email, as it does today.</p>
+        </section>
+      </div>
+
+      <aside style="flex: 1 1 340px; min-width: 0; background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; gap: 8px; align-items: center">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600; flex-grow: 1">Preview</h2>
+          <button type="button" data-prev="email" aria-pressed="true" style="font-family: Exo, sans-serif; font-size: 13px; padding: 6px 12px; border-radius: 999px; cursor: pointer">Email</button>
+          <button type="button" data-prev="text" aria-pressed="false" style="font-family: Exo, sans-serif; font-size: 13px; padding: 6px 12px; border-radius: 999px; cursor: pointer">Text</button>
+        </div>
+        <div id="prev-email" style="border: 1px solid #E5E9EC; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: #F8F8FA">
+          <span style="font-size: 13px; color: #6D6E71">Subject: 2027-28 Men's Basketball Season Tickets - Your Reserved Seats</span>
+          <span style="font-size: 18px; font-weight: 700">2027-28 Men's Basketball Season Tickets</span>
+          <span style="font-size: 14px; line-height: 1.5">Thank you for cheering on the Lincoln Lions. Your seats are saved for you through the deadline.</span>
+          <span style="align-self: flex-start; font-size: 14px; font-weight: 600; padding: 10px 16px; border-radius: 6px; color: #FFFFFF; background: #005CB9">Renew My Seats</span>
+          <span style="font-size: 14px">Passcode <strong>[PASSCODE]</strong> <span style="color: #6D6E71">(the button enters it for you)</span></span>
+          <span style="font-size: 14px">Seats Reserved for You: [SEATS]</span>
+          <span style="font-size: 14px">Purchasing Instructions</span>
+        </div>
+        <div id="prev-text" hidden style="border: 1px solid #E5E9EC; border-radius: 8px; padding: 16px; background: #F8F8FA"><div style="max-width: 280px; background: #F1F2F2; border-radius: 18px 18px 18px 4px; padding: 12px 14px; font-size: 14px; line-height: 1.45">Lincoln HS Athletics: [FIRST NAME], your 2027-28 Men's Basketball season tickets are ready to renew. [SEATS] are saved for you until Fri, Oct 29. Renew here: <span style="color: #005CB9; text-decoration: underline">[RENEWAL LINK]</span></div><div style="font-size: 12px; color: #6D6E71; margin-top: 6px">Reply STOP to opt out</div></div>
+        <p style="margin: 0; font-size: 13px; color: #6D6E71">Renew My Seats and the text link open checkout with the customer's passcode applied and their seats already selected.</p>
+        <button type="button" style="font-family: Exo, sans-serif; font-size: 14px; font-weight: 500; padding: 8px 14px; border: 0; box-shadow: 0 0 0 1px #d1d5db; border-radius: 6px; color: #2D2A26; background: #FFFFFF; cursor: pointer">Send Me a Test</button>
+      </aside>
+    </div>
+
+    <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap">
+      <a href="#review" style="font-size: 14px; font-weight: 500; padding: 8px 16px; border: 0; box-shadow: 0 0 0 1px #d1d5db; border-radius: 6px; color: #2D2A26; text-decoration: none; background: #FFFFFF">Cancel</a>
+      
+        <a href="#track" style="font-size: 14px; font-weight: 500; padding: 8px 16px; border-radius: 6px; color: #FFFFFF; text-decoration: none; background: #005CB9">Schedule Renewals</a>
+      
+      
+    </div>
+  </main>
+</div>
+</section>
+<section class="screen" id="track" hidden>
+<div style="min-height: 1160px; font-family: Exo, sans-serif; color: #2D2A26; background: #F7F7F7; display: flex; flex-direction: column">
+  <header style="background: #000000; color: #FFFFFF; font-family: verdana, sans-serif">
+    <nav aria-label="Box Office" style="max-width: 1280px; margin: 0 auto; padding: 0 16px; display: flex; flex-wrap: wrap; align-items: center; min-height: 48px; font-size: 14px">
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Dashboard</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">District</a>
+      <a href="#" style="color: #9d9d9d; text-decoration: none; padding: 14px 20px; white-space: nowrap">Events</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Reports</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Websites</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Fundraising</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">My Hometown</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Settings</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap; margin-left: auto">Log out</a>
+    </nav>
+  </header>
+  <main style="padding: 32px 16px 64px; display: flex; flex-direction: column; gap: 24px; max-width: 1280px; box-sizing: border-box; width: 100%; margin: 0 auto">
+    <div style="font-size: 14px; color: #6D6E71">Events / 2027-28 Men's Basketball Season Tickets / Renewals</div>
+
+    <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap">
+      <div style="display: flex; flex-direction: column; gap: 8px; flex: 1 1 480px">
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+          <h1 style="margin: 0; font-size: 24px; line-height: 32px; font-weight: 600">Track Renewals</h1>
+          <span style="font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #E6F4EE; color: #006644"><span data-stat="trackPill"></span></span>
+        </div>
+        <p style="margin: 0; font-size: 16px; color: #6D6E71">Deadline Fri, Oct 29, 11:59 pm · Unrenewed seats are released and go on sale then</p>
+      </div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap">
+        <a href="#window" style="font-size: 14px; font-weight: 500; padding: 8px 14px; border: 0; box-shadow: 0 0 0 1px #d1d5db; border-radius: 6px; color: #2D2A26; background: #FFFFFF; text-decoration: none">Edit Dates</a>
+        <button type="button" style="font-family: Exo, sans-serif; font-size: 14px; font-weight: 500; padding: 8px 14px; border: 0; box-shadow: 0 0 0 1px #d1d5db; border-radius: 6px; color: #2D2A26; background: #FFFFFF; cursor: pointer">Export</button>
+        <button type="button" data-release="open" style="font-family: Exo, sans-serif; font-size: 14px; font-weight: 500; padding: 8px 14px; border: 1px solid #E20010; border-radius: 6px; color: #B5000D; background: #FFFFFF; cursor: pointer">Release Unrenewed Seats</button>
+      </div>
+    </div>
+
+    <div id="release-panel" hidden>
+      <section aria-label="Release holds now" style="background: #FFFFFF; border: 2px solid #E20010; border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 14px">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600">Release <span data-stat="undecided"></span> unrenewed seats now?</h2>
+        <p style="margin: 0; font-size: 15px; line-height: 1.5">These seats go on sale right away instead of at the Fri, Oct 29 deadline. The <span data-stat="undecidedCustomers"></span> customers who haven't fully renewed can't use their passcode after this. Renewed seats aren't affected.</p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap">
+          <button type="button" data-release="close" style="font-family: Exo, sans-serif; font-size: 14px; font-weight: 500; padding: 8px 14px; border: 0; box-shadow: 0 0 0 1px #d1d5db; border-radius: 6px; color: #2D2A26; background: #FFFFFF; cursor: pointer">Cancel</button>
+          <button type="button" data-release="close" style="font-family: Exo, sans-serif; font-size: 14px; font-weight: 500; padding: 8px 14px; border: 0; border-radius: 6px; color: #FFFFFF; background: #B5000D; cursor: pointer">Release Unrenewed Seats</button>
+        </div>
+      </section>
+    </div>
+
+    <section style="background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 24px; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-end">
+        <div style="display: flex; flex-direction: column; gap: 4px; flex: 1 1 260px">
+          <span style="font-size: 14px; color: #6D6E71">Seats renewed</span>
+          <span style="font-size: 36px; font-weight: 700"><span data-stat="renewed"></span> <span style="font-size: 18px; font-weight: 500; color: #6D6E71">of <span data-stat="active"></span></span></span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; flex: 1 1 200px">
+          <span style="font-size: 14px; color: #6D6E71">Renewal revenue</span>
+          <span style="font-size: 36px; font-weight: 700"><span data-stat="revenue"></span></span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; flex: 1 1 200px">
+          <span style="font-size: 14px; color: #6D6E71">Seats not renewed yet</span>
+          <span style="font-size: 36px; font-weight: 700"><span data-stat="undecided"></span></span>
+        </div>
+      </div>
+      <div aria-label="Seat status: 742 renewed, 362 not renewed yet" role="img" style="display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: #E5E9EC">
+        <span style="width: 67.2%; background: #005CB9"></span>
+      </div>
+      <div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px">
+        <span style="display: flex; gap: 6px; align-items: center"><span style="width: 10px; height: 10px; border-radius: 2px; background: #005CB9"></span>Renewed <span data-stat="renewed"></span></span>
+        <span style="display: flex; gap: 6px; align-items: center"><span style="width: 10px; height: 10px; border-radius: 2px; background: #E5E9EC; border: 1px solid #d1d5db"></span>Not renewed yet <span data-stat="undecided"></span></span>
+      </div>
+    </section>
+
+    <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start">
+      <section style="flex: 999 1 640px; min-width: 0; background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600; flex-grow: 1">Customers</h2>
+          <button type="button" style="font-family: Exo, sans-serif; font-size: 14px; font-weight: 500; padding: 8px 14px; border: 0; border-radius: 6px; color: #FFFFFF; background: #005CB9; cursor: pointer">Remind <span data-stat="remind"></span> Customers</button>
+        </div>
+        <div role="tablist" aria-label="Filter by status" style="display: flex; gap: 8px; flex-wrap: wrap">
+          <button type="button" role="tab" aria-selected="true" style="font-family: Exo, sans-serif; font-size: 14px; padding: 6px 14px; border-radius: 999px; border: 1px solid #005CB9; background: #F1FAFE; color: #005CB9; font-weight: 600">All 412</button>
+          <button type="button" role="tab" aria-selected="false" style="font-family: Exo, sans-serif; font-size: 14px; padding: 6px 14px; border-radius: 999px; border: 1px solid #d1d5db; background: #FFFFFF; color: #2D2A26">Renewed 268</button>
+          <button type="button" role="tab" aria-selected="false" style="font-family: Exo, sans-serif; font-size: 14px; padding: 6px 14px; border-radius: 999px; border: 1px solid #d1d5db; background: #FFFFFF; color: #2D2A26">Partly renewed 22</button>
+          <button type="button" role="tab" aria-selected="false" style="font-family: Exo, sans-serif; font-size: 14px; padding: 6px 14px; border-radius: 999px; border: 1px solid #d1d5db; background: #FFFFFF; color: #2D2A26">Not renewed yet 122</button>
+        </div>
+        <div style="overflow-x: auto">
+          <table style="width: 100%; border-collapse: collapse; font-size: 15px; min-width: 680px">
+            <thead>
+              <tr style="text-align: left; color: #6D6E71; font-size: 13px">
+                <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">CUSTOMER</th>
+                <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">STATUS</th>
+                <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">SEATS</th>
+                <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">PAID</th>
+                <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">LAST ACTIVITY</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600">Homer Townes</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb"><span style="font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: #FFF8E0; color: #6B5300">Partly renewed</span></td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px">3 of 4 renewed</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb">$375</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #6D6E71">Bought Oct 18</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600">Dana Whitfield</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb"><span style="font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: #E6F4EE; color: #006644">Renewed</span></td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px">2 of 2 renewed</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb">$250</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #6D6E71">Bought Oct 5</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600">Coach Ray Alvarez</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb"><span style="font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: #E6F4EE; color: #006644">Renewed</span></td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px">2 of 2 renewed · comp</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb">$0</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #6D6E71">Bought Oct 5</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600">Marcus Lee</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb"><span style="font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: #F1F2F2; color: #2D2A26">Not renewed yet</span></td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px">0 of 2 renewed</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #6D6E71">None</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #6D6E71">Text sent Oct 5</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside style="flex: 1 1 300px; min-width: 0; background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600">Scheduled Messages</h2>
+        <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; font-size: 14px">
+          <li style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Renewal email and text</span><span style="color: #6D6E71"><span data-stat="sentWord"></span> Oct 5 to <span data-stat="contacted"></span> customers</span></li>
+          <li style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Reminder</span><span style="color: #6D6E71">Scheduled Oct 22 · 7 days before</span></li>
+          <li style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Reminder</span><span style="color: #6D6E71">Scheduled Oct 26 · 3 days before</span></li>
+          <li style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Reminder</span><span style="color: #6D6E71">Scheduled Oct 28 · 1 day before</span></li>
+          <li style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Deadline: unrenewed seats released</span><span style="color: #6D6E71">Scheduled Oct 29, 11:59 pm</span></li>
+        </ol>
+        <p style="margin: 0; font-size: 13px; color: #6D6E71">Reminders only go to customers with seats they haven't renewed.</p>
+      </aside>
+    </div>
+  </main>
+</div>
+</section>
+<section class="screen" id="approval" hidden>
+<div style="min-height: 1160px; font-family: Exo, sans-serif; color: #2D2A26; background: #F7F7F7; display: flex; flex-direction: column">
+  <header style="background: #000000; color: #FFFFFF; font-family: verdana, sans-serif">
+    <nav aria-label="Box Office" style="max-width: 1280px; margin: 0 auto; padding: 0 16px; display: flex; flex-wrap: wrap; align-items: center; min-height: 48px; font-size: 14px">
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Dashboard</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">District</a>
+      <a href="#" style="color: #9d9d9d; text-decoration: none; padding: 14px 20px; white-space: nowrap">Events</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Reports</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Websites</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Fundraising</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">My Hometown</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap">Settings</a>
+      <a href="#" style="color: #FFFFFF; text-decoration: none; padding: 14px 20px; white-space: nowrap; margin-left: auto">Log out</a>
+    </nav>
+  </header>
+  <main style="padding: 32px 16px 64px; display: flex; flex-direction: column; gap: 24px; max-width: 1280px; box-sizing: border-box; width: 100%; margin: 0 auto">
+    <div style="font-size: 14px; color: #6D6E71">Events / 2027-28 Men's Basketball Season Tickets / Renewals</div>
+
+    <div style="background: #F1FAFE; border: 1px solid #005CB9; border-radius: 8px; padding: 16px 20px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap">
+      <span style="font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #005CB9; color: #FFFFFF">Waiting for your approval</span>
+      <span style="font-size: 15px; flex: 1 1 400px">Hometown built these renewals for you. Nothing goes to customers until you approve.</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <h1 style="margin: 0; font-size: 24px; line-height: 32px; font-weight: 600">Review and Approve Renewals</h1>
+      <p style="margin: 0; font-size: 16px; color: #6D6E71">Sent for approval Sep 20, 2027</p>
+    </div>
+
+    <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start">
+      <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+        <section style="background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 24px; display: flex; flex-direction: column; gap: 16px">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <h2 style="margin: 0; font-size: 16px; font-weight: 600; flex-grow: 1">Renewal List</h2>
+            <a href="#review" style="font-size: 14px; font-weight: 600">View Full List</a>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+            <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; color: #6D6E71">Customers</span><span style="font-size: 24px; font-weight: 700"><span data-stat="customers"></span></span></div>
+            <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; color: #6D6E71">Seats</span><span style="font-size: 24px; font-weight: 700"><span data-stat="seats"></span></span></div>
+            <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; color: #6D6E71">Comp seats</span><span style="font-size: 24px; font-weight: 700"><span data-stat="comps"></span></span></div>
+          </div>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 24px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600">Renewal Prices</h2>
+          <div style="overflow-x: auto">
+            <table style="width: 100%; border-collapse: collapse; font-size: 15px; min-width: 480px">
+              <thead>
+                <tr style="text-align: left; color: #6D6E71; font-size: 13px">
+                  <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">LAST SEASON</th>
+                  <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">THIS SEASON</th>
+                  <th style="padding: 12px 16px; border-bottom: 2px solid #d1d5db; font-weight: 600">PRICE</th>
+                </tr>
+              </thead>
+              <tbody id="appr-levels"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 24px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <h2 style="margin: 0; font-size: 16px; font-weight: 600; flex-grow: 1">Dates</h2>
+            <a href="#window" style="font-size: 14px; font-weight: 600">View Settings</a>
+          </div>
+          <dl style="margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; font-size: 15px">
+            <div><dt style="font-size: 14px; color: #6D6E71">Renewals open</dt><dd style="margin: 2px 0 0">Tue, Oct 5, 2027 · 9:00 am</dd></div>
+            <div><dt style="font-size: 14px; color: #6D6E71">Deadline</dt><dd style="margin: 2px 0 0">Fri, Oct 29, 2027 · 11:59 pm</dd></div>
+            <div><dt style="font-size: 14px; color: #6D6E71">Reminders</dt><dd style="margin: 2px 0 0">7, 3 and 1 day before the deadline</dd></div>
+            <div><dt style="font-size: 14px; color: #6D6E71">Unrenewed seats</dt><dd style="margin: 2px 0 0">Released and on sale at the deadline</dd></div>
+            
+          </dl>
+        </section>
+      </div>
+
+      <aside style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+        <section style="background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 24px; display: flex; flex-direction: column; gap: 16px">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600">Notes</h2>
+          <div style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb">
+            <span style="font-size: 13px; color: #6D6E71">Hometown · Sep 20</span>
+            <span style="font-size: 15px; line-height: 1.5">Matched Chairback Club to Club Seats at $200, per your note. Coach Alvarez's two seats are comps.</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb">
+            <span style="font-size: 13px; color: #6D6E71">Athletic Director · Sep 16</span>
+            <span style="font-size: 15px; line-height: 1.5">Chairback Club is called Club Seats this year. Same price as last year.</span>
+          </div>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Add a note for Hometown
+            <textarea rows="3" placeholder="What should change?" style="font-family: Exo, sans-serif; font-size: 15px; font-weight: 400; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; resize: vertical"></textarea>
+          </label>
+        </section>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap">
+          <button type="button" style="flex: 1 1 140px; font-family: Exo, sans-serif; font-size: 14px; font-weight: 500; padding: 8px 16px; border: 0; box-shadow: 0 0 0 1px #d1d5db; border-radius: 6px; color: #2D2A26; background: #FFFFFF; cursor: pointer" id="request-btn">Request Changes</button>
+          <a href="#track" id="approve-btn" style="flex: 1 1 180px; text-align: center; font-size: 14px; font-weight: 500; padding: 8px 16px; border-radius: 6px; color: #FFFFFF; text-decoration: none; background: #005CB9">Approve and Schedule</a>
+        </div>
+        <p style="margin: 0; font-size: 13px; color: #6D6E71">Your approval and any changes are saved to this renewal's history.</p>
+      </aside>
+    </div>
+  </main>
+</div>
+</section>
+
+<section class="screen" id="map-screen" hidden>
+<div style="max-width:1080px;margin:0 auto;padding:20px 24px 60px;">
+  <h1 style="margin:0;font-size:18px;font-weight:700;">Create Order</h1>
+  <div style="margin-top:8px;font-size:14px;color:#6d6e71;display:flex;gap:6px;"><span style="color:#1e8a1e;">event</span><span>Men's Basketball vs Westfield - November 20, 2026 7:15 PM</span></div>
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px;flex-wrap:wrap;gap:6px;">
+    <div style="display:flex;gap:2px;">
+      <span style="padding:8px 12px;background:#2d2a26;color:#fff;font-size:12px;border-radius:3px 3px 0 0;">Credit Card/Cash/Comp</span>
+      <span style="padding:8px 12px;background:#58595b;color:#fff;font-size:12px;border-radius:3px 3px 0 0;">Quick Cash Entry</span>
+    </div>
+    <span style="padding:5px 8px;font-size:10px;border:1px solid #e5e5e5;background:#fff;margin-bottom:6px;">Upload Comp Orders</span>
+  </div>
+  <div style="border-top:1px solid #e5e5e5;padding:14px 12px 0;">
+    <div style="font-size:11px;color:#495057;margin-bottom:6px;"><span style="color:#b94a48;">*</span> marked fields are required to be filled in.</div>
+    <div class="co-form" style="display:grid;grid-template-columns:270px minmax(0,410px);gap:11px 14px;align-items:center;font-size:12px;">
+      <label style="font-weight:700;text-align:right;">First name</label><input style="height:24px;border:1px solid #ced4da;border-radius:2px;">
+      <label style="font-weight:700;text-align:right;">Last name</label><input style="height:24px;border:1px solid #ced4da;border-radius:2px;">
+      <label style="font-weight:700;text-align:right;">E-mail address</label><input style="height:24px;border:1px solid #ced4da;border-radius:2px;">
+      <label style="font-weight:700;text-align:right;">Confirm E-mail address</label><input style="height:24px;border:1px solid #ced4da;border-radius:2px;">
+      <label style="font-weight:700;text-align:right;">Phone number</label><input style="height:24px;border:1px solid #ced4da;border-radius:2px;">
+      <label style="font-weight:700;text-align:right;">Payment method <span style="color:#b94a48;">*</span></label>
+      <select style="height:26px;border:1px solid #ced4da;border-radius:2px;font-size:11px;background:#fff;"><option>Cash</option><option>Credit Card</option><option>Comp</option></select>
+      <label style="font-weight:700;text-align:right;">Promo Code</label><input style="height:24px;border:1px solid #ced4da;border-radius:2px;">
+      <label style="font-weight:700;text-align:right;align-self:start;padding-top:4px;">Internal message/notes</label><textarea rows="3" style="border:1px solid #ced4da;border-radius:2px;font-size:12px;"></textarea>
+      <label style="font-weight:700;text-align:right;">Order Options</label><label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" checked> Send receipt &amp; tickets to above e-mail address</label>
+    </div>
+  </div>
+
+  <h2 style="margin:26px 0 4px;font-size:14px;font-weight:700;">Reserved Seating Tickets</h2>
+  <div style="font-size:11px;color:#495057;margin-bottom:6px;">Event has reserved seating. Select seat(s) from live seat map below. Click a <strong>sold</strong> seat to see who it belongs to.</div>
+
+  <div style="position:relative;border:1px solid #c8c8c8;">
+    <div id="seatmap" style="height:470px;width:100%;"></div>
+    <div id="map-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#6d6e71;">Loading seat map…</div>
+    <div id="owner-card" hidden style="position:absolute;z-index:800;">
+      <div style="width:250px;background:#2d2a26;color:#fff;border-radius:4px;padding:10px 12px;font-size:11px;line-height:1.5;box-shadow:0 4px 14px rgba(0,0,0,.3);">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+          <span style="font-size:10px;color:#bcbec0;" data-f="where"></span>
+          <button id="card-close" aria-label="Close" style="background:none;border:none;color:#bcbec0;font-size:14px;cursor:pointer;padding:0;line-height:1;">×</button>
+        </div>
+        <div style="font-size:13px;font-weight:700;margin-top:2px;" data-f="name"></div>
+        <div style="color:#e5e9ec;" data-f="contact"></div>
+        <div style="margin-top:4px;display:flex;gap:6px;align-items:center;"><span data-f="dot" style="width:8px;height:8px;border-radius:50%;"></span><span data-f="item"></span></div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px;color:#bcbec0;"><span data-f="date"></span><a href="#" onclick="return false" style="color:#7fb8f0;" data-f="order"></a></div>
+      </div>
+    </div>
+    <div id="held-modal" hidden style="position:absolute;inset:0;z-index:999999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;">
+      <div style="background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.5);border-radius:8px;min-width:300px;max-width:320px;padding:20px;box-sizing:border-box;">
+        <div style="position:relative;">
+          <button id="held-close" aria-label="Close" style="position:absolute;right:-20px;top:-26px;transform:rotate(45deg);background:transparent;border:0;color:#969696;font-size:28px;font-weight:700;cursor:pointer;line-height:1;">+</button>
+          <div id="held-body" style="min-height:60px;max-height:300px;overflow-y:auto;position:relative;top:10px;margin-right:-10px;"></div>
+        </div>
+        <div style="margin-top:22px;"><button id="held-choose" style="background:#337ab7;color:#fff;border:1px solid #2e6da4;border-radius:4px;padding:6px 12px;font-size:14px;cursor:pointer;">Choose Seat(s)</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="legend" style="display:flex;gap:16px;flex-wrap:wrap;padding:8px 10px;font-size:11px;color:#495057;border:1px solid #c8c8c8;border-top:none;"></div>
+
+  <div style="background:#f1f1f1;padding:6px;display:flex;justify-content:center;">
+    <button id="clear-sel" style="background:#337ab7;color:#fff;border:none;border-radius:2px;padding:5px 12px;font-size:11px;font-weight:700;text-transform:uppercase;cursor:pointer;">Clear Selection</button>
+  </div>
+  <div style="background:#58595b;color:#fff;text-align:center;font-weight:700;padding:5px;font-size:14px;letter-spacing:.02em;">SELECTED SEATS <span>*</span></div>
+  <div id="selected" style="border:1px solid #e5e5e5;border-top:none;"></div>
+
+  <h2 style="margin:24px 0 4px;font-size:14px;font-weight:700;">General Admission Tickets</h2>
+  <div style="font-size:11px;color:#495057;margin-bottom:8px;">Event has general admission tickets. Select quantities to add to order.</div>
+  <div style="display:grid;grid-template-columns:160px 1fr;font-size:11px;border-top:1px solid #e5e5e5;">
+    <span style="font-weight:700;padding:6px 4px;">Qty</span><span style="font-weight:700;padding:6px 4px;">Ticket Name</span>
+    <div style="display:flex;align-items:center;border:1px solid #ced4da;border-radius:3px;width:max-content;margin:4px;"><button id="ga-dec" style="width:26px;height:26px;border:none;background:#fff;cursor:pointer;">−</button><span id="ga" style="width:30px;text-align:center;font-weight:700;font-size:13px;">0</span><button id="ga-inc" style="width:26px;height:26px;border:none;background:#fff;cursor:pointer;">+</button></div>
+    <span style="display:flex;align-items:center;padding:0 4px;">General Admission : $5.00</span>
+  </div>
+  <div style="text-align:right;margin-top:18px;font-size:12px;"><i id="co-total">Select tickets to calculate order total before placing.</i></div>
+  <div style="text-align:right;margin-top:12px;"><button type="button" style="background:#337ab7;color:#fff;border:1px solid #2e6da4;border-radius:6px;padding:10px 16px;font-size:18px;cursor:pointer;">Create Order &amp; Tickets</button></div>
+</div>
+</section>
+
+<div class="mg-back" id="manage" hidden role="dialog" aria-modal="true" aria-labelledby="mg-title">
+  <div class="mg">
+    <div class="mg-head">
+      <div><h2 id="mg-title"></h2><p id="mg-sub"></p></div>
+      <button class="mg-x" data-mg="close" aria-label="Close">×</button>
+    </div>
+    <div class="mg-body" id="mg-list-view">
+      <div style="display:flex;flex-direction:column;gap:8px" id="mg-seats"></div>
+      <p id="mg-hint" style="margin:0;font-size:13px;color:#6D6E71"></p>
+      <div id="mg-extra" style="display:flex;flex-direction:column;gap:12px"></div>
+      <div class="mg-confirm" id="mg-release-confirm" hidden>
+        <strong id="mg-release-title"></strong>
+        <span id="mg-release-text"></span>
+        <label class="mg-note"><input type="checkbox" id="mg-release-notify"><span id="mg-release-notify-text"></span></label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button class="btn" data-mg="release-cancel">Cancel</button>
+          <button class="btn btn-danger-solid" data-mg="release-do">Release Seats</button>
+        </div>
+      </div>
+    </div>
+    <div class="mg-body" id="mg-add-view" hidden>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+        <label class="add-f">Customer name<input id="add-name" type="text" placeholder="First and last name"></label>
+        <label class="add-f">Ticket level<select id="add-level"></select></label>
+        <label class="add-f">Email<input id="add-email" type="email" placeholder="name@example.com"></label>
+        <label class="add-f">Mobile number<input id="add-phone" type="tel" placeholder="(614) 555-0100"></label>
+        <label class="add-f">Seats<select id="add-count"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
+        <label class="add-f" style="align-self:end;flex-direction:row;align-items:center;gap:8px;font-weight:400"><input id="add-comp" type="checkbox" style="width:18px;height:18px;accent-color:#005CB9"> Comp seats</label>
+      </div>
+      <p id="add-error" style="margin:0;font-size:14px;color:#B5000D"></p>
+      <p style="margin:0;font-size:13px;color:#6D6E71">Next you'll pick their seats on the map. They get a passcode and their own renewal link.</p>
+    </div>
+    <div class="mg-body" id="mg-map-view" hidden>
+      <p style="margin:0;font-size:15px" id="mg-map-instr"></p>
+      <div id="mg-current" style="display:flex;flex-direction:column;gap:6px"></div>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:14px"><span id="mg-counter"></span><button type="button" class="btn" data-mg="clear-picks" style="padding:5px 10px;font-size:13px">Clear selections</button></div>
+      <div id="rmap"></div>
+      <div class="rlegend">
+        <span><i style="background:#0020c0"></i>Open</span>
+        <span><i style="background:#b01818"></i>Saved for another renewal customer</span>
+        <span><i class="cur-dot"></i>Current seats</span>
+        <span><i style="background:#4B5563"></i>General hold (can be assigned)</span>
+        <span><i style="background:#45a539"></i>New seats</span>
+      </div>
+      <div id="mg-move-summary" style="font-size:14px"></div>
+      <label class="mg-note"><input type="checkbox" id="mg-move-notify"><span id="mg-move-notify-text"></span></label>
+    </div>
+    <div class="mg-actions" id="mg-list-actions">
+      <button class="btn" data-mg="close">Done</button>
+      <button class="btn btn-danger" data-mg="release">Release Selected Seats</button>
+      <button class="btn btn-primary" data-mg="move">Move Selected Seats</button>
+    </div>
+    <div class="mg-actions" id="mg-add-actions" hidden>
+      <button class="btn" data-mg="close">Cancel</button>
+      <button class="btn btn-primary" data-mg="add-next">Choose Seats</button>
+    </div>
+    <div class="mg-actions" id="mg-map-actions" hidden>
+      <button class="btn" data-mg="map-back">Back</button>
+      <button class="btn btn-primary" data-mg="move-save" disabled>Move Seats</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+<div id="demo-chip" hidden><span id="demo-chip-text"></span><button type="button" id="demo-restart">Start Over</button></div>
+
+<script>
+/* Screen navigation */
+const SCREENS = { landing: 'landing', approval: 'approval', event: 'event', hub: 'hub', start: 'start', review: 'review', window: 'window', track: 'track', map: 'map-screen' };
+function go(key) {
+  if (!SCREENS[key]) key = 'landing';
+  document.getElementById('demo-chip').hidden = key === 'landing';
+  Object.values(SCREENS).forEach(id => { document.getElementById(id).hidden = true; });
+  document.getElementById(SCREENS[key]).hidden = false;
+  document.querySelectorAll('.demo-bar button').forEach(b => {
+    if (b.dataset.go === key) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+  });
+  window.scrollTo(0, 0);
+  if (key === 'map') initMap();
+  if (key === 'event') renderEntry();
+  if (key === 'hub') renderHub();
+  if (key === 'track' && tView === 'map') buildTrackMap();
+}
+document.querySelectorAll('.demo-bar button[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+// In-page links to a screen switch screens directly (the viewer may not report hash changes)
+document.addEventListener('click', e => {
+  const a = e.target.closest('a[href^="#"]'); const key = a && a.getAttribute('href').slice(1);
+  if (key && SCREENS[key] && !e.defaultPrevented) { e.preventDefault(); go(key); }
+});
+window.addEventListener('hashchange', () => go(location.hash.slice(1)));
+document.addEventListener('click', e => { const a = e.target.closest('a[href="#"]'); if (a) e.preventDefault(); });
+
+/* Start renewals: list source choice */
+document.querySelectorAll('.src-opt').forEach(opt => {
+  const sync = () => {
+    const pick = document.querySelector('input[name="source"]:checked').value;
+    document.querySelectorAll('.src-opt').forEach(o => o.classList.toggle('on', o.dataset.src === pick));
+    document.getElementById('main-cta').textContent = pick === 'file' ? 'Upload File' : 'Build Renewal List';
+  };
+  opt.querySelector('input').addEventListener('change', sync);
+  sync();
+});
+
+/* Track renewals: Release Holds Now confirm */
+document.querySelectorAll('[data-release]').forEach(b => b.addEventListener('click', () => {
+  document.getElementById('release-panel').hidden = b.dataset.release !== 'open';
+}));
+
+/* Venue and renewal list: one source for every screen.
+   Lincoln Fieldhouse: North (home) and South (visitor) Bleachers, rows A (court) to G, seats 27-42.
+   Chairback Club seats are North rows A-B, seats 34-37. The 2027-28 map removes North A 27 for a wheelchair space. */
+const VENUE = {"holders": [{"name": "Homer Townes", "contact": {"email": "homer.townes@hometown.com", "phone": "(866) 488-4849"}, "level": "Adult Reserved", "seats": [["N", "C", 39], ["N", "C", 40], ["N", "C", 41], ["N", "C", 42]], "status": "rrru", "comp": [], "day": "Oct 18"}, {"name": "Coach Ray Alvarez", "contact": {"email": "ralvarez@lincolnhs.org"}, "level": "Adult Reserved", "seats": [["N", "A", 41], ["N", "A", 42]], "status": "uu", "comp": [41, 42], "day": null}, {"name": "Jenna Morales", "contact": {"email": "jmorales@example.com"}, "level": "Student Reserved", "seats": [["N", "C", 37], ["N", "C", 38]], "status": "rr", "comp": [38], "day": "Oct 6"}, {"name": "Marcus Lee", "contact": {"phone": "(614) 555-0142"}, "level": "Senior Reserved", "seats": [["N", "F", 33], ["N", "F", 34]], "status": "uu", "comp": [], "day": null}, {"name": "Dana Whitfield", "contact": {"email": "dwhitfield@example.com"}, "level": "Adult Reserved", "seats": [["N", "A", 27], ["N", "A", 28]], "status": "ur", "comp": [], "day": "Oct 5"}, {"name": "Priya Shah", "contact": {}, "level": "Adult Reserved", "seats": [["N", "D", 29]], "status": "u", "comp": [], "day": null}, {"name": "Robert & Ellen Kowalski", "contact": {"email": "kowalski.family@example.com", "phone": "(614) 555-0177"}, "level": "Chairback Club", "seats": [["N", "A", 35], ["N", "A", 36]], "status": "rr", "comp": [], "day": "Oct 5"}, {"name": "Dr. Anita Okafor", "contact": {"email": "aokafor@example.com"}, "level": "Chairback Club", "seats": [["N", "B", 35], ["N", "B", 36]], "status": "uu", "comp": [], "day": null}, {"name": "Lincoln Athletic Boosters", "contact": {"email": "boosters@lincolnhs.org"}, "level": "Adult Reserved", "seats": [["N", "B", 41], ["N", "B", 42]], "status": "rr", "comp": [41, 42], "day": "Oct 5"}, {"name": "Principal Grace Liu", "contact": {"email": "gliu@lincolnhs.org"}, "level": "Adult Reserved", "seats": [["N", "B", 40]], "status": "r", "comp": [40], "day": "Oct 5"}, {"name": "Tom & Lisa Becker", "contact": {"email": "beckerfamily@example.com", "phone": "(614) 555-0163"}, "level": "Adult Reserved", "seats": [["N", "D", 36], ["N", "D", 37], ["N", "D", 38]], "status": "rrr", "comp": [], "day": "Oct 5"}, {"name": "Kevin Nguyen", "contact": {"email": "kevin.nguyen@example.com"}, "level": "Adult Reserved", "seats": [["N", "D", 33], ["N", "D", 34], ["N", "D", 35]], "status": "rrr", "comp": [], "day": "Oct 5"}, {"name": "Alicia Grant", "contact": {"email": "agrant@example.com"}, "level": "Adult Reserved", "seats": [["N", "E", 36], ["N", "E", 37]], "status": "rr", "comp": [], "day": "Oct 5"}, {"name": "Sam Patel", "contact": {"email": "sam.patel@example.com", "phone": "(614) 555-0172"}, "level": "Adult Reserved", "seats": [["N", "E", 38], ["N", "E", 39]], "status": "rr", "comp": [], "day": "Oct 5"}, {"name": "Heather Morrow", "contact": {"email": "hmorrow@example.com"}, "level": "Adult Reserved", "seats": [["N", "E", 33], ["N", "E", 34], ["N", "E", 35]], "status": "rrr", "comp": [], "day": "Oct 6"}, {"name": "Luis Carvalho", "contact": {"email": "lcarvalho@example.com"}, "level": "Adult Reserved", "seats": [["N", "C", 33], ["N", "C", 34]], "status": "rr", "comp": [], "day": "Oct 6"}, {"name": "Brianna Scott", "contact": {"email": "bscott@example.com"}, "level": "Student Reserved", "seats": [["N", "F", 36], ["N", "F", 37]], "status": "rr", "comp": [], "day": "Oct 7"}, {"name": "Eric Lindqvist", "contact": {"email": "elindqvist@example.com"}, "level": "Adult Reserved", "seats": [["N", "F", 38], ["N", "F", 39], ["N", "F", 40]], "status": "rrr", "comp": [], "day": "Oct 7"}, {"name": "Nora Fitzgerald", "contact": {"email": "nfitz@example.com"}, "level": "Senior Reserved", "seats": [["N", "D", 30], ["N", "D", 31]], "status": "rr", "comp": [], "day": "Oct 5"}, {"name": "Walt & June Harmon", "contact": {"email": "harmonwj@example.com", "phone": "(614) 555-0119"}, "level": "Senior Reserved", "seats": [["N", "C", 30], ["N", "C", 31], ["N", "C", 32]], "status": "rrr", "comp": [], "day": "Oct 5"}, {"name": "Marisol Vega", "contact": {"email": "mvega@example.com"}, "level": "Adult Reserved", "seats": [["N", "E", 30], ["N", "E", 31], ["N", "E", 32]], "status": "rrr", "comp": [], "day": "Oct 8"}, {"name": "Darnell Brooks", "contact": {"email": "dbrooks@example.com"}, "level": "Adult Reserved", "seats": [["N", "B", 38], ["N", "B", 39]], "status": "rr", "comp": [], "day": "Oct 8"}, {"name": "Owen Fischer", "contact": {"email": "ofischer@example.com"}, "level": "Student Reserved", "seats": [["N", "G", 36], ["N", "G", 37]], "status": "rr", "comp": [], "day": "Oct 9"}, {"name": "Hannah Cole", "contact": {"email": "hcole@example.com"}, "level": "Adult Reserved", "seats": [["N", "D", 41], ["N", "D", 42]], "status": "rr", "comp": [], "day": "Oct 9"}, {"name": "Victor Ramos", "contact": {"email": "vramos@example.com"}, "level": "Adult Reserved", "seats": [["N", "E", 41], ["N", "E", 42]], "status": "rr", "comp": [], "day": "Oct 10"}, {"name": "Teresa Quinn", "contact": {"phone": "(614) 555-0108"}, "level": "Senior Reserved", "seats": [["N", "B", 30], ["N", "B", 31]], "status": "rr", "comp": [], "day": "Oct 11"}, {"name": "Jamal Washington", "contact": {"email": "jwashington@example.com"}, "level": "Adult Reserved", "seats": [["N", "F", 30], ["N", "F", 31], ["N", "F", 32]], "status": "rrr", "comp": [], "day": "Oct 12"}, {"name": "Megan O'Rourke", "contact": {"email": "morourke@example.com"}, "level": "Student Reserved", "seats": [["N", "G", 33], ["N", "G", 34]], "status": "rr", "comp": [], "day": "Oct 13"}, {"name": "Phil & Dot Anders", "contact": {"email": "andersfam@example.com"}, "level": "Adult Reserved", "seats": [["S", "C", 35], ["S", "C", 36]], "status": "rr", "comp": [], "day": "Oct 18"}, {"name": "Ken Ishikawa", "contact": {"email": "kishikawa@example.com"}, "level": "Adult Reserved", "seats": [["S", "D", 36], ["S", "D", 37], ["S", "D", 38]], "status": "rrr", "comp": [], "day": "Oct 19"}, {"name": "Rachel & Ben Stein", "contact": {"email": "steinfam@example.com", "phone": "(614) 555-0131"}, "level": "Adult Reserved", "seats": [["N", "F", 41], ["N", "F", 42], ["N", "G", 41], ["N", "G", 42]], "status": "rrxx", "comp": [], "day": "Oct 9"}, {"name": "Carlos Mendoza", "contact": {"email": "cmendoza@example.com"}, "level": "Adult Reserved", "seats": [["N", "G", 38], ["N", "G", 39], ["N", "G", 40]], "status": "rrx", "comp": [], "day": "Oct 11"}, {"name": "Gary Pruitt", "contact": {"email": "gpruitt@example.com"}, "level": "Adult Reserved", "seats": [["N", "G", 28], ["N", "G", 29], ["N", "G", 30]], "status": "uuu", "comp": [], "day": null}, {"name": "Stacy Lin", "contact": {"phone": "(614) 555-0186"}, "level": "Student Reserved", "seats": [["S", "E", 30], ["S", "E", 31], ["S", "E", 32]], "status": "uuu", "comp": [], "day": null}, {"name": "Andre Dubois", "contact": {"email": "adubois@example.com"}, "level": "Adult Reserved", "seats": [["S", "D", 30], ["S", "D", 31], ["S", "D", 32]], "status": "uuu", "comp": [], "day": null}, {"name": "Wendy Park", "contact": {"email": "wpark@example.com"}, "level": "Senior Reserved", "seats": [["N", "C", 27], ["N", "C", 28]], "status": "uu", "comp": [], "day": null}, {"name": "Fernando Ruiz", "contact": {"email": "fruiz@example.com"}, "level": "Student Reserved", "seats": [["S", "F", 36], ["S", "F", 37], ["S", "F", 38]], "status": "uuu", "comp": [], "day": null}, {"name": "Bill Tran", "contact": {"email": "btran@example.com"}, "level": "Adult Reserved", "seats": [["S", "B", 38], ["S", "B", 39], ["S", "B", 40], ["S", "B", 41]], "status": "xxxx", "comp": [], "day": "Oct 12"}, {"name": "Lauren Hale", "contact": {"email": "lhale@example.com"}, "level": "Adult Reserved", "seats": [["N", "G", 31], ["N", "G", 32]], "status": "xx", "comp": [], "day": "Oct 13"}, {"name": "Doug Ferris", "contact": {"email": "dferris@example.com"}, "level": "Adult Reserved", "seats": [["S", "C", 39], ["S", "C", 40]], "status": "xx", "comp": [], "day": "Oct 19"}], "club": [["N", "A", 34], ["N", "A", 35], ["N", "A", 36], ["N", "A", 37], ["N", "B", 34], ["N", "B", 35], ["N", "B", 36], ["N", "B", 37]], "removed": [["N", "A", 27]]};
+const ROWS = ['G', 'F', 'E', 'D', 'C', 'B', 'A'];
+const seat = (sec, row, n, x) => ({ sec, row, n, ...(x || {}) });
+const seatKey = s => s.sec + s.row + s.n;
+const seatName = s => (s.sec === 'S' ? 'South' : 'North') + ' Bleachers · ' + s.row + ' · ' + s.n;
+const CLUB = new Set(VENUE.club.map(([a, b, c]) => a + b + c));
+const REMOVED = new Set(VENUE.removed.map(([a, b, c]) => a + b + c));
+const isClub = s => CLUB.has(seatKey(s));
+const GEN_START = ['SG39', 'SG40', 'SG41', 'SG42', 'SA42', 'SE39', 'SE40', 'SE41', 'NA31', 'NA32'];
+const GEN = new Set(GEN_START);
+const genHeld = s => GEN.has(seatKey(s)) && !OPT.genReleased;
+const firstName = name => name.replace(/^(Coach|Dr\.|Principal) /, '').split(' ')[0];
+const lastName = name => name.split(' ').slice(-1)[0];
+const money = n => '$' + n.toLocaleString();
+
+// This season's renewal prices; last season's levels map onto them on Review the list
+const PRICE = { 'Adult Reserved': 125, 'Student Reserved': 60, 'Senior Reserved': 60, 'Club Seats': 200 };
+const LAST_LEVELS = ['Adult Reserved', 'Student Reserved', 'Senior Reserved', 'Chairback Club'];
+const LAST_PRICE = { 'Adult Reserved': 115, 'Student Reserved': 55, 'Senior Reserved': 55, 'Chairback Club': 200 };
+const wasPrice = lv => ' <span style="color:#6D6E71;font-size:13px">(last season ' + money(LAST_PRICE[lv]) + ')</span>';
+const MATCH = { 'Adult Reserved': 'Adult Reserved', 'Student Reserved': 'Student Reserved', 'Senior Reserved': 'Senior Reserved', 'Chairback Club': null };
+
+const CUST = {};
+const OPT = { entry: 'home', state: 'open', setup: 'client', listBuilt: true, source: "2026-27 Men's Basketball Season Tickets" };
+// new: the list as built from last season, problems and all. Every later state has them fixed,
+// because a list can't be sent for approval or scheduled until they are. Only 'open' has renewals.
+function loadData(state, keep) {
+  if (keep) {
+    // The list the user just approved: released seats leave it and nobody has renewed yet
+    Object.values(CUST).forEach(c => { c.seats = c.seats.filter(s => !s.removed); c.seats.forEach(s => { s.st = 'u'; }); c.activity = null; });
+    Object.keys(CUST).forEach(k => { if (!CUST[k].seats.length) delete CUST[k]; });
+    return;
+  }
+  OPT.listBuilt = state !== 'new'; OPT.keepComps = true; OPT.approvedBy = state === 'new' ? null : 'Jordan Price, Athletic Director · Sep 27, 2027'; OPT.ackWired = false; OPT.genReleased = false; OPT.genWhen = 'deadline'; OPT.genDate = 'Mon, Oct 18, 2027 · 9:00 am'; GEN.clear(); GEN_START.forEach(k => GEN.add(k));
+  Object.keys(CUST).forEach(k => delete CUST[k]);
+  VENUE.holders.forEach(h => {
+    CUST[h.name] = {
+      name: h.name, contact: { ...h.contact }, level: h.level, day: h.day, activity: null,
+      seats: h.seats.map(([sec, row, n], i) => ({ sec, row, n, comp: h.comp.includes(n), lastComp: h.comp.includes(n), st: state === 'open' ? h.status[i] : 'u', removed: false })),
+    };
+  });
+  MATCH['Chairback Club'] = state === 'new' ? null : 'Club Seats';
+  if (state !== 'new') {
+    const d = CUST['Dana Whitfield'].seats.find(s => seatKey(s) === 'NA27'); d.n = 30;
+    CUST['Priya Shah'].contact = { email: 'pshah@example.com' };
+  }
+}
+loadData('open');
+const custList = () => Object.values(CUST).sort((a, b) => lastName(a.name).localeCompare(lastName(b.name)));
+const hasContact = c => !!(c.contact.email || c.contact.phone);
+const textOnly = c => !c.contact.email && !!c.contact.phone;
+const levelNow = c => MATCH[c.level];
+const levelForPrice = c => MATCH[c.level] || (c.level === 'Chairback Club' ? 'Club Seats' : c.level);
+const listSeats = c => c.seats.filter(s => !s.removed);
+// This season's level for one seat: set on the seat, or matched from the customer's level last season
+const seatLevel = (c, s) => s.lvl || levelNow(c);
+const seatPrice = (c, s) => s.comp ? 0 : (PRICE[seatLevel(c, s) || levelForPrice(c)] || 0);
+const SEAT_LEVELS = s => isClub(s) ? ['Club Seats'] : ['Adult Reserved', 'Student Reserved', 'Senior Reserved'];
+function levelSummary(c, seats) {
+  const n = {}; seats.forEach(s => { const l = seatLevel(c, s) || '?'; n[l] = (n[l] || 0) + 1; });
+  const keys = Object.keys(n);
+  if (keys.length === 1) return keys[0] === '?' ? null : keys[0];
+  return keys.map(k => (k === '?' ? 'No match yet' : k) + ' ×' + n[k]).join('<br>');
+}
+const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+function passcode(c) {
+  let h = 7; for (const ch of c.name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  let code = ''; for (let i = 0; i < 6; i++) { code += CODE_CHARS[h % CODE_CHARS.length]; h = Math.floor(h / CODE_CHARS.length) + i * 97; }
+  return code;
+}
+const renewLink = c => 'https://events.hometownticketing.com/embed/event/48213/seating?passcode=' + passcode(c);
+const tStatus = s => s.removed ? 'x' : s.st;
+function attention(c) {
+  const why = [];
+  const gone = listSeats(c).find(s => REMOVED.has(seatKey(s)));
+  if (gone) why.push('Seat ' + seatName(gone) + " isn't on this season's seat map.");
+  if (!hasContact(c)) why.push('No email or mobile number.');
+  if (listSeats(c).some(s => !seatLevel(c, s))) why.push('Match ' + c.level + ' to a ticket level above.');
+  return why;
+}
+function custTrack(c) {
+  const s = new Set(c.seats.map(tStatus));
+  if (s.size === 1 && s.has('x')) return 'Released';
+  if (!s.has('u')) return s.has('r') ? 'Renewed' : 'Released';
+  return s.has('r') ? 'Partly renewed' : 'Not renewed yet';
+}
+function stats() {
+  const cs = Object.values(CUST), all = cs.flatMap(c => c.seats.map(s => ({ s, c })));
+  const onList = cs.filter(c => listSeats(c).length);
+  const renewed = all.filter(x => tStatus(x.s) === 'r'), undecided = all.filter(x => tStatus(x.s) === 'u');
+  const released = all.filter(x => tStatus(x.s) === 'x').length;
+  const undecidedCust = cs.filter(c => c.seats.some(s => tStatus(s) === 'u'));
+  return {
+    customers: onList.length, seats: onList.reduce((a, c) => a + listSeats(c).length, 0),
+    comps: onList.reduce((a, c) => a + listSeats(c).filter(s => s.comp).length, 0),
+    attention: onList.filter(c => attention(c).length).length,
+    total: all.length, renewed: renewed.length, undecided: undecided.length, released, active: all.length - released,
+    revenue: renewed.reduce((a, x) => a + seatPrice(x.c, x.s), 0),
+    undecidedCustomers: undecidedCust.length, remind: undecidedCust.filter(hasContact).length,
+    contacted: cs.filter(hasContact).length,
+  };
+}
+
+/* Shared venue drawing */
+function drawCourt(map) {
+  const k = 4.4, cx = 372, cy = -180, LINE = '#5a3412';
+  const p = (x, y) => [cy + y * k, cx + x * k];
+  const o = { interactive: false };
+  const line = { ...o, color: LINE, weight: 2, fill: false };
+  L.rectangle([p(-28, -50), p(28, 50)], { ...o, stroke: false, fillColor: '#2d2a26', fillOpacity: 1 }).addTo(map);
+  L.rectangle([p(-25, -47), p(25, 47)], { ...o, color: LINE, weight: 2, fillColor: '#e4b97f', fillOpacity: 1 }).addTo(map);
+  L.polyline([p(-25, 0), p(25, 0)], line).addTo(map);
+  L.circle(p(0, 0), { ...line, radius: 6 * k }).addTo(map);
+  L.circle(p(0, 0), { ...o, stroke: false, fillColor: '#b01818', fillOpacity: 1, radius: 2 * k }).addTo(map);
+  [-1, 1].forEach(d => {
+    const base = 47 * d, ft = 28 * d, bk = 41.75 * d;
+    L.rectangle([p(-6, base), p(6, ft)], { ...o, color: LINE, weight: 2, fillColor: '#b01818', fillOpacity: 0.9 }).addTo(map);
+    L.circle(p(0, ft), { ...line, radius: 6 * k }).addTo(map);
+    const arc = [p(-19.75, base), p(-19.75, bk)];
+    for (let i = 0; i <= 36; i++) { const a = Math.PI - (i / 36) * Math.PI; arc.push(p(Math.cos(a) * 19.75, bk - d * Math.sin(a) * 19.75)); }
+    arc.push(p(19.75, base));
+    L.polyline(arc, line).addTo(map);
+    L.polyline([p(-3, 43 * d), p(3, 43 * d)], { ...o, color: '#2d2a26', weight: 3 }).addTo(map);
+    L.circle(p(0, bk), { ...o, color: '#d9480f', weight: 2, fill: false, radius: 0.9 * k }).addTo(map);
+  });
+}
+// season '2027' leaves out seats removed from this season's map and marks the wheelchair space
+function drawBleachers(m, cell, season) {
+  m.createPane('labels'); m.getPane('labels').style.zIndex = 650; m.getPane('labels').style.pointerEvents = 'none';
+  L.rectangle([[40, 228], [-400, 520]], { stroke: false, fillColor: '#e6e3dc', fillOpacity: 1, interactive: false }).addTo(m);
+  [[6, 214], [530, 738]].forEach(([a, b]) => L.rectangle([[40, a], [-400, b]], { color: '#c8102e', weight: 10, fillColor: '#fff', fillOpacity: 1, interactive: false }).addTo(m));
+  drawCourt(m);
+  const label = (latlng, html, cls, w) => L.marker(latlng, { interactive: false, pane: 'labels', icon: L.divIcon({ className: cls, iconSize: [w || 120, 14], html }) }).addTo(m);
+  label([62, 110], '<span style="white-space:nowrap">NORTH BLEACHERS</span>', 'seat-col'); label([62, 634], '<span style="white-space:nowrap">SOUTH BLEACHERS</span>', 'seat-col');
+  [{ sec: 'N', cols: ROWS, x0: 40, num: [18, 182] }, { sec: 'S', cols: [...ROWS].reverse(), x0: 564, num: [542, 706] }].forEach(({ sec, cols, x0, num }) => {
+    [[22], [-158]].forEach(([y]) => cols.forEach(c => label([y, x0 + cols.indexOf(c) * 20], c, 'seat-col')));
+    [[42, 36, 0], [35, 27, 9]].forEach(([hi, lo, off]) => {
+      for (let r = hi; r >= lo; r--) {
+        const y = -((hi - r) + off) * 20;
+        num.forEach(x => label([y, x], r, 'seat-label'));
+        cols.forEach((col, ci) => {
+          const s = seat(sec, col, r), ll = [y, x0 + ci * 20];
+          if (season === '2027' && REMOVED.has(seatKey(s))) {
+            L.rectangle([[y + 8, ll[1] - 8], [y - 8, ll[1] + 8]], { color: '#6D6E71', weight: 1, fillColor: '#F1F2F2', fillOpacity: 1, interactive: true })
+              .bindTooltip(seatName(s) + ' · wheelchair space this season', { direction: 'top' }).addTo(m);
+            label(ll, '<span style="font-size:10px;color:#2d2a26">♿</span>', 'seat-col', 14);
+            return;
+          }
+          cell(s, ll, ci, r);
+        });
+      }
+    });
+  });
+  setTimeout(() => { m.invalidateSize(); m.fitBounds([[70, 0], [-400, 744]], { padding: [12, 12] }); }, 0);
+}
+const hoverCursor = (m, dot) => {
+  dot.on('mouseover', () => { m.getContainer().style.cursor = 'pointer'; });
+  dot.on('mouseout', () => { m.getContainer().style.cursor = ''; });
+};
+function ownerOf(s) {
+  const k = seatKey(s);
+  for (const c of Object.values(CUST)) { const x = c.seats.find(y => seatKey(y) === k); if (x) return { c, s: x }; }
+  return null;
+}
+
+/* Create Order: a 2026-27 game. Last season's season ticket holders are the T seats. */
+const CO = { avail: '#0020c0', club: '#00838f', sold: '#a0a0a0', selected: '#00c020' };
+const GAME_LEVELS = [{ name: 'Adult Reserved', price: 12 }, { name: 'Student Reserved', price: 6 }, { name: 'Senior Reserved', price: 6 }];
+const CLUB_LEVEL = { name: 'Chairback Club', price: 20 };
+const HOLDS = [];
+const holdRange = (sec, rows, a, b, note, color) => rows.split('').forEach(row => { for (let n = a; n <= b; n++) HOLDS.push({ key: sec + row + n, note, color }); });
+holdRange('S', 'AB', 27, 34, 'Visiting team', '#ff9800');
+holdRange('S', 'G', 39, 42, 'Band boosters', '#f8c9a8');
+holdRange('N', 'A', 29, 29, 'ADA companion', '#a020f0');
+holdRange('S', 'A', 42, 42, null, '#8cc66b');
+const HOLD = Object.fromEntries(HOLDS.map(h => [h.key, h]));
+const BUYERS = ['Jordan Ellis', 'Rosa Delgado', 'Chris Albright', 'Maya Singh', 'Derek Holt', 'Tina Marsh', 'Omar Haddad', 'Leah Brennan', 'Grant Yates', 'Sofia Russo', 'Paul Kim', 'Erin Walsh', 'Nate Coleman', 'Beth Lowry', 'Ian Mercer', 'Kara Dunn'];
+function gameSeat(s, ci, r) {
+  const k = seatKey(s), own = ownerOf(s), ri = ROWS.indexOf(s.row);
+  if (own) return { kind: 'T', owner: own };
+  if (HOLD[k]) return { kind: 'held', hold: HOLD[k] };
+  if (k === 'NA34') return { kind: 'single', level: CLUB_LEVEL.name, i: 3 };
+  if (isClub(s)) return { kind: 'avail' };
+  if (s.sec === 'N' && (r * 13 + ri * 7) % 11 === 0) return { kind: 'P', i: r + ri };
+  if (s.sec === 'N' ? (r * 5 + ri * 3) % 4 === 0 : (r * 3 + ri * 5) % 6 === 0) return { kind: 'single', level: GAME_LEVELS[(r + ri) % 3 === 0 ? 1 : 0].name, i: r * 7 + ri };
+  return { kind: 'avail' };
+}
+const coState = { sel: [], pinned: null, popup: null, ga: 0 };
+const coLayers = {};
+let map = null;
+function coStyle(s, g) {
+  const k = seatKey(s), sel = coState.sel.find(x => x.key === k), pinned = coState.pinned && coState.pinned.key === k;
+  let fill = isClub(s) ? CO.club : CO.avail;
+  if (sel) fill = CO.selected;
+  else if (g.kind === 'T' || g.kind === 'P' || g.kind === 'single') fill = CO.sold;
+  else if (g.kind === 'held') fill = g.hold.color;
+  return { radius: 8, stroke: pinned, color: '#111', weight: pinned ? 3 : 0, fillColor: fill, fillOpacity: 1 };
+}
+function coMark(g) { return g.kind === 'T' ? 'T' : g.kind === 'P' ? 'P' : '✕'; }
+function initMap() {
+  if (map) { map.invalidateSize(); return; }
+  if (!window.L) { setTimeout(initMap, 60); return; }
+  map = L.map('seatmap', { crs: L.CRS.Simple, minZoom: -1.5, maxZoom: 3, zoomSnap: 0.25, attributionControl: false, preferCanvas: true });
+  drawBleachers(map, (s, ll, ci, r) => {
+    const g = gameSeat(s, ci, r), k = seatKey(s);
+    const dot = L.circle(ll, coStyle(s, g)).addTo(map);
+    coLayers[k] = { dot, s, g, ll };
+    if (g.kind === 'T' || g.kind === 'P' || g.kind === 'single')
+      L.marker(ll, { interactive: false, icon: L.divIcon({ className: 'seat-x', iconSize: [12, 12], html: '<div style="font-size:' + (coMark(g) === '✕' ? 10 : 11) + 'px;line-height:12px;">' + coMark(g) + '</div>' }) }).addTo(map);
+    hoverCursor(map, dot);
+    dot.on('click', e => {
+      L.DomEvent.stopPropagation(e);
+      if (g.kind === 'T' || g.kind === 'P' || g.kind === 'single') {
+        coState.pinned = coState.pinned && coState.pinned.key === k ? null : { key: k, s, g, ll };
+        return coRender();
+      }
+      const i = coState.sel.findIndex(x => x.key === k);
+      if (i >= 0) { coState.sel.splice(i, 1); return coRender(); }
+      // Selecting turns the seat green right away; the popup asks for a level and shows hold notes
+      const levels = isClub(s) ? [CLUB_LEVEL] : GAME_LEVELS;
+      coState.sel.push({ key: k, s, level: levels[0] });
+      if (levels.length > 1 || g.kind === 'held') coState.popup = { key: k, s, g, levels };
+      coState.pinned = null;
+      coRender();
+    });
+  });
+  map.on('click', () => { coState.pinned = null; coRender(); });
+  map.on('move zoom', placeCard);
+  document.getElementById('map-loading').hidden = true;
+  coRender();
+}
+function ownerCard(g) {
+  if (g.kind === 'T') {
+    const c = g.owner.c, i = Object.keys(CUST).indexOf(c.name);
+    return { name: c.name, contact: [c.contact.email, c.contact.phone].filter(Boolean).join(' · ') || 'No email or phone on order',
+      item: "2026-27 Men's Basketball Season Tickets · " + c.level, dot: '#b01818',
+      date: ['Jul 28, 2026', 'Aug 3, 2026', 'Aug 14, 2026', 'Aug 22, 2026', 'Sep 3, 2026'][i % 5], order: 20418 + i * 37 };
+  }
+  const name = BUYERS[g.i % BUYERS.length];
+  const contact = name.toLowerCase().replace(/[^a-z]+/g, '.') + '@example.com';
+  if (g.kind === 'P') return { name, contact, item: 'Basketball Reserved Season Pass', dot: '#b01818', date: 'Sep 18, 2026', order: 22105 + g.i * 11 };
+  return { name, contact, item: g.level, dot: '#0020c0', date: ['Nov 2, 2026', 'Nov 9, 2026', 'Nov 15, 2026', 'Nov 18, 2026'][g.i % 4], order: 31502 + g.i * 3 };
+}
+function placeCard() {
+  const card = document.getElementById('owner-card'), p0 = coState.pinned;
+  if (!p0 || !map) { card.hidden = true; return; }
+  const p = map.latLngToContainerPoint(p0.ll), w = document.getElementById('seatmap').clientWidth;
+  card.style.left = Math.max(140, Math.min(w - 140, p.x)) + 'px'; card.style.top = p.y + 'px';
+  card.style.transform = p.y < 250 ? 'translate(-50%, 16px)' : 'translate(-50%, calc(-100% - 14px))';
+  card.hidden = false;
+}
+function coRender() {
+  Object.values(coLayers).forEach(l => l.dot.setStyle(coStyle(l.s, l.g)));
+  if (coState.pinned) {
+    const o = ownerCard(coState.pinned.g), f = n => document.querySelector('#owner-card [data-f="' + n + '"]');
+    f('where').textContent = seatName(coState.pinned.s);
+    f('name').textContent = o.name; f('contact').textContent = o.contact;
+    f('dot').style.background = o.dot; f('item').textContent = o.item;
+    f('date').textContent = 'Purchased ' + o.date; f('order').textContent = 'Order #' + o.order;
+  }
+  placeCard();
+  const pop = coState.popup;
+  document.getElementById('held-modal').hidden = !pop;
+  if (pop) {
+    const sel = coState.sel.find(x => x.key === pop.key);
+    document.getElementById('held-body').innerHTML =
+      (pop.g.kind === 'held' ? '<p style="margin:0;font-size:20px;line-height:1.3;"><span style="color:#bb5555;font-size:14px;vertical-align:top;">✱</span> <span style="color:#bb5555;">'
+        + (pop.g.hold.note ? 'Held for: ' + pop.g.hold.note : 'Held by configuration tool') + '</span><span style="display:block;font-size:16px;">Section: '
+        + (pop.s.sec === 'S' ? 'South' : 'North') + ' Bleachers, <br>Row: ' + pop.s.row + ', Seat: ' + pop.s.n + '</span></p><hr style="border:0;border-top:1px solid #eee;margin:12px 0">' : '')
+      + (pop.levels.length > 1 ? '<p style="margin:8px 0 6px;font-size:14px;">Select ticket level:</p><select id="co-level" style="width:100%;height:34px;border:1px solid #ccc;border-radius:4px;font-size:14px;">'
+        + pop.levels.map((l, i) => '<option value="' + i + '"' + (sel && sel.level === l ? ' selected' : '') + '>' + l.name + ', $' + l.price + '</option>').join('') + '</select>' : '');
+  }
+  const groups = {};
+  coState.sel.forEach(x => { (groups[x.level.name] = groups[x.level.name] || { level: x.level, seats: [] }).seats.push(x.s); });
+  document.getElementById('selected').innerHTML = coState.sel.length
+    ? Object.values(groups).map(g => '<div style="padding:10px 12px;font-size:12px;"><h3 style="margin:0 0 4px;font-size:14px;font-weight:700;">Ticket Level - ' + g.level.name + ': $' + g.level.price.toFixed(2) + '</h3>'
+      + '<div style="margin-bottom:6px;">Number of seats selected: ' + g.seats.length + '</div>'
+      + g.seats.map(s => '<div>Section ' + (s.sec === 'S' ? 'South' : 'North') + ' Bleachers, Row ' + s.row + ', Seat ' + s.n + '</div>').join('') + '</div>').join('')
+    : '<div style="padding:12px;font-size:12px;"><em>No seats selected.</em></div>';
+  document.getElementById('ga').textContent = coState.ga;
+  const total = coState.sel.reduce((a, x) => a + x.level.price, 0) + coState.ga * 5;
+  document.getElementById('co-total').textContent = total ? 'Order total: $' + total.toFixed(2) : 'Select tickets to calculate order total before placing.';
+}
+document.getElementById('legend').innerHTML = '<span style="font-weight:700;color:#005CB9;">New:</span>' + [
+  ['Available · Reserved', CO.avail, ''], ['Available · Chairback Club', CO.club, ''], ['Held (color set per hold)', '#ff9800', ''],
+  ['Sold – season pass', CO.sold, 'P'], ['Sold – season ticket', CO.sold, 'T'], ['Sold – single game', CO.sold, '✕'], ['Selected', CO.selected, ''],
+].map(([label, fill, mark]) => '<span style="display:flex;gap:6px;align-items:center;"><span style="width:14px;height:14px;border-radius:50%;background:' + fill + ';color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;">' + mark + '</span>' + label + '</span>').join('');
+document.getElementById('card-close').onclick = () => { coState.pinned = null; coRender(); };
+document.getElementById('held-choose').onclick = () => {
+  const pop = coState.popup, sel = pop && coState.sel.find(x => x.key === pop.key), lv = document.getElementById('co-level');
+  if (sel && lv) sel.level = pop.levels[+lv.value];
+  coState.popup = null; coRender();
+};
+document.getElementById('held-close').onclick = () => { const pop = coState.popup; coState.sel = coState.sel.filter(x => x.key !== pop.key); coState.popup = null; coRender(); };
+document.getElementById('clear-sel').onclick = () => { coState.sel = []; coRender(); };
+document.getElementById('ga-inc').onclick = () => { coState.ga++; coRender(); };
+document.getElementById('ga-dec').onclick = () => { coState.ga = Math.max(0, coState.ga - 1); coRender(); };
+
+/* Renewal screens */
+const screenNow = () => document.getElementById('track').hidden ? 'review' : 'track';
+let mgName = null, mgMode = 'review', mgMoving = [], mgPicks = [], rmap = null;
+const rv = { filter: 'all', q: '' }, tr = { filter: 'all' };
+const BADGE = {
+  'Renewed': 'background:#E6F4EE;color:#006644', 'Partly renewed': 'background:#FFF8E0;color:#6B5300',
+  'Not renewed yet': 'background:#F1F2F2;color:#2D2A26', 'Released': 'background:#F1F2F2;color:#2D2A26',
+};
+const pillTab = (on, label, key, attr) => '<button type="button" role="tab" aria-selected="' + on + '" ' + attr + '="' + key + '" style="font-family: Exo, sans-serif; font-size: 14px; padding: 6px 14px; border-radius: 999px; cursor: pointer; '
+  + (on ? 'border: 1px solid #005CB9; background: #F1FAFE; color: #005CB9; font-weight: 600' : 'border: 1px solid #d1d5db; background: #FFFFFF; color: #2D2A26') + '">' + label + '</button>';
+const TD = 'padding: 14px 12px; border-bottom: 1px solid #e5e7eb';
+function chip(s, comp) {
+  const base = 'padding:4px 8px;border-radius:6px;white-space:nowrap;';
+  if (REMOVED.has(seatKey(s))) return '<span style="' + base + 'border:1px dashed #E0AF00;background:#FFFFFF">' + seatName(s) + '</span>';
+  if (comp) return '<span style="' + base + 'border:1px solid #008256;background:#E6F4EE;color:#006644">' + seatName(s) + ' · Comp</span>';
+  return '<span style="' + base + 'border:1px solid #d1d5db;background:#FFFFFF">' + seatName(s) + '</span>';
+}
+
+OPT.keepComps = true;
+function renderCompSwitch() {
+  const sec = document.querySelector('#review table').closest('section');
+  let box = document.getElementById('comp-switch');
+  if (!box) { box = document.createElement('label'); box.id = 'comp-switch'; box.style.cssText = 'display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border:1px solid #E5E9EC;border-radius:8px;font-size:15px'; sec.appendChild(box);
+    box.addEventListener('change', e => { OPT.keepComps = e.target.checked; Object.values(CUST).forEach(c => c.seats.forEach(s => { s.comp = OPT.keepComps && s.lastComp; })); renderLists();
+      toast(OPT.keepComps ? "Last season's comps are back on." : "Every seat now renews at full price. Add comps one seat at a time in Manage Seats."); }); }
+  const last = Object.values(CUST).reduce((a, c) => a + c.seats.filter(s => s.lastComp && !s.removed).length, 0);
+  box.innerHTML = '<input type="checkbox" id="keep-comps"' + (OPT.keepComps ? ' checked' : '') + (OPT.state !== 'new' ? ' disabled' : '') + ' style="margin-top:3px;width:18px;height:18px;accent-color:#005CB9">'
+    + '<span style="display:flex;flex-direction:column;gap:4px"><span style="font-weight:600">Keep last season\'s comps (' + last + ' seats)</span>'
+    + '<span style="font-size:14px;color:#6D6E71">Turn off to renew every seat at full price. You can still make any seat a comp, or take a comp away, in Manage Seats.</span></span>';
+}
+function renderLevelTable() {
+  renderCompSwitch();
+  const tbody = document.querySelector('#review table tbody');
+  const count = lv => Object.values(CUST).filter(c => c.level === lv).reduce((a, c) => a + listSeats(c).length, 0);
+  tbody.innerHTML = LAST_LEVELS.map((lv, i) => {
+    const m = MATCH[lv], last = i === LAST_LEVELS.length - 1, bd = last ? '' : 'border-bottom: 1px solid #e5e7eb';
+    const opts = (m ? [] : ['<option value="">Choose a ticket level</option>']).concat(Object.keys(PRICE).map(o => '<option' + (o === m ? ' selected' : '') + '>' + o + '</option>')).join('');
+    return '<tr' + (m ? '' : ' style="background: #FFF8E0"') + '><td style="padding: 12px; ' + bd + '">' + lv + '</td><td style="padding: 12px; ' + bd + '">' + count(lv) + '</td>'
+      + '<td style="padding: 12px; ' + bd + '"><select data-match="' + lv + '" aria-label="This season ticket level for ' + lv + '" style="font-family: Exo, sans-serif; font-size: 14px; padding: 6px 10px; border: 1px solid ' + (m ? '#d1d5db' : '#E0AF00') + '; border-radius: 6px; background: #FFFFFF">' + opts + '</select></td>'
+      + '<td style="padding: 12px; ' + bd + (m ? '' : '; color: #6B5300; font-weight: 600') + '">' + (m ? money(PRICE[m]) + wasPrice(lv) : 'No match yet') + '</td></tr>';
+  }).join('');
+  tbody.querySelectorAll('[data-match]').forEach(sel => sel.onchange = () => { MATCH[sel.dataset.match] = sel.value || null; renderLists(); });
+}
+function stateNote(screen, cls, tag, text, link) {
+  const main = document.querySelector('#' + screen + ' main');
+  let n = main.querySelector('.state-note');
+  if (!tag) { if (n) n.remove(); return; }
+  if (!n) { n = document.createElement('div'); main.children[0].after(n); }
+  n.className = 'state-note' + (cls ? ' ' + cls : '');
+  n.innerHTML = '<span class="tag">' + tag + '</span><span style="flex:1 1 360px">' + text + '</span>' + (link || '');
+}
+const btnLink = (href, label) => '<a href="#' + href + '" style="font-size:14px;font-weight:500;padding:8px 14px;border-radius:6px;color:#FFFFFF;text-decoration:none;background:#005CB9">' + label + '</a>';
+function renderReview() {
+  const locked = OPT.state !== 'new', rvEl = document.getElementById('review');
+  rvEl.classList.toggle('locked', locked);
+  if (OPT.state === 'pending') stateNote('review', '', 'Waiting for approval', 'Hometown sent this list to Lincoln High School Athletics. Changes go through Request Changes on the approval page.', btnLink('approval', 'Review and Approve'));
+  else if (locked) stateNote('review', '', 'Locked', 'Renewals are ' + (OPT.state === 'open' ? 'open' : 'scheduled') + ', so the renewal list is locked. Make changes in Track Renewals.', btnLink('track', 'Track Renewals'));
+  else if (OPT.setup === 'hometown') stateNote('review', '', 'Hometown view', "You're setting this up for Lincoln High School Athletics. They'll review and approve it before anything goes to customers.");
+  else stateNote('review');
+  renderLevelTable();
+  document.querySelectorAll('#review [data-match]').forEach(s => { s.disabled = locked; });
+  const cont = document.querySelector('#review a[href="#window"]'), blocked = !locked && stats().attention > 0;
+  cont.setAttribute('aria-disabled', blocked);
+  cont.style.background = blocked ? '#BCBEC0' : '#005CB9'; cont.style.cursor = blocked ? 'not-allowed' : '';
+  let why = document.getElementById('rv-block');
+  if (!why) { why = document.createElement('span'); why.id = 'rv-block'; why.style.cssText = 'align-self:center;font-size:14px;color:#6B5300'; cont.before(why); }
+  why.innerHTML = blocked ? 'Fix ' + stats().attention + ' row' + (stats().attention > 1 ? 's' : '') + ' that need attention before setting dates. <button type="button" class="mng-link" data-rv="attention">Show them</button>' : '';
+  const att = document.querySelector('#review [data-stat="attention"]').closest('div'), n = stats().attention;
+  att.style.background = n ? '#FFF8E0' : '#FFFFFF'; att.style.border = n ? '1px solid #E0AF00' : '0'; att.style.boxShadow = n ? '' : '0 0 0 1px rgba(45,42,38,0.1)'; att.style.borderRadius = n ? '8px' : '12px';
+  att.querySelectorAll('span').forEach(x => { x.style.color = n ? '#6B5300' : ''; });
+  att.style.cursor = n ? 'pointer' : ''; att.dataset.rv = n ? 'attention' : ''; att.title = n ? 'Show rows that need attention' : '';
+  const sec = document.querySelectorAll('#review table')[1].closest('section');
+  const cs = custList().filter(c => listSeats(c).length);
+  const counts = { all: cs.length, attention: cs.filter(c => attention(c).length).length, comp: cs.reduce((n, c) => n + listSeats(c).filter(s => s.comp).length, 0), text: cs.filter(textOnly).length };
+  sec.querySelector('[role="tablist"]').innerHTML = [['all', 'All'], ['attention', 'Need attention'], ['comp', 'Comp seats'], ['text', 'Text only']]
+    .map(([k, l]) => pillTab(rv.filter === k, l + ' ' + counts[k], k, 'data-rv')).join('');
+  const q = rv.q.trim().toLowerCase();
+  const shown = cs.filter(c => rv.filter === 'all' || (rv.filter === 'attention' && attention(c).length) || (rv.filter === 'comp' && listSeats(c).some(s => s.comp)) || (rv.filter === 'text' && textOnly(c)))
+    .filter(c => !q || (c.name + ' ' + (c.contact.email || '') + ' ' + listSeats(c).map(seatName).join(' ')).toLowerCase().includes(q));
+  sec.querySelector('table tbody').innerHTML = shown.map(c => {
+    const why = attention(c), seats = listSeats(c), lvl = levelSummary(c, seats), matched = seats.every(s => seatLevel(c, s));
+    const contact = rv.editing === c.name
+      ? '<div style="display:flex;flex-direction:column;gap:6px"><input id="ct-email" type="email" placeholder="Email" style="font-family:Exo,sans-serif;font-size:14px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px"><input id="ct-phone" type="tel" placeholder="Mobile number" style="font-family:Exo,sans-serif;font-size:14px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px"><span style="display:flex;gap:10px"><button class="mng-link" data-contact-save="' + c.name + '">Save</button><button class="mng-link" style="color:#6D6E71" data-contact-cancel="1">Cancel</button></span></div>'
+      : !hasContact(c) ? '<span style="color: #6B5300">No email or mobile number</span>'
+      : [c.contact.email, c.contact.phone].filter(Boolean).join('<br>') + (textOnly(c) ? '<br><span style="font-size: 12px; padding: 2px 8px; border-radius: 999px; background: #F1F2F2; color: #2D2A26">Text only</span>' : '');
+    const price = matched ? money(seats.reduce((a, s) => a + seatPrice(c, s), 0)) : '<span style="color: #6B5300; font-weight: 600">No match yet</span>';
+    const gone = seats.some(s => REMOVED.has(seatKey(s)));
+    const acts = (gone ? '<button class="mng-link" data-manage="' + c.name + '" data-missing="1">Choose Seat</button>' : '<button class="mng-link" data-manage="' + c.name + '">Manage Seats</button>')
+      + (!hasContact(c) && rv.editing !== c.name ? '<button class="mng-link" style="display:block;margin-top:8px" data-contact="' + c.name + '">Add Contact</button>' : '');
+    return '<tr style="vertical-align: top' + (why.length ? '; background: #FFF8E0' : '') + '">'
+      + '<td style="' + TD + '; font-weight: 600">' + c.name + '</td>'
+      + '<td style="' + TD + '; font-size: 14px; line-height: 1.5">' + contact + '</td>'
+      + '<td style="' + TD + '"><div style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; gap: 6px; flex-wrap: wrap; font-size: 13px">' + seats.map(s => chip(s, s.comp)).join('') + '</div>'
+      + why.map(w => '<span style="font-size: 13px; color: #6B5300">' + w + '</span>').join('') + '</div></td>'
+      + '<td style="' + TD + '">' + (lvl || '<span style="color: #6B5300">' + c.level + '</span>') + '</td>'
+      + '<td style="' + TD + '">' + price + '</td><td style="' + TD + '">' + acts + '</td></tr>';
+  }).join('') || '<tr><td colspan="6" style="padding: 16px 12px; color: #6D6E71">' + (rv.filter === 'attention' ? 'All rows are ready. You can continue to dates.' : 'No customers match.') + '</td></tr>';
+  rv.shownCount = shown.length;
+}
+function renderTrack() {
+  const off = OPT.state === 'new' || OPT.state === 'pending';
+  document.getElementById('track').classList.toggle('off', off);
+  const apv = document.getElementById('track-approved') || (() => { const el = document.createElement('p'); el.id = 'track-approved'; el.style.cssText = 'margin: 0; font-size: 14px; color: #6D6E71'; const sub = [...document.querySelectorAll('#track main p')].find(p => /^Deadline/.test(p.textContent)); sub.after(el); return el; })();
+  apv.textContent = OPT.approvedBy ? 'Approved by ' + OPT.approvedBy : ''; apv.hidden = !OPT.approvedBy;
+  if (off) stateNote('track', 'warn', 'Not scheduled', OPT.state === 'pending' ? 'Renewals are waiting for the client to approve them. Tracking starts once they\'re scheduled.' : 'Renewals haven\'t been scheduled yet. Build and approve the renewal list first.', btnLink(OPT.state === 'pending' ? 'approval' : 'review', OPT.state === 'pending' ? 'Review and Approve' : 'Review List'));
+  else if (OPT.state === 'scheduled') stateNote('track', '', 'Scheduled', 'Renewals open Tue, Oct 5. Nobody can renew before then, but you can still add customers, fix contacts, and release or move seats.', '<button type="button" class="btn" id="jump-open">Demo: jump to Oct 20</button>');
+  else stateNote('track');
+  const jump = document.getElementById('jump-open');
+  if (jump) jump.onclick = () => {
+    // Keep the list the user built and fill in sample renewals as of Oct 20
+    OPT.state = 'open';
+    VENUE.holders.forEach(h => { const c = CUST[h.name]; if (c) c.seats.forEach((s, i) => { s.st = h.status[i] || 'u'; }); });
+    Object.values(CUST).forEach(c => { if (!c.activity || /scheduled/.test(c.activity)) c.activity = null; });
+    tPick = null; renderLists(); toast('Jumped to Wed, Oct 20: renewals are open, 9 days before the deadline.');
+  };
+  document.querySelectorAll('#track [data-release="open"]').forEach(b => { b.hidden = OPT.state !== 'open'; });
+  document.querySelector('#track [data-stat="trackPill"]').parentElement.hidden = OPT.state === 'scheduled';
+  const remindBtn = document.querySelector('#track [data-stat="remind"]'); if (remindBtn) remindBtn.closest('button').hidden = OPT.state !== 'open';
+  let addBtn = document.getElementById('track-add');
+  if (!addBtn && remindBtn) {
+    addBtn = document.createElement('button'); addBtn.id = 'track-add'; addBtn.className = 'btn'; addBtn.type = 'button'; addBtn.textContent = 'Add Customer';
+    addBtn.onclick = openAdd; remindBtn.closest('button').before(addBtn);
+    const conf = document.createElement('section'); conf.id = 'remind-confirm'; conf.hidden = true;
+    conf.style.cssText = 'border:2px solid #005CB9;border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.5';
+    remindBtn.closest('section').querySelector('[role="tablist"]').before(conf);
+    remindBtn.closest('button').addEventListener('click', () => {
+      const who = Object.values(CUST).filter(c => c.seats.some(s => tStatus(s) === 'u') && hasContact(c));
+      const em = who.filter(c => c.contact.email).length;
+      conf.innerHTML = '<strong>Remind ' + who.length + ' customers now?</strong><span>' + em + ' by email and ' + (who.length - em) + ' by text, each with their renewal link. The next scheduled reminder still goes out Oct 22.</span>'
+        + '<div style="display:flex;gap:12px;flex-wrap:wrap"><button type="button" class="btn" id="remind-cancel">Cancel</button><button type="button" class="btn btn-primary" id="remind-send">Send Reminder</button></div>';
+      conf.hidden = false; remindBtn.closest('button').disabled = true;
+      document.getElementById('remind-cancel').onclick = () => { conf.hidden = true; remindBtn.closest('button').disabled = false; };
+      document.getElementById('remind-send').onclick = () => {
+        who.forEach(c => { c.activity = (c.contact.email ? 'Email' : 'Text') + ' reminder sent Oct 20'; });
+        conf.hidden = true; remindBtn.closest('button').disabled = false;
+        const list = document.querySelector('#track aside ol'), li = document.createElement('li');
+        li.style.cssText = 'display: flex; flex-direction: column; gap: 2px';
+        li.innerHTML = '<span style="font-weight: 600">Reminder (sent by you)</span><span style="color: #6D6E71">Sent Oct 20 to ' + who.length + ' customers</span>';
+        list.insertBefore(li, list.children[1]);
+        renderLists(); toast('Reminder sent to ' + who.length + ' customers.');
+      };
+    });
+  }
+  const table = document.querySelector('#track table');
+  const headRow = table.querySelector('thead tr');
+  if (headRow.cells.length === 5) {
+    const th = document.createElement('th');
+    th.style.cssText = 'padding:12px 16px;border-bottom:2px solid #d1d5db';
+    th.innerHTML = '<span style="position:absolute;left:-9999px">Actions</span>';
+    headRow.appendChild(th);
+  }
+  const cs = custList(), counts = { all: cs.length };
+  ['Renewed', 'Partly renewed', 'Not renewed yet', 'Released'].forEach(k => { counts[k] = cs.filter(c => custTrack(c) === k).length; });
+  table.closest('section').querySelector('[role="tablist"]').innerHTML = [['all', 'All'], ['Renewed', 'Renewed'], ['Partly renewed', 'Partly renewed'], ['Not renewed yet', 'Not renewed yet'], ['Released', 'Released']]
+    .map(([k, l]) => pillTab(tr.filter === k, l + ' ' + counts[k], k, 'data-tr')).join('');
+  table.querySelector('tbody').innerHTML = cs.filter(c => tr.filter === 'all' || custTrack(c) === tr.filter).map(c => {
+    const status = custTrack(c), sts = c.seats.map(tStatus);
+    const r = sts.filter(x => x === 'r').length, x = sts.filter(y => y === 'x').length, active = sts.length - x;
+    const paid = c.seats.filter(s => tStatus(s) === 'r').reduce((a, s) => a + seatPrice(c, s), 0);
+    const verb = OPT.state === 'scheduled' ? 'scheduled' : 'sent';
+    const activity = c.activity || (status === 'Released' ? 'Released by you ' + c.day : r ? 'Bought ' + c.day
+      : c.contact.email ? 'Email ' + verb + ' Oct 5' : c.contact.phone ? 'Text ' + verb + ' Oct 5' : 'Not contacted');
+    const td = 'padding: 12px; border-bottom: 1px solid #e5e7eb';
+    return '<tr><td style="' + td + '; font-weight: 600">' + c.name + '</td>'
+      + '<td style="' + td + '"><span style="font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; ' + BADGE[status] + '">' + status + '</span></td>'
+      + '<td style="' + td + '; font-size: 14px">' + (active ? r + ' of ' + active + ' renewed' : 'None saved') + (c.seats.some(s => s.comp) ? ' · comp' : '') + (x ? ' · ' + x + ' released' : '') + '</td>'
+      + '<td style="' + td + (paid ? '' : '; color: #6D6E71') + '">' + (paid ? money(paid) : r ? '$0' : 'None') + '</td>'
+      + '<td style="' + td + '; font-size: 14px; color: #6D6E71">' + activity + '</td>'
+      + '<td style="' + td + '"><button class="mng-link" data-manage="' + c.name + '">Manage Seats</button></td></tr>';
+  }).join('');
+  const s = stats(), bar = document.querySelector('#track [role="img"]');
+  bar.setAttribute('aria-label', 'Seat status: ' + s.renewed + ' renewed, ' + s.released + ' released, ' + s.undecided + ' not renewed yet');
+  bar.innerHTML = '<span style="width:' + (100 * s.renewed / s.total).toFixed(1) + '%;background:#005CB9"></span><span style="width:' + (100 * s.released / s.total).toFixed(1) + '%;background:#888F96"></span>';
+  bar.nextElementSibling.innerHTML = [['#005CB9', 'Renewed ' + s.renewed], ['#888F96', 'Released ' + s.released], ['#E5E9EC', 'Not renewed yet ' + s.undecided]]
+    .map(([c, l]) => '<span style="display: flex; gap: 6px; align-items: center"><span style="width: 10px; height: 10px; border-radius: 2px; background: ' + c + (c === '#E5E9EC' ? '; border: 1px solid #d1d5db' : '') + '"></span>' + l + '</span>').join('');
+}
+function fillStats() {
+  const s = stats(), v = { ...s, revenue: money(s.revenue), sentWord: OPT.state === 'scheduled' ? 'Scheduled' : 'Sent',
+    trackPill: OPT.state === 'scheduled' ? 'Scheduled · opens Tue, Oct 5' : 'Open · 9 days left', showing: 'Showing ' + (rv.shownCount ?? s.customers) + ' of ' + s.customers + '.' };
+  document.querySelectorAll('[data-stat]').forEach(el => { el.textContent = typeof v[el.dataset.stat] === 'number' ? v[el.dataset.stat].toLocaleString() : v[el.dataset.stat]; });
+}
+function renderLists() {
+  renderReview(); renderTrack(); if (window.entryReady) { renderWindow(); renderApproval(); } fillStats();
+  if (window.entryReady) { renderEntry(); renderHub(); }
+  if (tView === 'map' && !document.getElementById('track').hidden) { tPick = null; buildTrackMap(); }
+}
+document.getElementById('review').addEventListener('click', e => {
+  const t = e.target.closest('[data-rv]'); if (t && t.dataset.rv) { rv.filter = t.dataset.rv; renderLists(); if (t.id === 'rv-block' || t.closest('#rv-block') || !t.closest('[role="tablist"]')) document.querySelectorAll('#review table')[1].scrollIntoView({ block: 'start' }); }
+  const ct = e.target.closest('[data-contact]'); if (ct) { rv.editing = ct.dataset.contact; renderReview(); }
+  if (e.target.closest('[data-contact-cancel]')) { rv.editing = null; renderReview(); }
+  const sv = e.target.closest('[data-contact-save]');
+  if (sv) {
+    const email = document.getElementById('ct-email').value.trim(), phone = document.getElementById('ct-phone').value.trim();
+    if (!email && !phone) { document.getElementById('ct-email').focus(); return; }
+    CUST[sv.dataset.contactSave].contact = { ...(email && { email }), ...(phone && { phone }) };
+    rv.editing = null; renderLists(); toast('Contact added for ' + sv.dataset.contactSave + '.');
+  }
+  const c = e.target.closest('a[href="#window"][aria-disabled="true"]'); if (c) { e.preventDefault(); e.stopPropagation(); }
+}, true);
+[...document.querySelectorAll('#review button')].filter(b => /Import File|Add Customer/.test(b.textContent)).forEach(b => b.classList.add('rv-edit'));
+document.querySelector('#review input[type="search"]').addEventListener('input', e => { rv.q = e.target.value; renderReview(); fillStats(); });
+document.getElementById('track').addEventListener('click', e => {
+  const t = e.target.closest('[data-tr]'); if (t) { tr.filter = t.dataset.tr; renderTrack(); }
+});
+document.addEventListener('click', e => {
+  const m = e.target.closest('[data-manage]'); if (m) openManage(m.dataset.manage, !!m.dataset.missing);
+});
+
+/* Manage seats: release or move */
+function notifyLabel(c, what) {
+  if (c.contact.email) return 'Email ' + firstName(c.name) + ' ' + what;
+  if (c.contact.phone) return 'Text ' + firstName(c.name) + ' ' + what.replace('email', 'text');
+  return null;
+}
+function setNotify(boxId, textId, c, what) {
+  const box = document.getElementById(boxId), label = box.closest('label'), live = mgMode === 'track';
+  label.hidden = !live;
+  if (!live) return;
+  const t = notifyLabel(c, what);
+  box.disabled = !t; box.checked = false;
+  document.getElementById(textId).textContent = t || "No email or mobile number on file, so this customer can't be told here.";
+}
+const mgSeats = c => mgMode === 'track' ? c.seats : listSeats(c);
+const locked = s => mgMode === 'track' && tStatus(s) !== 'u';
+function openManage(name, moveMissing) {
+  mgName = name; mgMode = screenNow();
+  const c = CUST[name], seats = mgSeats(c);
+  document.getElementById('mg-title').textContent = 'Manage Seats: ' + name;
+  document.getElementById('mg-sub').textContent = "2027-28 Men's Basketball Season Tickets · last season " + c.level + (c.seats.some(s => s.lastComp) ? ' · had comps' : '');
+  document.getElementById('mg-seats').innerHTML = seats.length ? seats.map((s, i) => {
+    const lk = locked(s), gone = REMOVED.has(seatKey(s));
+    const tags = (isClub(s) ? '<span class="mg-tag" style="background:#E0F2F1;color:#00695c">Club Seats</span>' : '')
+      + (gone ? '<span class="mg-tag" style="background:#FFF8E0;color:#6B5300">Not on this season\'s map</span>' : '')
+      + (lk ? '<span class="mg-tag" style="' + (tStatus(s) === 'r' ? 'background:#E6F4EE;color:#006644">Renewed' : 'background:#F1F2F2;color:#2D2A26">Released') + '</span>' : '');
+    const cur = seatLevel(c, s);
+    const ctrl = lk ? '<span style="font-size:13px">' + (cur || c.level) + (s.comp ? ' · Comp' : '') + '</span>'
+      : '<select data-lvl="' + i + '" aria-label="Ticket level for ' + seatName(s) + '" style="font-family:Exo,sans-serif;font-size:13px;padding:5px 8px;border:1px solid ' + (cur ? '#d1d5db' : '#E0AF00') + ';border-radius:6px;background:#fff">'
+        + (cur ? '' : '<option value="">Choose a level</option>') + SEAT_LEVELS(s).map(l => '<option' + (l === cur ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>'
+        + '<label style="display:flex;gap:6px;align-items:center;font-size:13px;white-space:nowrap"><input type="checkbox" data-comp="' + i + '"' + (s.comp ? ' checked' : '') + ' style="accent-color:#005CB9"> Comp</label>';
+    const was = s.lastComp && !s.comp ? '<span class="mg-tag" style="background:#F1F2F2;color:#2D2A26">Comp last season</span>' : '';
+    return '<div class="mg-seat" style="flex-wrap:wrap' + (lk ? ';color:#6D6E71' : '') + '"><label style="display:flex;gap:10px;align-items:center;flex:1 1 200px"><input type="checkbox" data-i="' + i + '"' + (lk ? ' disabled' : '') + ((moveMissing && gone) ? ' checked' : '') + '>'
+      + '<span>' + seatName(s) + '</span></label>' + tags + was + ctrl + '</div>';
+  }).join('') : '<p style="margin:0;font-size:15px;color:#6D6E71">No seats saved for this customer.</p>';
+  document.getElementById('mg-hint').textContent = mgMode === 'track'
+    ? "Renewed seats are already purchased, and released seats are back on sale, so neither can be changed here."
+    : 'Changes save to the renewal list. Nothing goes to customers until renewals open.';
+  document.getElementById('mg-release-confirm').hidden = true;
+  renderExtra();
+  showListView();
+  document.getElementById('manage').hidden = false; focusDialog();
+  if (moveMissing) startMove();
+}
+// After launch: fix contact info, copy the customer's renewal link, resend the renewal
+let mgEditContact = false;
+function renderExtra() {
+  const box = document.getElementById('mg-extra'), c = CUST[mgName];
+  if (mgMode !== 'track' || !c) { box.innerHTML = ''; return; }
+  const undecided = c.seats.some(s => tStatus(s) === 'u');
+  const via = c.contact.email ? 'email' : c.contact.phone ? 'text' : null;
+  const contact = mgEditContact
+    ? '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px"><label class="add-f">Email<input id="mg-c-email" type="email" value="' + (c.contact.email || '') + '"></label><label class="add-f">Mobile number<input id="mg-c-phone" type="tel" value="' + (c.contact.phone || '') + '"></label></div>'
+      + (undecided ? '<label class="mg-note"><input type="checkbox" id="mg-c-resend" checked><span>Send the renewal to the updated contact</span></label>' : '')
+      + '<div style="display:flex;gap:10px"><button class="btn btn-primary" data-x="contact-save">Save Contact</button><button class="btn" data-x="contact-cancel">Cancel</button></div>'
+    : '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span style="flex:1 1 240px;font-size:15px">' + ([c.contact.email, c.contact.phone].filter(Boolean).join(' · ') || '<span style="color:#6B5300">No email or mobile number</span>') + '</span><button class="mng-link" data-x="contact-edit">Edit Contact</button></div>';
+  box.innerHTML = '<div style="border-top:1px solid #E5E9EC;padding-top:12px;display:flex;flex-direction:column;gap:8px"><strong style="font-size:14px">Contact</strong>' + contact + '</div>'
+    + '<div style="border-top:1px solid #E5E9EC;padding-top:12px;display:flex;flex-direction:column;gap:8px"><strong style="font-size:14px">Renewal link · passcode ' + passcode(c) + '</strong>'
+    + '<div class="link-box"><input id="mg-link" readonly value="' + renewLink(c) + '" aria-label="Renewal link"><button class="btn" data-x="copy">Copy Link</button>'
+    + (undecided && via && OPT.state === 'open' ? '<button class="btn btn-primary" data-x="resend">Resend Renewal ' + (via === 'email' ? 'Email' : 'Text') + '</button>' : '') + '</div>'
+    + '<span style="font-size:13px;color:#6D6E71">' + (!undecided ? "Nothing left to renew, so there's nothing to resend." : OPT.state !== 'open' ? 'Their renewal goes out with everyone else\'s on Tue, Oct 5. You can copy the link now.' : !via ? 'Add an email or mobile number to send the renewal.' : 'The link opens checkout with their passcode applied and seats selected. Share it however the customer prefers.') + '</span></div>';
+}
+document.getElementById('mg-extra').addEventListener('click', e => {
+  const b = e.target.closest('[data-x]'); if (!b) return;
+  const c = CUST[mgName];
+  if (b.dataset.x === 'contact-edit') { mgEditContact = true; renderExtra(); }
+  if (b.dataset.x === 'contact-cancel') { mgEditContact = false; renderExtra(); }
+  if (b.dataset.x === 'contact-save') {
+    const email = document.getElementById('mg-c-email').value.trim(), phone = document.getElementById('mg-c-phone').value.trim();
+    const resend = document.getElementById('mg-c-resend') && document.getElementById('mg-c-resend').checked && (email || phone);
+    c.contact = { ...(email && { email }), ...(phone && { phone }) };
+    if (resend) c.activity = (email ? 'Email' : 'Text') + ' resent Oct 20';
+    mgEditContact = false; renderExtra(); renderLists();
+    toast('Contact updated for ' + c.name + '.' + (resend ? ' Renewal ' + (email ? 'email' : 'text') + ' sent to the new contact.' : ''));
+  }
+  if (b.dataset.x === 'copy') {
+    const inp = document.getElementById('mg-link');
+    const fallback = () => { inp.select(); toast('Press Ctrl+C or Cmd+C to copy the selected link.'); };
+    try { navigator.clipboard.writeText(inp.value).then(() => toast('Renewal link copied for ' + c.name + '.'), fallback); }
+    catch (err) { fallback(); }
+  }
+  if (b.dataset.x === 'resend') {
+    const via = c.contact.email ? 'Email' : 'Text';
+    c.activity = via + ' resent Oct 20'; renderLists(); renderExtra();
+    toast('Renewal ' + via.toLowerCase() + ' resent to ' + c.name + ' with their renewal link.');
+  }
+});
+document.getElementById('mg-seats').addEventListener('change', e => {
+  const c = CUST[mgName]; if (!c) return;
+  const seats = mgSeats(c), lv = e.target.closest('[data-lvl]'), cp = e.target.closest('[data-comp]');
+  if (lv) { seats[+lv.dataset.lvl].lvl = lv.value || null; renderLists(); toast(seatName(seats[+lv.dataset.lvl]) + ' now renews at ' + (lv.value || 'no level') + '.'); }
+  if (cp) { seats[+cp.dataset.comp].comp = cp.checked; renderLists(); toast(seatName(seats[+cp.dataset.comp]) + (cp.checked ? ' is now a comp.' : ' now renews at full price.')); }
+});
+let mgReturnFocus = null;
+function focusDialog() {
+  if (!mgReturnFocus) mgReturnFocus = document.activeElement;
+  setTimeout(() => { const f = document.querySelector('#manage .mg-head h2'); f.setAttribute('tabindex', '-1'); f.focus(); }, 0);
+}
+function closeManage() { if (mgReturnFocus && mgReturnFocus.focus) mgReturnFocus.focus(); mgReturnFocus = null; mgEditContact = false; mgAdd = null; document.getElementById('manage').hidden = true; if (rmap) { rmap.remove(); rmap = null; } }
+function showView(v) {
+  ['list', 'add', 'map'].forEach(k => { document.getElementById('mg-' + k + '-view').hidden = document.getElementById('mg-' + k + '-actions').hidden = k !== v; });
+}
+function showListView() {
+  showView('list');
+  const none = !mgSeats(CUST[mgName]).some(s => !locked(s));
+  document.querySelector('[data-mg="release"]').disabled = none;
+  document.querySelector('[data-mg="move"]').disabled = none;
+}
+function checkedSeats() {
+  const seats = mgSeats(CUST[mgName]);
+  const picked = [...document.querySelectorAll('#mg-seats input[data-i]:checked')].map(i => seats[+i.dataset.i]);
+  return picked.length ? picked : seats.filter(s => !locked(s));
+}
+function startRelease() {
+  const c = CUST[mgName], list = checkedSeats(), track = mgMode === 'track', many = list.length > 1;
+  mgMoving = list;
+  document.getElementById('mg-release-title').textContent = 'Release ' + list.length + ' seat' + (many ? 's' : '') + ' for ' + mgName + '?';
+  document.getElementById('mg-release-text').textContent = list.map(seatName).join(', ') + '. ' + (many ? 'These seats come' : 'This seat comes')
+    + (track ? ' off ' + firstName(mgName) + "'s renewal and " + (many ? 'go' : 'goes') + ' on sale right away. Their passcode stops working for ' + (many ? 'these seats.' : 'this seat.')
+             : " off the renewal list and won't be saved for " + firstName(mgName) + '.')
+    ;
+  setNotify('mg-release-notify', 'mg-release-notify-text', c, 'that their seats were released');
+  document.getElementById('mg-release-confirm').hidden = false;
+}
+function doRelease() {
+  const c = CUST[mgName], n = mgMoving.length, notify = document.getElementById('mg-release-notify').checked && mgMode === 'track';
+  mgMoving.forEach(s => { s.removed = true; });
+  if (mgMode === 'track') c.activity = 'Seats released by you';
+  renderLists(); closeManage();
+  toast('Released ' + n + ' seat' + (n > 1 ? 's' : '') + ' for ' + mgName + '.' + (notify ? ' ' + firstName(mgName) + ' was emailed.' : ''));
+}
+function startMove() {
+  mgMoving = checkedSeats(); mgPicks = [];
+  const c = CUST[mgName], club = c.level === 'Chairback Club';
+  showView('map');
+  document.getElementById('mg-map-instr').innerHTML = 'Choose <strong>' + mgMoving.length + '</strong> open seat' + (mgMoving.length > 1 ? 's' : '') + ' for ' + mgName
+    + '. ' + (club ? 'Club Seats holders can only move to other Club Seats.' : 'Club Seats are a different ticket level, so they aren\'t available here.') + ' Their current seats are pink.';
+  if (mgMode === 'track') setNotify('mg-move-notify', 'mg-move-notify-text', c, 'the new seats');
+  else {
+    const box = document.getElementById('mg-move-notify');
+    box.closest('label').hidden = false; box.disabled = true; box.checked = true;
+    document.getElementById('mg-move-notify-text').textContent = 'The renewal email will list the new seats when renewals open.';
+  }
+  buildRenewalMap(); updateMove();
+}
+let mgAdd = null;
+function openAdd() {
+  mgMode = 'track'; mgName = null; mgAdd = null;
+  document.getElementById('mg-title').textContent = 'Add Customer';
+  document.getElementById('mg-sub').textContent = "2027-28 Men's Basketball Season Tickets · renewals are " + (OPT.state === 'open' ? 'open' : 'scheduled');
+  document.getElementById('add-level').innerHTML = Object.keys(PRICE).map(l => '<option>' + l + '</option>').join('');
+  ['add-name', 'add-email', 'add-phone'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('add-comp').checked = false; document.getElementById('add-error').textContent = '';
+  showView('add');
+  document.getElementById('manage').hidden = false; mgReturnFocus = document.activeElement;
+  document.getElementById('add-name').focus();
+}
+function addNext() {
+  const name = document.getElementById('add-name').value.trim(), email = document.getElementById('add-email').value.trim(), phone = document.getElementById('add-phone').value.trim();
+  const err = document.getElementById('add-error');
+  if (!name) { err.textContent = "Enter the customer's name."; return; }
+  if (CUST[name]) { err.textContent = name + ' is already on the renewal list. Use Manage Seats on their row instead.'; return; }
+  if (!email && !phone) { err.textContent = 'Add an email or mobile number so they can get their renewal link.'; return; }
+  mgAdd = { name, email, phone, level: document.getElementById('add-level').value, comp: document.getElementById('add-comp').checked };
+  const n = +document.getElementById('add-count').value;
+  mgMoving = Array.from({ length: n }, (_, i) => ({ placeholder: i + 1 })); mgPicks = [];
+  showView('map');
+  document.getElementById('mg-map-instr').innerHTML = 'Choose <strong>' + n + '</strong> open seat' + (n > 1 ? 's' : '') + ' for ' + name + ' at ' + mgAdd.level + '.';
+  const box = document.getElementById('mg-move-notify'), open = OPT.state === 'open';
+  box.closest('label').hidden = false; box.disabled = !open; box.checked = true;
+  document.getElementById('mg-move-notify-text').textContent = open
+    ? 'Send ' + name.split(' ')[0] + ' their renewal ' + (email ? 'email' : 'text') + ' now' : "Their renewal goes out with everyone else's on Tue, Oct 5.";
+  buildRenewalMap(); updateMove();
+}
+function updateMove() {
+  document.querySelector('[data-mg="move-save"]').textContent = mgAdd ? 'Add Customer' : 'Move Seats';
+  const c = mgName && CUST[mgName], need = mgMoving.length;
+  document.getElementById('mg-current').innerHTML = c ? '<strong style="font-size:14px">Current Seat Locations</strong>' + mgSeats(c).filter(s => tStatus(s) !== 'x' || mgMode !== 'track').map(s =>
+    '<span style="display:flex;gap:10px;align-items:center;font-size:14px"><i class="cur-dot"></i>' + (seatLevel(c, s) || c.level) + ' — ' + seatName(s)
+    + (REMOVED.has(seatKey(s)) ? ' <span style="color:#6B5300">(not on this season\'s map)</span>' : '') + (mgMoving.includes(s) ? ' <strong style="font-size:12px;color:#c2185b">Moving</strong>' : '') + '</span>').join('') : '';
+  document.getElementById('mg-counter').innerHTML = '<strong>' + mgPicks.length + ' of ' + need + '</strong> selected';
+  document.getElementById('mg-move-summary').innerHTML = '<strong style="font-size:14px">' + 'New Seats *' + '</strong><br>' + mgMoving.map((s, i) =>
+    (s.placeholder ? 'Seat ' + s.placeholder : seatName(s)) + ' → ' + (mgPicks[i] ? '<strong>' + seatName(mgPicks[i]) + '</strong>' : '<span style="color:#6D6E71">choose a seat</span>')).join('<br>');
+  document.querySelector('[data-mg="move-save"]').disabled = mgPicks.length !== mgMoving.length;
+}
+function claimGeneral() {
+  const used = mgPicks.filter(q => GEN.has(seatKey(q)));
+  used.forEach(q => GEN.delete(seatKey(q)));
+  return used.length ? ' ' + used.length + ' general hold' + (used.length > 1 ? 's were' : ' was') + ' assigned to them.' : '';
+}
+function saveMove() {
+  const fromGen = claimGeneral();
+  if (mgAdd) {
+    const a = mgAdd, send = document.getElementById('mg-move-notify').checked && OPT.state === 'open';
+    CUST[a.name] = { name: a.name, contact: { ...(a.email && { email: a.email }), ...(a.phone && { phone: a.phone }) }, level: a.level, day: null,
+      activity: send ? (a.email ? 'Email' : 'Text') + ' sent Oct 20' : 'Added by you',
+      seats: mgPicks.map(q => ({ sec: q.sec, row: q.row, n: q.n, comp: a.comp, st: 'u', removed: false })) };
+    MATCH[a.level] = MATCH[a.level] || a.level;
+    const where = mgPicks.map(seatName).join(', ');
+    closeManage(); renderLists();
+    toast('Added ' + a.name + ' with ' + where + '.' + fromGen + (send ? ' Their renewal ' + (a.email ? 'email' : 'text') + ' and link were sent.' : ''));
+    return;
+  }
+  const c = CUST[mgName], notify = document.getElementById('mg-move-notify').checked && mgMode === 'track';
+  mgMoving.forEach((s, i) => { s.sec = mgPicks[i].sec; s.row = mgPicks[i].row; s.n = mgPicks[i].n; });
+  if (mgMode === 'track') c.activity = 'Seats moved by you';
+  const where = mgPicks.map(seatName).join(', ');
+  renderLists(); closeManage();
+  toast('Moved ' + mgName + ' to ' + where + '.' + fromGen + (notify ? ' Updated renewal ' + (c.contact.email ? 'email' : 'text') + ' sent.' : ''));
+}
+// A seat is taken if it's on someone's list (Review) or saved and not released (Track)
+function takenBy(s) {
+  const o = ownerOf(s);
+  if (!o || o.s.removed) return null;
+  if (mgMode === 'track' && o.s.st === 'x') return null;
+  return o;
+}
+function buildRenewalMap() {
+  if (rmap) rmap.remove();
+  rmap = L.map('rmap', { crs: L.CRS.Simple, minZoom: -1.5, maxZoom: 3, zoomSnap: 0.25, attributionControl: false, preferCanvas: true });
+  const wantClub = mgAdd ? mgAdd.level === 'Club Seats' : CUST[mgName].level === 'Chairback Club';
+  drawBleachers(rmap, (s, ll) => {
+    const k = seatKey(s), own = takenBy(s), moving = own && mgMoving.includes(own.s), gen = !own && genHeld(s), mine = own && own.c.name === mgName;
+    const wrongLevel = isClub(s) !== wantClub;
+    const base = { radius: 8, fillOpacity: 1, stroke: isClub(s), color: '#00838f', weight: 2 };
+    const style = () => mgPicks.some(p => seatKey(p) === k) ? { ...base, fillColor: '#45a539' }
+      : (moving || mine) ? { ...base, fillColor: '#ff69b4', stroke: false }
+      : own ? { ...base, fillColor: '#b01818' } : wrongLevel ? { ...base, fillColor: '#D9DCDF' } : gen ? { ...base, fillColor: '#4B5563' } : wrongLevel ? { ...base, fillColor: '#D9DCDF' } : { ...base, fillColor: '#0020c0' };
+    const dot = L.circle(ll, style()).addTo(rmap);
+    if (moving || mine) L.marker(ll, { interactive: false, icon: L.divIcon({ className: 'seat-cur', iconSize: [12, 12], html: '<i class="cur-dot" style="background-color:transparent;background-size:10px"></i>' }) }).addTo(rmap);
+    const lvl = isClub(s) ? 'Club Seats' : 'Adult, Student or Senior Reserved';
+    dot.bindTooltip(seatName(s) + ' · ' + lvl + ' · ' + (moving ? 'current seat, being moved' : own ? (mine ? 'current seat, staying' : 'saved for ' + own.c.name) : wrongLevel ? 'different ticket level' : gen ? 'general hold, can be assigned' : 'open'), { direction: 'top' });
+    if (own || wrongLevel) return;
+    dot.on('click', () => {
+      const i = mgPicks.findIndex(p => seatKey(p) === k);
+      if (i >= 0) mgPicks.splice(i, 1);
+      else if (mgPicks.length < mgMoving.length) mgPicks.push(s);
+      dot.setStyle(style()); dot.setTooltipContent(seatName(s) + ' · ' + lvl + ' · ' + (mgPicks.some(p => seatKey(p) === k) ? 'new seat' : gen ? 'general hold, can be assigned' : 'open')); updateMove();
+    });
+    hoverCursor(rmap, dot);
+  }, '2027');
+}
+
+/* Track renewals: List / Map */
+const TSTAT = {
+  r: { label: 'Renewed', fill: '#005CB9' }, u: { label: 'Not renewed yet', fill: '#E0AF00' },
+  x: { label: 'Released', fill: '#888F96' }, gen: { label: 'General hold', fill: '#4B5563' }, none: { label: 'Not on renewal list', fill: '#FFFFFF' },
+};
+let tmap = null, tView = 'list', tPick = null;
+function setupTrackMap() {
+  const section = document.querySelector('#track table').closest('section');
+  const tabs = section.querySelector('[role="tablist"]'), wrap = section.querySelector('table').parentElement, head = section.firstElementChild;
+  const tog = document.createElement('div');
+  tog.setAttribute('role', 'group'); tog.setAttribute('aria-label', 'View');
+  tog.style.cssText = 'display:inline-flex;border:1px solid #d1d5db;border-radius:6px;overflow:hidden';
+  tog.innerHTML = ['list', 'map'].map(v => '<button type="button" data-tview="' + v + '" style="font-family:Exo,sans-serif;font-size:14px;padding:7px 14px;border:0;cursor:pointer">' + (v === 'list' ? 'List' : 'Map') + '</button>').join('');
+  head.insertBefore(tog, head.children[1]);
+  const mv = document.createElement('div');
+  mv.id = 'track-map-view'; mv.hidden = true;
+  mv.innerHTML = '<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">'
+    + '<div style="flex:999 1 520px;min-width:0;display:flex;flex-direction:column;gap:10px"><div id="tmap" style="height:440px;border:1px solid #c8c8c8;border-radius:6px"></div><div class="rlegend" id="tlegend"></div><p id="tnote" style="margin:0;font-size:13px;color:#6D6E71"></p></div>'
+    + '<div id="tcard" style="flex:1 1 220px;min-width:0;border:1px solid #E5E9EC;border-radius:8px;padding:16px;font-size:14px;display:flex;flex-direction:column;gap:8px"></div></div>';
+  wrap.after(mv);
+  const paint = () => tog.querySelectorAll('button').forEach(b => {
+    const on = b.dataset.tview === tView; b.style.background = on ? '#005CB9' : '#FFFFFF'; b.style.color = on ? '#FFFFFF' : '#2D2A26'; b.setAttribute('aria-pressed', on);
+  });
+  tog.addEventListener('click', e => {
+    const b = e.target.closest('[data-tview]'); if (!b) return;
+    tView = b.dataset.tview; tabs.hidden = wrap.hidden = tView === 'map'; mv.hidden = tView !== 'map';
+    paint(); if (tView === 'map') buildTrackMap();
+  });
+  paint();
+}
+function buildTrackMap() {
+  if (tmap) tmap.remove();
+  tmap = L.map('tmap', { crs: L.CRS.Simple, minZoom: -1.5, maxZoom: 3, zoomSnap: 0.25, attributionControl: false, preferCanvas: true });
+  const counts = { r: 0, u: 0, x: 0, gen: 0 };
+  drawBleachers(tmap, (s, ll) => {
+    const o = ownerOf(s), status = o ? tStatus(o.s) : genHeld(s) ? 'gen' : 'none';
+    if (counts[status] !== undefined) counts[status]++;
+    const picked = tPick && seatKey(tPick) === seatKey(s);
+    const dot = L.circle(ll, { radius: 8, fillOpacity: 1, fillColor: TSTAT[status].fill,
+      stroke: picked || status === 'none' || isClub(s), color: picked ? '#2d2a26' : isClub(s) ? '#00838f' : '#BCBEC0', weight: picked ? 3 : isClub(s) ? 2 : 1 }).addTo(tmap);
+    dot.bindTooltip(seatName(s) + ' · ' + (o ? o.c.name + ' · ' + levelForPrice(o.c) + ' · ' : isClub(s) ? 'Club Seats · ' : '') + TSTAT[status].label, { direction: 'top' });
+    if (!o) return;
+    dot.on('click', () => { tPick = s; buildTrackMap(); showTrackCard(s, o); });
+    hoverCursor(tmap, dot);
+  }, '2027');
+  document.getElementById('tlegend').innerHTML = ['r', 'u', 'x', 'gen', 'none'].map(k =>
+    '<span><i style="background:' + TSTAT[k].fill + (k === 'none' ? ';box-shadow:inset 0 0 0 1px #BCBEC0' : '') + '"></i>' + TSTAT[k].label + (counts[k] !== undefined ? ' ' + counts[k] : '') + '</span>').join('')
+    + '<span><i style="background:#fff;box-shadow:inset 0 0 0 2px #00838f"></i>Club Seats</span><span>♿ Wheelchair space</span>';
+  const off = Object.values(CUST).flatMap(c => c.seats.filter(s => REMOVED.has(seatKey(s)) && !s.removed).map(s => seatName(s) + ' (' + c.name + ', ' + TSTAT[tStatus(s)].label.toLowerCase() + ')'));
+  document.getElementById('tnote').textContent = off.length ? 'Not on this season\'s map: ' + off.join('; ') + '.' : '';
+  if (!tPick) document.getElementById('tcard').innerHTML = "<strong>Click a seat</strong><span style=\"color:#6D6E71\">See who it's saved for, their ticket level and whether they renewed.</span>";
+}
+function showTrackCard(s, o) {
+  const c = o.c, status = custTrack(c), seatSt = TSTAT[tStatus(o.s)].label;
+  const r = c.seats.filter(x => tStatus(x) === 'r').length, act = c.seats.filter(x => tStatus(x) !== 'x').length;
+  document.getElementById('tcard').innerHTML = '<span style="color:#6D6E71;font-size:13px">' + seatName(s) + ' · ' + seatSt + '</span>'
+    + '<strong style="font-size:16px">' + c.name + '</strong>'
+    + '<span><span style="font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px;' + BADGE[status] + '">' + status + '</span></span>'
+    + '<span style="font-size:13px">' + levelForPrice(c) + (o.s.comp ? ' · Comp' : '') + '</span>'
+    + '<span style="font-size:13px;color:#6D6E71">' + ([c.contact.email, c.contact.phone].filter(Boolean).join(' · ') || 'No email or mobile number') + '</span>'
+    + '<span style="font-size:13px">' + r + ' of ' + act + ' seat' + (act === 1 ? '' : 's') + ' renewed</span>'
+    + '<button class="btn btn-primary" style="align-self:flex-start;margin-top:4px" data-manage="' + c.name + '">Manage Seats</button>';
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 5000);
+}
+document.getElementById('manage').addEventListener('click', e => {
+  if (e.target.id === 'manage') return closeManage();
+  const b = e.target.closest('[data-mg]'); if (!b) return;
+  ({ close: closeManage, 'clear-picks': () => { mgPicks = []; buildRenewalMap(); updateMove(); }, 'add-next': addNext, release: startRelease, 'release-cancel': () => { document.getElementById('mg-release-confirm').hidden = true; },
+     'release-do': doRelease, move: startMove, 'map-back': () => { if (rmap) { rmap.remove(); rmap = null; } showListView(); }, 'move-save': saveMove })[b.dataset.mg]();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !document.getElementById('manage').hidden) closeManage(); });
+// Release Holds Now: releases every seat nobody has renewed yet
+[...document.querySelectorAll('#release-panel button')].filter(b => b.textContent.trim() === 'Release Seats').forEach(b => b.addEventListener('click', () => {
+  let n = 0;
+  Object.values(CUST).forEach(c => c.seats.forEach(s => { if (tStatus(s) === 'u') { s.removed = true; n++; c.activity = 'Released by you'; } }));
+  renderLists(); toast('Released ' + n + ' unrenewed seats. They are on sale now.');
+}));
+setupTrackMap();
+renderLists();
+
+/* Entry point: one Season Renewals panel on the season event page */
+function bindSeg(id, key) {
+  const seg = document.getElementById(id);
+  seg.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    OPT[key] = b.dataset.v;
+    seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    renderEntry(); renderHub();
+  });
+}
+bindSeg('opt-entry', 'entry');
+function setState(state, keep) {
+  OPT.state = state;
+  document.querySelectorAll('#opt-state button').forEach(x => x.classList.toggle('on', x.dataset.v === state));
+  loadData(state, keep); tPick = null; rv.editing = null;
+  renderLists();
+}
+document.getElementById('opt-state').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setState(b.dataset.v); }, true);
+document.querySelectorAll('#window [data-prev]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#window [data-prev]').forEach(x => {
+    const on = x === b; x.setAttribute('aria-pressed', on);
+    x.style.border = '1px solid ' + (on ? '#005CB9' : '#d1d5db'); x.style.background = on ? '#F1FAFE' : '#FFFFFF'; x.style.color = on ? '#005CB9' : '#2D2A26'; x.style.fontWeight = on ? '600' : '400';
+  });
+  document.getElementById('prev-email').hidden = b.dataset.prev !== 'email'; document.getElementById('prev-text').hidden = b.dataset.prev !== 'text';
+}));
+document.querySelector('#window [data-prev="email"]').click();
+document.getElementById('opt-setup').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  OPT.setup = b.dataset.v;
+  document.querySelectorAll('#opt-setup button').forEach(x => x.classList.toggle('on', x === b));
+  document.body.classList.toggle('setup-hometown', OPT.setup === 'hometown');
+  renderLists();
+});
+
+/* Renewal window: the last step before anything goes to customers */
+const winMain = document.querySelector('#window main');
+const winSteps = document.querySelector('#review ol[aria-label="Steps"]').cloneNode(true);
+winMain.children[0].after(winSteps);
+const STEP_DONE = 'padding: 6px 14px; border-radius: 999px; background: #E6F4EE; color: #006644; font-weight: 600';
+const STEP_NOW = 'padding: 6px 14px; border-radius: 999px; background: #005CB9; color: #FFFFFF; font-weight: 600';
+const STEP_NEXT = 'padding: 6px 14px; border-radius: 999px; background: #FFFFFF; border: 1px solid #E5E9EC; color: #6D6E71';
+function paintSteps() {
+  const last = OPT.setup === 'hometown' ? '4. Client approval' : '4. Approve and schedule';
+  [...document.querySelectorAll('#review ol[aria-label="Steps"]')].forEach(ol => {
+    const li = ol.children; li[0].style.cssText = STEP_DONE; li[1].style.cssText = STEP_NOW; li[2].style.cssText = STEP_NEXT; li[3].style.cssText = STEP_NEXT; li[3].textContent = last;
+  });
+  const li = winSteps.children; li[0].style.cssText = STEP_DONE; li[1].style.cssText = STEP_DONE; li[2].style.cssText = STEP_NOW; li[3].style.cssText = STEP_NEXT; li[3].textContent = last;
+  winSteps.hidden = OPT.state !== 'new';
+}
+const genSec = document.createElement('section');
+genSec.style.cssText = 'background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 24px; display: flex; flex-direction: column; gap: 14px';
+[...document.querySelectorAll('#window section h2')].find(h => h.textContent === 'Message to Customers').closest('section').before(genSec);
+function renderGeneral() {
+  const seats = [...GEN].map(k => seat(k[0], k[1], +k.slice(2)));
+  if (!seats.length && !OPT.genReleased) { genSec.innerHTML = '<h2 style="margin: 0; font-size: 16px; font-weight: 600">General Holds</h2><p style="margin:0;font-size:15px">All general holds were assigned to customers.</p>'; return; }
+  genSec.innerHTML = '<div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin: 0; font-size: 16px; font-weight: 600">General Holds</h2>'
+    + '<p style="margin:0;font-size:14px;color:#6D6E71">Seats held on this event that aren\'t saved for any customer. To give one to a customer, pick it when you add or move their seats.</p></div>'
+    + (OPT.genReleased
+      ? '<p style="margin:0;font-size:15px">' + seats.length + ' general holds were released and are on sale.</p>'
+      : '<div style="display:flex;gap:6px;flex-wrap:wrap;font-size:13px">' + seats.map(s => '<span style="padding:4px 8px;border-radius:6px;border:1px solid #d1d5db;background:#F7F7F7;white-space:nowrap">' + seatName(s) + '</span>').join('') + '</div>'
+        + '<fieldset style="border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:10px"><legend style="font-size:14px;font-weight:600;padding:0;margin-bottom:10px">Release general holds</legend>'
+        + [['deadline', 'At the deadline, with the unrenewed seats'], ['date', 'On a date'], ['keep', "Don't release them"]].map(([v, l]) =>
+          '<label style="display:flex;gap:10px;align-items:center;font-size:15px;flex-wrap:wrap"><input type="radio" name="gen-when" value="' + v + '"' + (OPT.genWhen === v ? ' checked' : '') + ' style="width:18px;height:18px;accent-color:#005CB9"> ' + l
+          + (v === 'date' ? ' <input type="text" id="gen-date" aria-label="General holds release date" value="' + OPT.genDate + '"' + (OPT.genWhen === 'date' ? '' : ' disabled') + ' style="font-family: Exo, sans-serif; font-size: 14px; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px">' : '') + '</label>').join('')
+        + '</fieldset>'
+        + '<div id="gen-confirm" hidden style="border:2px solid #E20010;border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.5"><strong>Release ' + seats.length + ' general holds now?</strong><span>They go on sale right away. Seats saved for customers aren\'t affected.</span>'
+        + '<div style="display:flex;gap:12px;flex-wrap:wrap"><button type="button" class="btn" data-gen="cancel">Cancel</button><button type="button" class="btn btn-danger-solid" data-gen="do">Release General Holds</button></div></div>'
+        + '<button type="button" class="btn btn-danger" data-gen="ask" style="align-self:flex-start">Release General Holds Now</button>');
+}
+genSec.addEventListener('click', e => {
+  const b = e.target.closest('[data-gen]'); if (!b) return;
+  if (b.dataset.gen === 'ask') document.getElementById('gen-confirm').hidden = false;
+  if (b.dataset.gen === 'cancel') document.getElementById('gen-confirm').hidden = true;
+  if (b.dataset.gen === 'do') { OPT.genReleased = true; renderLists(); toast('Released ' + GEN.size + ' general holds. They are on sale now.'); }
+});
+genSec.addEventListener('change', e => {
+  if (e.target.name === 'gen-when') { OPT.genWhen = e.target.value; renderGeneral(); renderGenMessage(); }
+  if (e.target.id === 'gen-date') { OPT.genDate = e.target.value; renderGenMessage(); }
+});
+// Track's scheduled messages list shows when general holds will be released
+function renderGenMessage() {
+  const list = [...document.querySelectorAll('#track aside ol')][0]; if (!list) return;
+  let li = document.getElementById('gen-msg');
+  if (!li) { li = document.createElement('li'); li.id = 'gen-msg'; li.style.cssText = 'display: flex; flex-direction: column; gap: 2px'; list.appendChild(li); }
+  const n = GEN.size;
+  li.hidden = OPT.genReleased || !n || OPT.genWhen === 'keep';
+  li.innerHTML = '<span style="font-weight: 600">General holds released (' + n + ')</span><span style="color: #6D6E71">Scheduled ' + (OPT.genWhen === 'date' ? OPT.genDate.replace(/, 20\d\d/, '') : 'Oct 29, 11:59 pm · with unrenewed seats') + '</span>';
+}
+const winBtn = document.querySelector('#window a[href="#track"]');
+const winConfirm = document.createElement('section');
+winConfirm.id = 'win-confirm'; winConfirm.hidden = true;
+winConfirm.style.cssText = 'background:#FFFFFF;border:2px solid #005CB9;border-radius:8px;padding:24px;display:flex;flex-direction:column;gap:12px;font-size:15px;line-height:1.5';
+winBtn.parentElement.before(winConfirm);
+function renderWindow() {
+  paintSteps(); renderGeneral(); renderGenMessage();
+  const st = OPT.state, s = stats(), blocked = st === 'new' && s.attention > 0;
+  winBtn.textContent = st === 'new' ? (OPT.setup === 'hometown' ? 'Send for Approval' : 'Schedule Renewals') : st === 'pending' ? 'Back to Approval' : 'Save Changes';
+  winBtn.style.background = blocked ? '#BCBEC0' : '#005CB9';
+  winBtn.setAttribute('aria-disabled', blocked);
+  let why = document.getElementById('win-block');
+  if (!why) { why = document.createElement('span'); why.id = 'win-block'; why.style.cssText = 'align-self:center;font-size:14px;color:#6B5300'; winBtn.before(why); }
+  why.textContent = blocked ? 'Fix ' + s.attention + ' row' + (s.attention > 1 ? 's' : '') + ' on the renewal list first.' : '';
+  if (st !== 'new' || winConfirm.hidden) { winConfirm.hidden = true; winBtn.hidden = false; }
+}
+winBtn.addEventListener('click', e => {
+  e.preventDefault();
+  const st = OPT.state, s = stats();
+  if (winBtn.getAttribute('aria-disabled') === 'true') return;
+  if (st === 'pending') { go('approval'); return; }
+  if (st !== 'new') { toast('Dates saved. Scheduled messages were updated.'); go('track'); return; }
+  if (OPT.setup === 'hometown') {
+    winConfirm.innerHTML = '<strong style="font-size:16px">Send the renewal for approval</strong>'
+      + '<label class="add-f">Send to<select id="appr-to"><option value="Jordan Price">Jordan Price · Athletic Director · jprice@lincolnhs.org</option><option value="Kim Alvarez">Kim Alvarez · Athletic Secretary · kalvarez@lincolnhs.org</option></select></label>'
+      + '<label class="add-f">Message<textarea id="appr-msg" rows="3" style="font-family:Exo,sans-serif;font-size:15px;font-weight:400;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px">Your 2027-28 Men\'s Basketball season ticket renewals are ready. Please review and approve by Fri, Sep 24 so renewals can open Oct 5.</textarea></label>'
+      + '<div style="border:1px solid #E5E9EC;border-radius:8px;padding:14px;background:#F8F8FA;font-size:14px;display:flex;flex-direction:column;gap:8px"><span style="color:#6D6E71;font-size:13px">Email preview · Subject: Approve your 2027-28 Men\'s Basketball season ticket renewals</span>'
+      + '<span>' + s.customers + ' customers · ' + s.seats + ' seats · opens Tue, Oct 5 · deadline Fri, Oct 29</span><span style="align-self:flex-start;font-weight:600;padding:8px 14px;border-radius:6px;color:#FFFFFF;background:#005CB9">Review and Approve</span></div>'
+      + '<span style="color:#6D6E71;font-size:14px">Nothing goes to customers until the client approves. You\'ll get an email when they approve or ask for changes.</span>'
+      + '<div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" id="win-cancel">Cancel</button><button class="btn btn-primary" id="win-send">Send for Approval</button></div>';
+    winConfirm.hidden = false; winBtn.hidden = true; winConfirm.scrollIntoView({ block: 'center' });
+    document.getElementById('win-cancel').onclick = () => { winConfirm.hidden = true; winBtn.hidden = false; };
+    document.getElementById('win-send').onclick = () => {
+      OPT.approver = document.getElementById('appr-to').value; OPT.apprMsg = document.getElementById('appr-msg').value;
+      winConfirm.hidden = true; setState('pending', true); OPT.viewAs = 'client'; updateChip(); go('approval');
+      toast('Approval email sent to ' + OPT.approver + '. Now viewing as the client.');
+    };
+    return;
+  }
+  winConfirm.innerHTML = '<strong style="font-size:16px">Approve the renewal list and schedule renewals?</strong>'
+    + '<span>' + s.customers + ' customers · ' + s.seats + ' seats · ' + s.comps + ' comps. The first email and text go out Tue, Oct 5 at 9:00 am, reminders 7, 3 and 1 day before the Fri, Oct 29 deadline. At the deadline, unrenewed seats are released and go on sale.' + (GEN.size && !OPT.genReleased ? (OPT.genWhen === 'keep' ? ' General holds stay held.' : ' ' + GEN.size + ' general holds will be released ' + (OPT.genWhen === 'date' ? 'on ' + OPT.genDate : 'at the deadline') + '.') : '') + '</span>'
+    + '<span style="color:#6D6E71;font-size:14px">After this the renewal list is locked. Make changes in Track Renewals.</span>'
+    + approveCheck('win')
+    + '<div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" id="win-cancel">Cancel</button><button class="btn btn-primary" id="win-approve" disabled>Approve and Schedule</button></div>';
+  wireApprove('win');
+  winConfirm.hidden = false; winBtn.hidden = true; winConfirm.scrollIntoView({ block: 'center' });
+  document.getElementById('win-cancel').onclick = () => { winConfirm.hidden = true; winBtn.hidden = false; };
+  document.getElementById('win-approve').onclick = () => {
+    recordApproval(); winConfirm.hidden = true; setState('scheduled', true); go('track');
+    toast('Renewals scheduled. The first email and text go out Tue, Oct 5.');
+  };
+}, true);
+
+/* Client approval: required in both flows and recorded with the renewal */
+OPT.approvedBy = null;
+const APPROVER = { 'Jordan Price': 'Jordan Price, Athletic Director', 'Kim Alvarez': 'Kim Alvarez, Athletic Secretary' };
+const approveCheck = id => '<label class="mg-note"><input type="checkbox" id="' + id + '-ack"><span>I reviewed the renewal list, prices and dates, and I approve them. My name and the date are saved with this renewal.</span></label>';
+function wireApprove(id) {
+  const box = document.getElementById(id + '-ack'), btn = document.getElementById(id + '-approve') || document.getElementById('approve-btn');
+  box.checked = false;
+  box.onchange = () => { btn.disabled = !box.checked; btn.style.opacity = box.checked ? '' : '0.45'; btn.style.pointerEvents = box.checked ? '' : 'none'; };
+  box.onchange();
+}
+function recordApproval() {
+  const who = OPT.setup === 'hometown' ? (OPT.approver || 'Jordan Price') : 'Jordan Price';
+  OPT.approvedBy = APPROVER[who] + ' · Sep 27, 2027';
+}
+/* Client approval of a Hometown-built list */
+OPT.approver = 'Jordan Price'; OPT.apprMsg = '';
+function renderApproval() {
+  const sub = [...document.querySelectorAll('#approval main p')].find(x => /^Sent for approval/.test(x.textContent));
+  if (sub) sub.textContent = 'Sent for approval Sep 20, 2027 by Alex Moreno at Hometown · emailed to ' + OPT.approver;
+  const notes = [...document.querySelectorAll('#approval h2')].find(h => h.textContent === 'Notes');
+  if (notes && OPT.apprMsg) {
+    let n = document.getElementById('appr-latest');
+    if (!n) { n = document.createElement('div'); n.id = 'appr-latest'; n.style.cssText = 'display: flex; flex-direction: column; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb'; notes.after(n); }
+    n.innerHTML = '<span style="font-size: 13px; color: #6D6E71">Alex Moreno, Hometown · Sep 20</span><span style="font-size: 15px; line-height: 1.5"></span>';
+    n.lastChild.textContent = OPT.apprMsg;
+  }
+  document.getElementById('appr-levels').innerHTML = LAST_LEVELS.map((lv, i) => {
+    const bd = i < LAST_LEVELS.length - 1 ? 'border-bottom: 1px solid #e5e7eb' : '';
+    return '<tr><td style="padding: 10px 12px; ' + bd + '">' + lv + '</td><td style="padding: 10px 12px; ' + bd + '">' + (MATCH[lv] || 'No match yet') + '</td><td style="padding: 10px 12px; ' + bd + '">' + (MATCH[lv] ? money(PRICE[MATCH[lv]]) + wasPrice(lv) : '') + '</td></tr>';
+  }).join('');
+  const waiting = OPT.state === 'pending';
+  document.querySelector('#approval main > div:nth-child(2)').hidden = !waiting;
+  if (!waiting) stateNote('approval', 'warn', 'Nothing to approve', OPT.state === 'new' ? 'Hometown hasn\'t sent a renewal list for approval yet.' : 'This list was approved. Renewals are ' + (OPT.state === 'open' ? 'open.' : 'scheduled.'), btnLink(OPT.state === 'new' ? 'hub' : 'track', OPT.state === 'new' ? 'Renewals Home' : 'Track Renewals'));
+  else stateNote('approval');
+  document.getElementById('approve-btn').hidden = document.getElementById('request-btn').hidden = !waiting;
+  let ack = document.getElementById('appr-ack');
+  if (!ack) { const holder = document.createElement('div'); holder.innerHTML = approveCheck('appr'); document.getElementById('approve-btn').parentElement.before(holder.firstChild); }
+  document.getElementById('appr-ack').closest('label').hidden = !waiting;
+  if (waiting && !OPT.ackWired) { OPT.ackWired = true; wireApprove('appr'); }
+}
+document.getElementById('approve-btn').addEventListener('click', e => {
+  e.preventDefault(); if (!document.getElementById('appr-ack').checked) return; recordApproval(); setState('scheduled', true); OPT.viewAs = 'client'; updateChip(); go('track');
+  toast('Approved. Alex Moreno at Hometown got an email, and the first renewal email and text go out Tue, Oct 5.');
+});
+document.getElementById('request-btn').addEventListener('click', e => {
+  const note = document.querySelector('#approval textarea');
+  if (!note.value.trim()) {
+    note.style.borderColor = '#B5000D'; note.focus();
+    let m = document.getElementById('req-err');
+    if (!m) { m = document.createElement('span'); m.id = 'req-err'; m.style.cssText = 'font-size:14px;color:#B5000D;font-weight:400'; m.textContent = 'Say what should change so Hometown can fix it.'; note.after(m); }
+    e.stopImmediatePropagation(); return;
+  }
+  note.style.borderColor = '#d1d5db'; const m = document.getElementById('req-err'); if (m) m.remove();
+  OPT.apprMsg = ''; note.value = '';
+  setState('new', true); OPT.setup = 'hometown'; OPT.viewAs = 'hometown'; updateChip();
+  document.querySelectorAll('#opt-setup button').forEach(x => x.classList.toggle('on', x.dataset.v === 'hometown'));
+  document.body.classList.add('setup-hometown');
+  renderLists(); go('review'); toast('Your note was emailed to Alex Moreno at Hometown. Now viewing as Hometown staff.');
+});
+function renderEntry() {
+  const open = OPT.state === 'open' || OPT.state === 'scheduled';
+  document.getElementById('renew-panel-sub').textContent = {
+    new: "Build last season's renewal list, set dates and track renewals",
+    pending: 'Waiting for ' + (OPT.approver || 'the client') + ' to approve · sent by Hometown Sep 20',
+    scheduled: 'Scheduled · renewals open Tue, Oct 5',
+    open: 'Renewals open until Fri, Oct 29 · ' + stats().renewed + ' of ' + stats().active + ' seats renewed',
+  }[OPT.state];
+  if (OPT.entry !== 'home' && OPT.state === 'pending') { const b = document.getElementById('renew-panel-btn'); b.textContent = 'Approve'; b.setAttribute('href', '#approval'); return; }
+  const btn = document.getElementById('renew-panel-btn');
+  const dest = OPT.entry === 'home' ? 'hub' : open ? 'track' : 'start';
+  btn.textContent = OPT.entry === 'home' ? 'Open' : open ? 'Track' : 'Start';
+  btn.setAttribute('href', '#' + dest);
+}
+function renderHub() {
+  const open = OPT.state === 'open', s = stats();
+  const pendingOrSched = OPT.state === 'pending' || OPT.state === 'scheduled';
+  document.getElementById('hub-from-wrap').hidden = !OPT.listBuilt; document.getElementById('hub-from').textContent = OPT.source;
+  const pill = (txt, st) => '<span style="font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px;' + st + '">' + txt + '</span>';
+  const DONE = 'background:#E6F4EE;color:#006644', WAIT = 'background:#F1F2F2;color:#6D6E71', LIVE = 'background:#F1FAFE;color:#005CB9';
+  const card = (n, title, status, body, btn) => '<section style="background:#FFFFFF;border-radius:12px;box-shadow:0 0 0 1px rgba(45,42,38,0.1);padding:24px;display:flex;flex-direction:column;gap:12px">'
+    + '<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap"><h2 style="margin:0;font-size:16px;font-weight:600">' + n + '. ' + title + '</h2>' + status + '</div>'
+    + '<div style="font-size:14px;line-height:1.5;flex-grow:1">' + body + '</div>' + btn + '</section>';
+  const a = (href, label, primary) => '<a href="#' + href + '" style="align-self:flex-start;font-size:14px;font-weight:500;padding:8px 16px;border-radius:6px;text-decoration:none;'
+    + (primary ? 'color:#FFFFFF;background:#005CB9' : 'color:#2D2A26;background:#FFFFFF;box-shadow:0 0 0 1px #d1d5db') + '">' + label + '</a>';
+  const off = label => '<span style="align-self:flex-start;font-size:14px;font-weight:500;padding:8px 16px;border-radius:6px;color:#9CA3AF;background:#F7F7F7;box-shadow:0 0 0 1px #E5E9EC">' + label + '</span>';
+  document.getElementById('hub-steps').innerHTML = pendingOrSched
+    ? card(1, 'Renewal list', pill(OPT.state === 'pending' ? 'Waiting for approval' : 'Approved', OPT.state === 'pending' ? LIVE : DONE), s.customers + ' customers · ' + s.seats + ' seats' + (OPT.state === 'pending' ? '<br><span style="color:#6D6E71">Built by Hometown, sent Sep 20</span>' : '<br><span style="color:#6D6E71">' + (OPT.approvedBy ? 'Approved by ' + OPT.approvedBy + '. ' : '') + 'The renewal list is locked. Make changes in Track Renewals.</span>'), OPT.state === 'pending' ? a('approval', 'Review and Approve', true) : a('review', 'View List'))
+      + card(2, 'Renewal dates', pill(OPT.state === 'pending' ? 'Set by Hometown' : 'Scheduled', OPT.state === 'pending' ? WAIT : LIVE), 'Opens Tue, Oct 5 · Deadline Fri, Oct 29<br><span style="color:#6D6E71">Unrenewed seats are released and go on sale at the deadline</span>', a('window', OPT.state === 'pending' ? 'View Dates' : 'Edit Dates'))
+      + card(3, 'Track Renewals', pill(OPT.state === 'pending' ? 'After approval' : 'Opens Oct 5', WAIT), OPT.state === 'pending' ? 'See who renewed once renewals are scheduled.' : s.seats + ' seats saved for ' + s.customers + ' customers. Nobody can renew until Oct 5.', OPT.state === 'pending' ? off('Track Renewals') : a('track', 'Track Renewals', true))
+    : open
+    ? card(1, 'Renewal list', pill('Approved', DONE), s.customers + ' customers · ' + s.seats + ' seats<br><span style="color:#6D6E71">' + (OPT.approvedBy ? 'Approved by ' + OPT.approvedBy + '. ' : '') + 'The renewal list is locked. Make changes in Track Renewals.</span>', a('review', 'View List'))
+      + card(2, 'Renewal dates', pill('Open', LIVE), 'Opened Tue, Oct 5 · Deadline Fri, Oct 29<br><span style="color:#6D6E71">Unrenewed seats are released and go on sale at the deadline</span>', a('window', 'Edit Dates'))
+      + card(3, 'Track Renewals', pill('9 days left', LIVE), '<strong>' + s.renewed + '</strong> of ' + s.active + ' seats renewed · ' + money(s.revenue)
+        + '<div style="margin-top:8px;height:10px;border-radius:999px;background:#E5E9EC;overflow:hidden"><div style="width:' + (100 * s.renewed / s.active).toFixed(1) + '%;height:100%;background:#005CB9"></div></div>', a('track', 'Track Renewals', true))
+    : OPT.listBuilt
+    ? card(1, 'Renewal list', pill(s.attention ? s.attention + ' need attention' : 'Ready', s.attention ? 'background:#FFF8E0;color:#6B5300' : DONE), s.customers + ' customers · ' + s.seats + ' seats<br><span style="color:#6D6E71">Built from ' + OPT.source + '</span>', a('review', 'Continue', true))
+      + card(2, 'Renewal dates', pill(s.attention ? 'After step 1' : 'Next', WAIT), 'Set when renewals open, the deadline, reminders and when unrenewed seats go on sale.', s.attention ? off('Set Dates') : a('window', 'Set Dates'))
+      + card(3, 'Track Renewals', pill('After scheduling', WAIT), 'See who renewed, send reminders, and release or move seats on the list or the seat map.', off('Track Renewals'))
+    : card(1, 'Renewal list', pill('Not started', WAIT), 'Build the list from last season\'s ticket holders, or import a file.', a('start', 'Start Renewals', true))
+      + card(2, 'Renewal dates', pill('After step 1', WAIT), 'Set when renewals open, the deadline, reminders and when unrenewed seats go on sale.', off('Set Dates'))
+      + card(3, 'Track Renewals', pill('After scheduling', WAIT), 'See who renewed, send reminders, and release or move seats on the list or the seat map.', off('Track Renewals'));
+}
+window.entryReady = true;
+renderEntry(); renderHub();
+
+document.getElementById('main-cta').addEventListener('click', () => {
+  const sel = document.querySelector('#start select');
+  OPT.source = document.querySelector('input[name="source"]:checked').value === 'file' ? 'an imported file' : sel.value; OPT.listBuilt = true; renderLists();
+});
+/* Two flows from one start page */
+OPT.viewAs = 'client';
+function updateChip() {
+  document.getElementById('demo-chip-text').textContent = OPT.setup === 'hometown'
+    ? (OPT.viewAs === 'client' ? 'Hometown flow · viewing as the client' : 'Hometown flow · viewing as Hometown staff')
+    : 'Client flow · viewing as the athletic director';
+}
+function startFlow(setup) {
+  OPT.setup = setup; OPT.viewAs = setup === 'hometown' ? 'hometown' : 'client'; OPT.entry = 'home';
+  document.body.classList.toggle('setup-hometown', setup === 'hometown');
+  setState('new'); updateChip(); go('event');
+}
+document.querySelectorAll('[data-flow]').forEach(b => b.addEventListener('click', () => startFlow(b.dataset.flow)));
+document.getElementById('demo-restart').addEventListener('click', () => go('landing'));
+updateChip();
+go(location.hash.slice(1) || 'landing');
+</script>
+</body>
+</html>
