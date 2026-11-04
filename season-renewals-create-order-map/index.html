@@ -12,6 +12,11 @@
 body{margin:0;background:#F7F7F7}
 a{color:#005CB9}a:hover{color:#00488E}
 [hidden]{display:none !important}
+.demo-skip{font:600 14px Exo,sans-serif;color:#FFFFFF;background:#E8590C;border:0;border-radius:6px;padding:8px 14px;cursor:pointer;margin-left:6px;box-shadow:0 0 0 2px #FFFFFF,0 0 0 4px #E8590C}
+.demo-skip:hover{background:#C2410C}
+.demo-skip:focus-visible{outline:3px solid #2D2A26;outline-offset:3px}
+.demo-top{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 16px;border:2px dashed #E8590C;border-radius:8px;background:#FFF4EC;font:15px Exo,sans-serif;color:#2D2A26}
+.demo-top .demo-skip{margin-left:auto}
 .demo-bar{display:none !important}
 .flow-card{all:unset;box-sizing:border-box;cursor:pointer;background:#FFFFFF;border-radius:12px;box-shadow:0 0 0 1px rgba(45,42,38,0.1);padding:24px;display:flex;flex-direction:column;gap:12px;font-family:Exo,sans-serif;font-size:15px;line-height:1.5;color:#2D2A26}
 .flow-card:hover{box-shadow:0 0 0 2px #005CB9}
@@ -950,6 +955,13 @@ input,select,button{font-family:inherit;}
   </div>
 </div>
 <div class="toast" id="toast" hidden role="status"></div>
+<div class="mg-back" id="skip-modal" hidden role="dialog" aria-modal="true" aria-labelledby="skip-title">
+  <div class="mg" style="max-width:560px">
+    <div class="mg-head"><div><h2 id="skip-title">Skip for the demo?</h2><p>This only exists in the demo. In the product these have to be fixed before renewals can be scheduled.</p></div><button class="mg-x" data-skipx="close" aria-label="Close">×</button></div>
+    <div class="mg-body"><div id="skip-list" style="display:flex;flex-direction:column;gap:10px;font-size:15px"></div></div>
+    <div class="mg-actions"><button class="btn" data-skipx="close">Cancel</button><button class="btn btn-primary" data-skipx="done">Done, Skip These</button></div>
+  </div>
+</div>
 <div id="demo-chip" hidden><span id="demo-chip-text"></span><button type="button" id="demo-restart">Start Over</button></div>
 
 <script>
@@ -1069,6 +1081,21 @@ function passcode(c) {
 }
 const renewLink = c => 'https://events.hometownticketing.com/embed/event/48213/seating?passcode=' + passcode(c);
 const tStatus = s => s.removed ? 'x' : s.st;
+// Problem kinds, most serious first: a seat that can't be held, a level with no price, a customer who can't be reached
+const ISSUE = {
+  seat: { label: 'Seat', color: '#B5000D', bg: '#FDECEC' },
+  level: { label: 'Level', color: '#5B2C9F', bg: '#F1EBFA' },
+  contact: { label: 'Contact', color: '#6B5300', bg: '#FFF8E0' },
+};
+function issues(c) {
+  const out = [];
+  const gone = listSeats(c).find(s => REMOVED.has(seatKey(s)));
+  if (gone) out.push({ kind: 'seat', text: seatName(gone) + " isn't on this season's seat map." });
+  if (listSeats(c).some(s => !seatLevel(c, s))) out.push({ kind: 'level', text: 'Match ' + c.level + ' to a ticket level above.' });
+  if (!hasContact(c)) out.push({ kind: 'contact', text: 'No email or mobile number.' });
+  return out;
+}
+const issueTag = k => '<span style="font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;color:' + ISSUE[k].color + ';background:' + ISSUE[k].bg + ';border:1px solid ' + ISSUE[k].color + '">' + ISSUE[k].label + '</span>';
 function attention(c) {
   const why = [];
   const gone = listSeats(c).find(s => REMOVED.has(seatKey(s)));
@@ -1308,7 +1335,7 @@ const pillTab = (on, label, key, attr) => '<button type="button" role="tab" aria
 const TD = 'padding: 14px 12px; border-bottom: 1px solid #e5e7eb';
 function chip(s, comp) {
   const base = 'padding:4px 8px;border-radius:6px;white-space:nowrap;';
-  if (REMOVED.has(seatKey(s))) return '<span style="' + base + 'border:1px dashed #E0AF00;background:#FFFFFF">' + seatName(s) + '</span>';
+  if (REMOVED.has(seatKey(s))) return '<span style="' + base + 'border:1px dashed ' + ISSUE.seat.color + ';color:' + ISSUE.seat.color + ';background:#FFFFFF">' + seatName(s) + '</span>';
   if (comp) return '<span style="' + base + 'border:1px solid #008256;background:#E6F4EE;color:#006644">' + seatName(s) + ' · Comp</span>';
   return '<span style="' + base + 'border:1px solid #d1d5db;background:#FFFFFF">' + seatName(s) + '</span>';
 }
@@ -1332,9 +1359,9 @@ function renderLevelTable() {
   tbody.innerHTML = LAST_LEVELS.map((lv, i) => {
     const m = MATCH[lv], last = i === LAST_LEVELS.length - 1, bd = last ? '' : 'border-bottom: 1px solid #e5e7eb';
     const opts = (m ? [] : ['<option value="">Choose a ticket level</option>']).concat(Object.keys(PRICE).map(o => '<option' + (o === m ? ' selected' : '') + '>' + o + '</option>')).join('');
-    return '<tr' + (m ? '' : ' style="background: #FFF8E0"') + '><td style="padding: 12px; ' + bd + '">' + lv + '</td><td style="padding: 12px; ' + bd + '">' + count(lv) + '</td>'
-      + '<td style="padding: 12px; ' + bd + '"><select data-match="' + lv + '" aria-label="This season ticket level for ' + lv + '" style="font-family: Exo, sans-serif; font-size: 14px; padding: 6px 10px; border: 1px solid ' + (m ? '#d1d5db' : '#E0AF00') + '; border-radius: 6px; background: #FFFFFF">' + opts + '</select></td>'
-      + '<td style="padding: 12px; ' + bd + (m ? '' : '; color: #6B5300; font-weight: 600') + '">' + (m ? money(PRICE[m]) + wasPrice(lv) : 'No match yet') + '</td></tr>';
+    return '<tr' + (m ? '' : ' style="background: ' + ISSUE.level.bg + '"') + '><td style="padding: 12px; ' + bd + '">' + lv + '</td><td style="padding: 12px; ' + bd + '">' + count(lv) + '</td>'
+      + '<td style="padding: 12px; ' + bd + '"><select data-match="' + lv + '" aria-label="This season ticket level for ' + lv + '" style="font-family: Exo, sans-serif; font-size: 14px; padding: 6px 10px; border: 1px solid ' + (m ? '#d1d5db' : ISSUE.level.color) + '; border-radius: 6px; background: #FFFFFF">' + opts + '</select></td>'
+      + '<td style="padding: 12px; ' + bd + (m ? '' : '; color: ' + ISSUE.level.color + '; font-weight: 600') + '">' + (m ? money(PRICE[m]) + wasPrice(lv) : 'No match yet') + '</td></tr>';
   }).join('');
   tbody.querySelectorAll('[data-match]').forEach(sel => sel.onchange = () => { MATCH[sel.dataset.match] = sel.value || null; renderLists(); });
 }
@@ -1361,10 +1388,14 @@ function renderReview() {
   cont.style.background = blocked ? '#BCBEC0' : '#005CB9'; cont.style.cursor = blocked ? 'not-allowed' : '';
   let why = document.getElementById('rv-block');
   if (!why) { why = document.createElement('span'); why.id = 'rv-block'; why.style.cssText = 'align-self:center;font-size:14px;color:#6B5300'; cont.before(why); }
-  why.innerHTML = blocked ? 'Fix ' + stats().attention + ' row' + (stats().attention > 1 ? 's' : '') + ' that need attention before setting dates. <button type="button" class="mng-link" data-rv="attention">Show them</button>' : '';
+  why.innerHTML = blocked ? 'Fix ' + stats().attention + ' row' + (stats().attention > 1 ? 's' : '') + ' that need attention before setting dates. <button type="button" class="mng-link" data-rv="attention">Show them</button> <button type="button" class="demo-skip" data-skip="window">Demo: Skip Fixes</button>' : '';
   const att = document.querySelector('#review [data-stat="attention"]').closest('div'), n = stats().attention;
   att.style.background = n ? '#FFF8E0' : '#FFFFFF'; att.style.border = n ? '1px solid #E0AF00' : '0'; att.style.boxShadow = n ? '' : '0 0 0 1px rgba(45,42,38,0.1)'; att.style.borderRadius = n ? '8px' : '12px';
   att.querySelectorAll('span').forEach(x => { x.style.color = n ? '#6B5300' : ''; });
+  const kinds = {}; Object.values(CUST).forEach(c => issues(c).forEach(x => { kinds[x.kind] = (kinds[x.kind] || 0) + 1; }));
+  let brk = document.getElementById('att-kinds');
+  if (!brk) { brk = document.createElement('span'); brk.id = 'att-kinds'; brk.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-top:4px'; att.appendChild(brk); }
+  brk.innerHTML = Object.keys(ISSUE).filter(k => kinds[k]).map(k => issueTag(k).replace('>' + ISSUE[k].label + '<', '>' + kinds[k] + ' ' + ISSUE[k].label.toLowerCase() + '<')).join('');
   att.style.cursor = n ? 'pointer' : ''; att.dataset.rv = n ? 'attention' : ''; att.title = n ? 'Show rows that need attention' : '';
   const sec = document.querySelectorAll('#review table')[1].closest('section');
   const cs = custList().filter(c => listSeats(c).length);
@@ -1378,18 +1409,19 @@ function renderReview() {
     const why = attention(c), seats = listSeats(c), lvl = levelSummary(c, seats), matched = seats.every(s => seatLevel(c, s));
     const contact = rv.editing === c.name
       ? '<div style="display:flex;flex-direction:column;gap:6px"><input id="ct-email" type="email" placeholder="Email" style="font-family:Exo,sans-serif;font-size:14px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px"><input id="ct-phone" type="tel" placeholder="Mobile number" style="font-family:Exo,sans-serif;font-size:14px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px"><span style="display:flex;gap:10px"><button class="mng-link" data-contact-save="' + c.name + '">Save</button><button class="mng-link" style="color:#6D6E71" data-contact-cancel="1">Cancel</button></span></div>'
-      : !hasContact(c) ? '<span style="color: #6B5300">No email or mobile number</span>'
+      : !hasContact(c) ? '<span style="color: ' + ISSUE.contact.color + '">No email or mobile number</span>'
       : [c.contact.email, c.contact.phone].filter(Boolean).join('<br>') + (textOnly(c) ? '<br><span style="font-size: 12px; padding: 2px 8px; border-radius: 999px; background: #F1F2F2; color: #2D2A26">Text only</span>' : '');
     const price = matched ? money(seats.reduce((a, s) => a + seatPrice(c, s), 0)) : '<span style="color: #6B5300; font-weight: 600">No match yet</span>';
     const gone = seats.some(s => REMOVED.has(seatKey(s)));
     const acts = (gone ? '<button class="mng-link" data-manage="' + c.name + '" data-missing="1">Choose Seat</button>' : '<button class="mng-link" data-manage="' + c.name + '">Manage Seats</button>')
       + (!hasContact(c) && rv.editing !== c.name ? '<button class="mng-link" style="display:block;margin-top:8px" data-contact="' + c.name + '">Add Contact</button>' : '');
-    return '<tr style="vertical-align: top' + (why.length ? '; background: #FFF8E0' : '') + '">'
-      + '<td style="' + TD + '; font-weight: 600">' + c.name + '</td>'
+    const iss = issues(c), top = iss[0] && ISSUE[iss[0].kind];
+    return '<tr style="vertical-align: top' + (top ? '; background: ' + top.bg : '') + '">'
+      + '<td style="' + TD + '; font-weight: 600' + (top ? '; box-shadow: inset 4px 0 0 ' + top.color : '') + '">' + c.name + '</td>'
       + '<td style="' + TD + '; font-size: 14px; line-height: 1.5">' + contact + '</td>'
       + '<td style="' + TD + '"><div style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; gap: 6px; flex-wrap: wrap; font-size: 13px">' + seats.map(s => chip(s, s.comp)).join('') + '</div>'
-      + why.map(w => '<span style="font-size: 13px; color: #6B5300">' + w + '</span>').join('') + '</div></td>'
-      + '<td style="' + TD + '">' + (lvl || '<span style="color: #6B5300">' + c.level + '</span>') + '</td>'
+      + iss.map(x => '<span style="display:flex;gap:8px;align-items:center;font-size: 13px; color: ' + ISSUE[x.kind].color + '">' + issueTag(x.kind) + x.text + '</span>').join('') + '</div></td>'
+      + '<td style="' + TD + '">' + (lvl || '<span style="color: ' + ISSUE.level.color + '">' + c.level + '</span>') + '</td>'
       + '<td style="' + TD + '">' + price + '</td><td style="' + TD + '">' + acts + '</td></tr>';
   }).join('') || '<tr><td colspan="6" style="padding: 16px 12px; color: #6D6E71">' + (rv.filter === 'attention' ? 'All rows are ready. You can continue to dates.' : 'No customers match.') + '</td></tr>';
   rv.shownCount = shown.length;
@@ -1878,6 +1910,22 @@ function paintSteps() {
   });
   const li = winSteps.children; li[0].style.cssText = STEP_DONE; li[1].style.cssText = STEP_DONE; li[2].style.cssText = STEP_NOW; li[3].style.cssText = STEP_NEXT; li[3].textContent = last;
   winSteps.hidden = OPT.state !== 'new';
+  const blocked = stats().attention > 0;
+  const link = (li, dest) => {
+    li.onclick = dest ? () => go(dest) : null; li.onkeydown = dest ? e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(dest); } } : null;
+    li.tabIndex = dest ? 0 : -1; if (dest) { li.setAttribute('role', 'link'); li.style.cursor = 'pointer'; li.title = 'Go to ' + li.textContent.replace(/^\d\. /, ''); } else { li.removeAttribute('role'); li.title = ''; }
+  };
+  [...document.querySelectorAll('#review ol[aria-label="Steps"]')].forEach(ol => { link(ol.children[0], 'start'); link(ol.children[1], null); link(ol.children[2], blocked ? null : 'window'); link(ol.children[3], null); ol.children[1].setAttribute('aria-current', 'step'); });
+  const n = stats().attention, show = OPT.state === 'new' && n > 0;
+  const top = (id, ol, dest) => {
+    let bar = document.getElementById(id);
+    if (!bar) { bar = document.createElement('div'); bar.id = id; bar.className = 'demo-top'; ol.after(bar); }
+    bar.hidden = !show;
+    bar.innerHTML = '<span><strong>Demo only.</strong> ' + n + ' row' + (n > 1 ? 's' : '') + ' on the renewal list need' + (n > 1 ? '' : 's') + ' attention. Skip to fill them in with sample fixes.</span><button type="button" class="demo-skip" data-skip="' + dest + '">Demo: Skip Fixes</button>';
+  };
+  top('rv-top-skip', document.querySelector('#review ol[aria-label="Steps"]'), 'window');
+  top('win-top-skip', winSteps, '');
+  link(winSteps.children[0], 'start'); link(winSteps.children[1], 'review'); link(winSteps.children[2], null); link(winSteps.children[3], null); winSteps.children[2].setAttribute('aria-current', 'step');
 }
 const genSec = document.createElement('section');
 genSec.style.cssText = 'background: #FFFFFF; border-radius: 12px; box-shadow: 0 0 0 1px rgba(45,42,38,0.1); padding: 24px; display: flex; flex-direction: column; gap: 14px';
@@ -1931,7 +1979,7 @@ function renderWindow() {
   winBtn.setAttribute('aria-disabled', blocked);
   let why = document.getElementById('win-block');
   if (!why) { why = document.createElement('span'); why.id = 'win-block'; why.style.cssText = 'align-self:center;font-size:14px;color:#6B5300'; winBtn.before(why); }
-  why.textContent = blocked ? 'Fix ' + s.attention + ' row' + (s.attention > 1 ? 's' : '') + ' on the renewal list first.' : '';
+  why.innerHTML = blocked ? 'Fix ' + s.attention + ' row' + (s.attention > 1 ? 's' : '') + ' on the renewal list first. <button type="button" class="demo-skip" data-skip="">Demo: Skip Fixes</button>' : '';
   if (st !== 'new' || winConfirm.hidden) { winConfirm.hidden = true; winBtn.hidden = false; }
 }
 winBtn.addEventListener('click', e => {
@@ -2080,6 +2128,42 @@ document.getElementById('main-cta').addEventListener('click', () => {
   const sel = document.querySelector('#start select');
   OPT.source = document.querySelector('input[name="source"]:checked').value === 'file' ? 'an imported file' : sel.value; OPT.listBuilt = true; renderLists();
 });
+/* Demo-only skip: fills in whatever is blocking with sample fixes and says what it did */
+let skipDest = '';
+function skipPlan() {
+  const plan = [];
+  Object.values(CUST).forEach(c => issues(c).forEach(x => {
+    if (x.kind === 'seat') {
+      const s = listSeats(c).find(z => REMOVED.has(seatKey(z)));
+      const club = isClub(s), owned = new Set(Object.values(CUST).flatMap(o => listSeats(o).map(seatKey)));
+      let pick = null;
+      ['N', 'S'].some(sec => ROWS.slice().reverse().some(row => { for (let n = 27; n <= 42; n++) { const z = seat(sec, row, n), k = seatKey(z); if (!REMOVED.has(k) && !owned.has(k) && !genHeld(z) && isClub(z) === club) { pick = z; return true; } } return false; }));
+      plan.push({ kind: 'seat', who: c.name, text: seatName(s) + ' is moved to ' + seatName(pick), apply: () => { s.sec = pick.sec; s.row = pick.row; s.n = pick.n; } });
+    }
+    if (x.kind === 'contact') {
+      const email = c.name.toLowerCase().replace(/^(coach|dr\.|principal) /, '').replace(/[^a-z]+/g, '.').replace(/^\.|\.$/g, '') + '@example.com';
+      plan.push({ kind: 'contact', who: c.name, text: 'gets the sample email ' + email, apply: () => { c.contact = { email }; } });
+    }
+  }));
+  LAST_LEVELS.filter(lv => !MATCH[lv] && Object.values(CUST).some(c => c.level === lv && listSeats(c).length)).forEach(lv => {
+    const to = lv === 'Chairback Club' ? 'Club Seats' : 'Adult Reserved';
+    plan.push({ kind: 'level', who: lv, text: 'is matched to ' + to, apply: () => { MATCH[lv] = to; } });
+  });
+  return plan;
+}
+function openSkip(dest) {
+  skipDest = dest;
+  document.getElementById('skip-list').innerHTML = skipPlan().map(x => '<span style="display:flex;gap:10px;align-items:flex-start">' + issueTag(x.kind) + '<span><strong>' + x.who + '</strong> ' + x.text + '</span></span>').join('');
+  document.getElementById('skip-modal').hidden = false;
+  setTimeout(() => document.querySelector('#skip-modal [data-skipx="done"]').focus(), 0);
+}
+document.addEventListener('click', e => {
+  const s = e.target.closest('[data-skip]'); if (s) { e.preventDefault(); openSkip(s.dataset.skip); return; }
+  const x = e.target.closest('[data-skipx]'); if (!x) return;
+  if (x.dataset.skipx === 'done') { const plan = skipPlan(); plan.forEach(p => p.apply()); renderLists(); toast('Skipped ' + plan.length + ' item' + (plan.length > 1 ? 's' : '') + ' with sample fixes.'); if (skipDest) go(skipDest); }
+  document.getElementById('skip-modal').hidden = true;
+});
+
 /* Two flows from one start page */
 OPT.viewAs = 'client';
 function updateChip() {
