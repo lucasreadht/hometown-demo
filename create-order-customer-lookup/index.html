@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Create Order Customer Lookup</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#F7F7F7;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:13px;color:#333}
+a{color:#337ab7}
+[hidden]{display:none !important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ===== Demo controls (not part of the product) ===== */
+.demo-bar{background:#2d2a26;color:#fff;padding:10px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:13px}
+.demo-inner{max-width:1180px;margin:0 auto;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.demo-title{font-weight:700;font-size:14px;margin-right:auto}
+.demo-title small{display:block;font-weight:400;opacity:.75;font-size:11px}
+.seg{display:inline-flex;align-items:center;background:#1a1815;border:1px solid #6b655d;border-radius:8px;padding:3px;gap:3px}
+.seg span{font-size:10px;text-transform:uppercase;letter-spacing:.05em;opacity:.85;padding:0 6px}
+.seg button{border:1px solid #8a837b;background:#3d3934;color:#fff;padding:4px 10px;border-radius:5px;cursor:pointer;font:inherit;font-size:12px}
+.seg button:hover{background:#57524b}
+.seg button[aria-pressed="true"]{background:#FFC700;border-color:#FFC700;color:#1a1815;font-weight:700}
+.demo-tip{max-width:1180px;margin:8px auto 0;font-size:12px;opacity:.85}
+html.in-frame .demo-bar{display:none}
+#phone_view{background:#e9ecef;padding:24px 16px 40px;min-height:calc(100vh - 60px)}
+.phone{width:399px;max-width:100%;margin:0 auto;background:#111;border-radius:44px;padding:12px;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.phone iframe{display:block;width:375px;max-width:100%;height:740px;border:0;border-radius:32px;background:#fff}
+
+/* ===== Box Office admin shell ===== */
+.bo-header{background:#000;color:#fff;font-family:verdana,sans-serif}
+.bo-nav{max-width:1280px;margin:0 auto;padding:0 16px;display:flex;flex-wrap:wrap;align-items:center;min-height:48px;font-size:14px}
+.bo-nav a{color:#fff;text-decoration:none;padding:14px 20px;white-space:nowrap}
+.bo-nav a.on{color:#9d9d9d}
+.bo-nav a.out{margin-left:auto}
+.page{max-width:1080px;margin:0 auto;padding:20px 24px 60px}
+h1{margin:0;font-size:18px;font-weight:700}
+.sub{margin-top:8px;font-size:14px;color:#6d6e71;display:flex;gap:6px;flex-wrap:wrap}
+.sub .ev{color:#1e8a1e}
+.tabs{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px;flex-wrap:wrap;gap:6px}
+.tabs .t{padding:8px 12px;background:#58595b;color:#fff;font-size:12px;border-radius:3px 3px 0 0}
+.tabs .t.on{background:#2d2a26}
+.tabs .up{padding:5px 8px;font-size:11px;border:1px solid #ccc;background:#fff;margin-bottom:6px;border-radius:3px}
+.panel{background:#fff;border-top:1px solid #e5e5e5;padding:15px}
+.req{font-size:12px;color:#495057;margin:0 0 10px;font-weight:700}
+.req i,.star{color:#b94a48;font-style:normal}
+
+/* form-horizontal: col-sm-4 label, col-sm-6 field */
+.fg{display:grid;grid-template-columns:4fr 6fr 2fr;gap:0 15px;align-items:center;margin-bottom:12px}
+.fg > label{font-weight:700;text-align:right}
+.fg > .ctl{grid-column:2}
+.fc{width:100%;height:30px;padding:5px 10px;font:inherit;border:1px solid #ccc;border-radius:4px;box-shadow:inset 0 1px 1px rgba(0,0,0,.075);background:#fff}
+.fc:focus{border-color:#66afe9;outline:0;box-shadow:inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6)}
+.fc.filled{background:#FFFBE6;border-color:#E0AF00;transition:background 1.5s}
+.help{color:#737373;font-size:12px;margin:4px 0 0}
+.card-box{border:1px solid #ccc;border-radius:4px;padding:8px 10px;color:#999;background:#fafafa}
+.btn{display:inline-block;font:inherit;padding:6px 12px;border-radius:4px;border:1px solid #ccc;background:#fff;color:#333;cursor:pointer;line-height:1.4;text-decoration:none}
+.btn:hover{background:#e6e6e6}
+.btn-primary{background:#337ab7;border-color:#2e6da4;color:#fff}
+.btn-primary:hover{background:#286090}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-lg{padding:10px 16px;font-size:18px;border-radius:6px}
+.btn:focus-visible,.linkbtn:focus-visible{outline:3px solid #66afe9;outline-offset:2px}
+.linkbtn{background:none;border:0;padding:0;color:#337ab7;cursor:pointer;font:inherit;text-decoration:underline}
+
+/* ===== NEW: customer lookup (shared by both styles) ===== */
+.new-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:#E8590C;padding:1px 6px;border-radius:3px;vertical-align:middle}
+.lookup{border:1px solid #bce8f1;background:#f4fafd;border-radius:4px;padding:12px 14px;margin:0 0 16px}
+.lookup-head{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline;margin-bottom:8px}
+.lookup-head strong{font-size:14px}
+.lookup-head .scope{font-size:12px;color:#6d6e71}
+.crit{display:grid;grid-template-columns:1.6fr 1.1fr 1fr 1fr;gap:8px 10px}
+.crit label{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:700;min-width:0}
+.crit-foot{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:8px;font-size:12px}
+.crit-foot .count{color:#6d6e71;margin-left:auto}
+.results{margin-top:10px;border:1px solid #ddd;border-radius:4px;background:#fff;max-height:330px;overflow:auto}
+.res{display:grid;grid-template-columns:1.2fr 1.6fr 1.6fr auto;gap:4px 14px;padding:10px 12px;border-top:1px solid #eee;align-items:center}
+.res:first-child{border-top:0}
+.res:hover{background:#f7fbff}
+.res .nm{font-weight:700;font-size:14px}
+.res .sm{font-size:12px;color:#6d6e71}
+.res .ln{font-size:12px;line-height:1.5}
+.res .miss{color:#a0a0a0;font-style:italic}
+.res mark{background:#FFF1A8;color:inherit;padding:0}
+.res-head{display:grid;grid-template-columns:1.2fr 1.6fr 1.6fr auto;gap:14px;padding:6px 12px;background:#f5f5f5;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#6d6e71;border-bottom:1px solid #ddd;position:sticky;top:0}
+.vtag{display:inline-block;font-size:10px;font-weight:700;color:#31708f;background:#d9edf7;border-radius:3px;padding:1px 5px;margin-left:4px;vertical-align:middle}
+.empty{padding:14px 12px;color:#6d6e71}
+.imported{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;background:#dff0d8;border:1px solid #d6e9c6;color:#3c763d;border-radius:4px;padding:8px 12px;margin:0 0 14px}
+.imported b{color:#2b542c}
+.imported .linkbtn{margin-left:auto;color:#3c763d}
+.opener{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:0 0 14px;padding:10px 12px;border:1px dashed #bce8f1;border-radius:4px;background:#f4fafd}
+.opener span{font-size:12px;color:#6d6e71}
+
+.mag-wrap{position:relative}
+.mag{display:none;position:absolute;right:1px;top:1px;width:32px;height:28px;border:0;border-left:1px solid #e5e5e5;background:#f4fafd;border-radius:0 3px 3px 0;cursor:pointer;color:#337ab7;align-items:center;justify-content:center;padding:0}
+.mag:hover{background:#e1f0fa}
+.mag:focus-visible{outline:3px solid #66afe9;outline-offset:1px}
+.icons-on .mag{display:flex}
+.icons-on .mag-wrap .fc{padding-right:40px}
+.name-pair{position:relative}
+.pb-names{position:absolute;left:0;top:0;bottom:12px;display:flex;align-items:center;padding-left:8px;border-left:3px solid #bce8f1}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+.modal{background:#fff;border-radius:6px;box-shadow:0 5px 15px rgba(0,0,0,.5);width:860px;max-width:100%}
+.modal-h{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #e5e5e5}
+.modal-h h2{margin:0;font-size:18px}
+.modal-h .close{background:none;border:0;font-size:24px;line-height:1;color:#888;cursor:pointer}
+.modal-b{padding:14px 16px}
+.modal-b .results{max-height:none}
+.modal-f{padding:12px 16px;border-top:1px solid #e5e5e5;text-align:right}
+
+/* tickets */
+h2.sec{margin:26px 0 4px;font-size:14px;font-weight:700}
+.sec-help{font-size:12px;color:#495057;margin-bottom:8px}
+.ga{display:grid;grid-template-columns:120px 1fr;font-size:12px;border-top:1px solid #e5e5e5}
+.ga .h{font-weight:700;padding:6px 4px}
+.qty{display:flex;align-items:center;border:1px solid #ced4da;border-radius:3px;width:max-content;margin:4px}
+.qty button{width:28px;height:28px;border:0;background:#fff;cursor:pointer;font-size:14px}
+.qty span{width:30px;text-align:center;font-weight:700;font-size:13px}
+.ga .lvl{display:flex;align-items:center;padding:0 4px;border-bottom:1px solid #f0f0f0}
+.total{text-align:right;margin-top:18px;font-size:12px}
+.submit{text-align:right;margin-top:12px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2d2a26;color:#fff;padding:10px 16px;border-radius:6px;font-size:13px;z-index:2000}
+
+/* custom questions (from the Oct 12 Custom Questions design) */
+.cq-badge{font-size:11px;color:#0055B9;border:1px solid #b8d4f0;background:#eaf2fb;border-radius:3px;padding:0 6px;line-height:18px;margin-left:6px;white-space:nowrap}
+.cq{margin:10px 1% 0;border-top:1px solid #ddd;padding-top:4px}
+.cq-h{margin:1.4em 0 6px;font-weight:700;font-size:18px}
+.cq-help{margin:0 0 4px;color:#555}
+.cq-fs{border:1px solid #ddd;border-radius:4px;padding:6px 20px 18px;margin:16px 0 0;min-width:0}
+.cq-fs legend{font-size:14px;font-weight:700;padding:0 6px;color:#48484A}
+.cq-fs legend span{font-weight:400;color:#737373}
+.cq-reg{background:#f9f9f9}
+.cq-grid1{display:grid;gap:14px;max-width:640px}
+.cq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px 16px;max-width:640px}
+.cq-q{display:grid;gap:5px;min-width:0}
+.cq-label{font-weight:700}
+.cq-star{color:#a94442;margin-left:4px}
+.cq-opt{font-weight:400;color:#737373}
+.cq-date{max-width:220px}
+.cq-sub{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#737373;margin:4px 0 8px}
+.cq-subrow{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;border-top:1px solid #e5e5e5;margin:18px 0 8px;padding-top:12px;max-width:640px}
+.cq-subrow .cq-sub{margin:0}
+.cq-choices{display:flex;flex-wrap:wrap;gap:6px 22px}
+.cq-choice{display:flex;gap:8px;align-items:center;font-weight:400;cursor:pointer}
+.cq-copy{background:none;border:0;padding:0;color:#337ab7;font:inherit;font-size:13px;cursor:pointer}
+.cq-copy:hover{text-decoration:underline}
+
+@media (max-width:767px){
+  .cq-fs{padding:6px 12px 14px}
+  .ga{grid-template-columns:110px minmax(0,1fr)}
+  .ga .lvl{flex-wrap:wrap;gap:4px;padding:4px}
+  .cq-badge{margin-left:0;white-space:normal}
+  .bo-nav{padding:0 4px}
+  .bo-nav a{padding:10px 10px;font-size:12px}
+  .page{padding:16px 12px 40px}
+  .fg{grid-template-columns:1fr;gap:4px}
+  .fg > label{text-align:left}
+  .fg > .ctl{grid-column:1}
+  .res,.res-head{grid-template-columns:1fr}
+  .res-head{display:none}
+  .res .use{justify-self:start}
+  .pb-names{position:static;border:0;padding:0;margin-bottom:10px}
+  .crit{grid-template-columns:1fr 1fr}
+  .crit label:first-child{grid-column:1 / -1}
+  .crit-foot .count{margin-left:0;width:100%}
+  .modal-bg{padding:0}
+  .modal{border-radius:0;min-height:100%}
+  .submit .btn-lg{width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Demo controls (not part of the product) ===== -->
+<div class="demo-bar">
+  <div class="demo-inner">
+    <div class="demo-title">Create Order: Customer Lookup<small>Mockup. Searches the Customer List and fills the buyer fields.</small></div>
+    <div class="seg" role="group" aria-label="Version"><span>Version</span><button aria-pressed="true">Current Box Office</button><button onclick="location.href='new-stack.html'">New admin</button></div>
+    <div class="seg" role="group" aria-label="Event"><span>Event</span><button data-event="game">Football game</button><button data-event="camp">Camp + custom questions</button></div>
+    <div class="seg" role="group" aria-label="Button placement"><span>Button</span><button data-place="above">Above buyer fields</button><button data-place="names">Left of names</button><button data-place="tabs">Tab row</button><button data-place="email">Beside E-mail</button><button data-place="icons">Icons in fields</button></div>
+    <div class="seg" role="group" aria-label="Device"><span>Device</span><button data-device="desktop">Desktop</button><button data-device="mobile">Mobile</button></div>
+    <button type="button" class="btn btn-sm" id="demo_reset" style="background:transparent;color:#FFC700;border-color:#FFC700;font-weight:700">Reset</button>
+  </div>
+  <div class="demo-tip">Open the Phonebook and try: E-mail <b>homer.townes</b> (2 versions). First name <b>homer</b> + Last name <b>townes</b> (3 versions, no other Homers or Townes). Phone <b>4849</b>.</div>
+</div>
+
+<div id="phone_view" hidden><div class="phone"><iframe id="phone_frame" title="Mobile view"></iframe></div></div>
+
+<div id="desktop_view">
+<header class="bo-header">
+  <nav class="bo-nav" aria-label="Box Office">
+    <a href="#">Dashboard</a><a href="#">District</a><a href="#" class="on">Events</a><a href="#">Reports</a><a href="#">Websites</a><a href="#">Fundraising</a><a href="#">My Hometown</a><a href="#">Settings</a><a href="#" class="out">Log out</a>
+  </nav>
+</header>
+
+<main class="page">
+  <h1>Create Order</h1>
+  <div class="sub"><span class="ev">event</span><span id="ev_name">Football vs Westfield - November 20, 2026 7:00 PM</span></div>
+
+  <div class="tabs">
+    <div style="display:flex;gap:2px"><span class="t on">Credit Card/Cash/Comp</span><span class="t">Quick Cash Entry</span></div>
+    <div style="display:flex;gap:6px;align-items:flex-end">
+      <button type="button" class="btn btn-primary btn-sm pb-open" id="open_tabs" hidden style="margin-bottom:6px">Look Up Customer</button>
+      <span class="up">Upload Comp Orders</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <p class="req"><i aria-hidden="true">*</i> marked fields are required to be filled in.</p>
+
+    <!-- NEW: imported banner -->
+    <div class="imported" id="imported" hidden role="status"></div>
+
+    <!-- NEW: button that opens the phonebook (placement A: above buyer fields) -->
+    <div class="opener" id="modal_opener" hidden>
+      <button type="button" class="btn btn-primary btn-sm pb-open" id="open_phonebook">Look Up Customer</button>
+      <span class="new-tag">New</span>
+      <span>Search the Customer List by e-mail, phone or name and fill in the buyer.</span>
+    </div>
+
+    <div id="buyer">
+      <div class="name-pair">
+        <div class="pb-names" id="names_btn_wrap" hidden><button type="button" class="btn btn-primary btn-sm pb-open" id="open_names">Look Up Customer</button></div>
+        <div class="fg"><label for="f_first">First name</label><div class="ctl"><input class="fc" id="f_first" data-k="first"></div></div>
+        <div class="fg"><label for="f_last">Last name</label><div class="ctl"><input class="fc" id="f_last" data-k="last"></div></div>
+      </div>
+      <div class="fg"><label for="f_email">E-mail address</label><div class="ctl"><input class="fc" type="email" id="f_email" data-k="email"></div><div class="pb-email" id="email_btn_wrap" hidden><button type="button" class="btn btn-primary btn-sm pb-open" id="open_email" style="white-space:nowrap">Look Up</button></div></div>
+      <div class="fg"><label for="f_email2">Confirm E-mail address</label><div class="ctl"><input class="fc" type="email" id="f_email2" data-k="email2"></div></div>
+      <div class="fg"><label for="f_phone">Phone number</label><div class="ctl"><input class="fc" type="tel" id="f_phone" data-k="phone"></div></div>
+      <div class="fg"><label for="f_pay">Payment method <span class="star" aria-hidden="true">*</span></label><div class="ctl">
+        <select class="fc" id="f_pay"><option value="">Select…</option><option value="cash">Cash</option><option value="check">Check</option><option value="credit_card">Credit Card</option><option value="comp">Comp</option></select></div></div>
+      <div class="fg"><label for="f_promo">Promo Code</label><div class="ctl"><input class="fc" id="f_promo"></div></div>
+      <div class="fg card" hidden><label>Card</label><div class="ctl"><div class="card-box">Card number · MM / YY · CVC (Stripe)</div></div></div>
+      <div class="fg card" hidden><label for="f_a1">Street address</label><div class="ctl"><input class="fc" id="f_a1" data-k="a1"></div></div>
+      <div class="fg card" hidden><label for="f_a2">Apt/Room/Ste</label><div class="ctl"><input class="fc" id="f_a2" data-k="a2"></div></div>
+      <div class="fg card" hidden><label for="f_city">City</label><div class="ctl"><input class="fc" id="f_city" data-k="city"></div></div>
+      <div class="fg card" hidden><label for="f_state">State</label><div class="ctl"><select class="fc" id="f_state" data-k="state"><option>AL</option><option>GA</option><option>OH</option><option>TN</option></select></div></div>
+      <div class="fg card" hidden><label for="f_zip">ZIP/Postal Code</label><div class="ctl"><input class="fc" id="f_zip" data-k="zip"></div></div>
+      <div class="fg check" hidden><label for="f_inst">Pay method number</label><div class="ctl"><input class="fc" id="f_inst"><p class="help">Check number, last 4 digits of credit card, etc.</p></div></div>
+      <div class="fg"><label for="f_msg">Internal message/notes</label><div class="ctl"><input class="fc" id="f_msg"></div></div>
+      <div class="fg"><span style="font-weight:700;text-align:right">Order Options</span><div class="ctl"><label><input type="checkbox" checked> Send receipt &amp; tickets to above e-mail address</label></div></div>
+    </div>
+
+    <h2 class="sec" id="tix_head">General Admission Tickets</h2>
+    <div class="sec-help" id="tix_help">Event has general admission tickets. Select quantities to add to order.</div>
+    <div class="ga" id="ga"></div>
+    <div class="cq" id="regs" hidden></div>
+    <div class="total"><i id="total">Select tickets to calculate order total before placing.</i></div>
+    <div class="submit"><button type="button" class="btn btn-primary btn-lg" id="submit">Create Order &amp; Tickets</button></div>
+  </div>
+</main>
+</div>
+
+<!-- NEW style B: phonebook pop-up -->
+<div class="modal-bg" id="phonebook" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pb_title">
+    <div class="modal-h"><h2 id="pb_title">Customer Phonebook</h2><button type="button" class="close" id="pb_close" aria-label="Close">&times;</button></div>
+    <div class="modal-b">
+      <p style="margin:0 0 10px;font-size:12px;color:#6d6e71">Searches the Customer List for events you have access to. Each different name, e-mail, phone or address on past orders shows as its own row.</p>
+      <div data-lookup="modal"></div>
+    </div>
+    <div class="modal-f"><button type="button" class="btn" id="pb_cancel">Cancel</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* Custom questions on Create Order (shared by index.html and new-stack.html).
+   Questions and layout from Lucas's Oct 12, 2026 design "Create Order with Custom Questions"
+   (Artifacts/Claude Design/Custom Questions Create Order Tool.zip): order questions asked once,
+   then per registration: camper details + camp questions, with "Copy answers from Registration #1". */
+(function () {
+  const CAMP = {
+    name: 'Summer Youth Basketball Camp',
+    when: 'June 14, 2027 9:00 AM',
+    levels: [
+      {n:'Full Week Camp (Grades 3–5)', p:150},
+      {n:'Full Week Camp (Grades 6–8)', p:150},
+      {n:'Half Day Camp (Mornings)', p:85},
+      {n:'Sibling Registration', p:125},
+    ],
+  };
+  const ORDER_QS = [
+    {id:'hear', type:'dropdown', label:'How did you hear about this camp?', required:true, options:['School website','Coach or teacher','Social media','Email newsletter','Friend or family']},
+  ];
+  const GUEST_QS = [
+    {id:'g_first', type:'text', label:'Camper first name', ph:'First name', required:true},
+    {id:'g_last', type:'text', label:'Camper last name', ph:'Last name', required:true},
+    {id:'g_email', type:'text', label:'Parent/guardian e-mail', ph:'E-mail', required:true},
+    {id:'g_phone', type:'text', label:'Parent/guardian phone', ph:'Phone #', required:true},
+  ];
+  const TICKET_QS = [
+    {id:'emerg', type:'text', label:'Emergency contact (name & phone)', ph:'e.g. Dana Ruiz, (205) 555-0142', required:true},
+    {id:'dob', type:'date', label:'Camper date of birth', required:true},
+    {id:'shirt', type:'radio', label:'Camp T-shirt size', required:true, options:['Youth S','Youth M','Youth L','Adult S','Adult M']},
+    {id:'med', type:'checkbox', label:'Allergies or medical conditions', required:false, options:['Food allergy','Asthma','Bee sting allergy','Other (staff will follow up)']},
+  ];
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  let ans = {};
+
+  function qHTML(q, key, inputCls) {
+    const v = ans[key];
+    const id = 'q_' + key.replace(/[^a-z0-9]/gi, '_');
+    const mark = q.required ? '<span class="cq-star" aria-hidden="true">*</span><span class="sr-only"> (required)</span>' : ' <span class="cq-opt">(optional)</span>';
+    if (q.type === 'radio' || q.type === 'checkbox') {
+      return `<div class="cq-q"><span class="cq-label" id="${id}_l">${esc(q.label)}${mark}</span>
+        <div class="cq-choices" role="${q.type === 'radio' ? 'radiogroup' : 'group'}" aria-labelledby="${id}_l">${q.options.map(o => {
+          const on = q.type === 'radio' ? v === o : (v || []).includes(o);
+          return `<label class="cq-choice"><input type="${q.type}" name="${id}" value="${esc(o)}" data-a="${key}" data-kind="${q.type}" ${on ? 'checked' : ''}> ${esc(o)}</label>`;
+        }).join('')}</div></div>`;
+    }
+    const ctl = q.type === 'dropdown'
+      ? `<select class="${inputCls}" id="${id}" data-a="${key}"><option value="">-- Select --</option>${q.options.map(o => `<option ${v === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`
+      : `<input class="${inputCls}${q.type === 'date' ? ' cq-date' : ''}" id="${id}" type="${q.type === 'date' ? 'date' : 'text'}" data-a="${key}" value="${esc(v || '')}" placeholder="${esc(q.ph || '')}">`;
+    return `<div class="cq-q"><label class="cq-label" for="${id}">${esc(q.label)}${mark}</label>${ctl}</div>`;
+  }
+
+  // qty: array of counts per CAMP.levels
+  function render(host, qty, inputCls) {
+    const blocks = [];
+    CAMP.levels.forEach((l, li) => { for (let i = 0; i < (qty[li] || 0); i++) blocks.push(l.n); });
+    if (!blocks.length) { host.innerHTML = ''; host.hidden = true; return; }
+    host.hidden = false;
+    host.innerHTML = `<h3 class="cq-h">Registration Details</h3>
+      <p class="cq-help">Enter each camper's details and the camp's custom questions, the same form families complete online. Answers save to the order and show on the guest list.</p>
+      <fieldset class="cq-fs"><legend>Order questions <span>· asked once per order</span></legend>
+        <div class="cq-grid1">${ORDER_QS.map(q => qHTML(q, 'order:' + q.id, inputCls)).join('')}</div></fieldset>
+      ${blocks.map((name, n) => `<fieldset class="cq-fs cq-reg"><legend>Registration #${n + 1} · <i>${esc(name)}</i></legend>
+        <div class="cq-sub">Camper details</div>
+        <div class="cq-grid2">${GUEST_QS.map(q => qHTML(q, 'r' + n + ':' + q.id, inputCls)).join('')}</div>
+        <div class="cq-subrow"><span class="cq-sub">Camp questions</span>${n > 0 ? `<button type="button" class="cq-copy" data-copy="${n}">Copy answers from Registration #1</button>` : ''}</div>
+        <div class="cq-grid1">${TICKET_QS.map(q => qHTML(q, 'r' + n + ':' + q.id, inputCls)).join('')}</div></fieldset>`).join('')}`;
+  }
+
+  function bind(host, getQty, inputCls) {
+    host.addEventListener('input', save);
+    host.addEventListener('change', save);
+    function save(e) {
+      const el = e.target.closest('[data-a]'); if (!el) return;
+      const k = el.dataset.a;
+      if (el.dataset.kind === 'checkbox') { const arr = ans[k] || []; ans[k] = el.checked ? [...arr, el.value] : arr.filter(x => x !== el.value); }
+      else ans[k] = el.value;
+    }
+    host.addEventListener('click', e => {
+      const b = e.target.closest('[data-copy]'); if (!b) return;
+      const n = b.dataset.copy;
+      TICKET_QS.forEach(q => { const src = ans['r0:' + q.id]; if (src !== undefined) ans['r' + n + ':' + q.id] = Array.isArray(src) ? [...src] : src; });
+      render(host, getQty(), inputCls);
+      host.querySelector(`[data-copy="${n}"]`)?.focus();
+    });
+  }
+
+  window.CQ = { CAMP, render, bind, reset() { ans = {}; } };
+})();
+</script>
+<script>
+const $ = id => document.getElementById(id);
+const FRAME = window.FRAME_CFG || null;
+if (FRAME) document.documentElement.classList.add('in-frame');
+const PAGE_SRC = '<!doctype html>\n' + document.documentElement.outerHTML;
+
+/* Sample Customer List. One row per distinct name / e-mail / phone / address found on orders.
+   Phone and address come from past orders (the Customer List export today has name + e-mail only). */
+const CUSTOMERS = [
+  {first:'Homer',last:'Townes',email:'homer.townes@hometown.com',phone:'(866) 488-4849',a1:'742 Evergreen Ter',a2:'',city:'Birmingham',state:'AL',zip:'35203',lastEv:'Football vs Westfield',lastDt:'Nov 14, 2026',orders:9},
+  {first:'Homer',last:'Townes',email:'homer.townes@hometown.com',phone:'(205) 555-0142',a1:'742 Evergreen Ter',a2:'',city:'Birmingham',state:'AL',zip:'35203',lastEv:'Boys Basketball vs Oak Grove',lastDt:'Feb 6, 2026',orders:3},
+  {first:'Homer',last:'Townes',email:'homer.j.townes@example.com',phone:'',a1:'',a2:'',city:'',state:'',zip:'',lastEv:'2025-26 Football Season Pass',lastDt:'Aug 2, 2025',orders:1},
+  {first:'Marge',last:'Townes',email:'marge.townes@example.com',phone:'(205) 555-0177',a1:'742 Evergreen Ter',a2:'',city:'Birmingham',state:'AL',zip:'35203',lastEv:'Volleyball vs Westfield',lastDt:'Oct 9, 2026',orders:4},
+  {first:'Lisa',last:'Townes',email:'lisa.townes@example.com',phone:'(205) 555-0188',a1:'',a2:'',city:'',state:'',zip:'',lastEv:'Fall Band Concert',lastDt:'Oct 23, 2026',orders:2},
+  {first:'Bart',last:'Townes',email:'bart.townes@example.com',phone:'(205) 555-0199',a1:'',a2:'',city:'',state:'',zip:'',lastEv:'Football vs Pinecrest',lastDt:'Sep 26, 2026',orders:1},
+  {first:'Homer',last:'Delgado',email:'hdelgado@example.com',phone:'(205) 555-0110',a1:'18 Ridge Rd',a2:'Apt 4',city:'Hoover',state:'AL',zip:'35226',lastEv:'Football vs Westfield',lastDt:'Nov 14, 2026',orders:5},
+  {first:'Homer',last:'Patel',email:'homer.patel@example.com',phone:'(205) 555-0123',a1:'',a2:'',city:'',state:'',zip:'',lastEv:'Girls Soccer vs Pinecrest',lastDt:'Apr 11, 2026',orders:2},
+  {first:'Ned',last:'Townes-Flanders',email:'ned.tf@example.com',phone:'(205) 555-0131',a1:'744 Evergreen Ter',a2:'',city:'Birmingham',state:'AL',zip:'35203',lastEv:'Football vs Westfield',lastDt:'Nov 14, 2026',orders:12},
+  {first:'Carla',last:'Townes',email:'carla.townes@example.com',phone:'(334) 555-0164',a1:'',a2:'',city:'',state:'',zip:'',lastEv:'Wrestling Tri-Meet',lastDt:'Jan 17, 2026',orders:1},
+  {first:'Maria',last:'Alvarez',email:'malvarez@example.com',phone:'(205) 555-0155',a1:'2210 Oak St',a2:'',city:'Birmingham',state:'AL',zip:'35205',lastEv:'Football vs Westfield',lastDt:'Nov 14, 2026',orders:7},
+  {first:'Maria',last:'Alvarez',email:'maria.alvarez.bhs@example.com',phone:'(205) 555-0155',a1:'',a2:'',city:'',state:'',zip:'',lastEv:'Spring Musical',lastDt:'Apr 25, 2026',orders:2},
+  {first:'James',last:'Okafor',email:'jokafor@example.com',phone:'(205) 555-0168',a1:'91 Lakeview Dr',a2:'',city:'Vestavia Hills',state:'AL',zip:'35216',lastEv:'Boys Basketball vs Oak Grove',lastDt:'Feb 6, 2026',orders:6},
+  {first:'Tanya',last:'Brooks',email:'tbrooks@example.com',phone:'(205) 555-0172',a1:'',a2:'',city:'',state:'',zip:'',lastEv:'Homecoming Dance',lastDt:'Oct 3, 2026',orders:1},
+  {first:'Devon',last:'Hughes',email:'devon.hughes@example.com',phone:'(205) 555-0181',a1:'55 Main St',a2:'Ste 200',city:'Birmingham',state:'AL',zip:'35203',lastEv:'Football vs Pinecrest',lastDt:'Sep 26, 2026',orders:3},
+];
+// how many rows share each email (so we can tag "1 of 2 versions")
+const EMAIL_COUNT = CUSTOMERS.reduce((m, c) => (m[c.email] = (m[c.email] || 0) + 1, m), {});
+
+// E-mail first: expected to be the most used search
+const FIELDS = [
+  {k:'email', label:'E-mail', ph:'Any part of the e-mail', type:'email'},
+  {k:'phone', label:'Phone', ph:'Any part of the number', type:'tel'},
+  {k:'first', label:'First name', ph:'Starts with…', type:'text'},
+  {k:'last', label:'Last name', ph:'Starts with…', type:'text'},
+];
+const digits = s => (s || '').replace(/\D/g, '');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function fieldMatch(c, k, q) {
+  if (!q) return true;
+  if (k === 'phone') { const d = digits(q); return d.length > 0 && digits(c.phone).includes(d); }
+  const v = (c[k] || '').toLowerCase(), t = q.toLowerCase().trim();
+  return k === 'first' || k === 'last' ? v.startsWith(t) : v.includes(t);
+}
+function hl(text, q, k) {
+  if (!q || !text) return esc(text);
+  if (k === 'phone') {
+    const d = digits(q); if (!d) return esc(text);
+    // highlight the digit run inside the formatted phone
+    let out = '', di = 0, start = -1; const src = text, dd = digits(src), at = dd.indexOf(d);
+    if (at < 0) return esc(text);
+    for (let i = 0; i < src.length; i++) {
+      const isD = /\d/.test(src[i]);
+      const inRun = isD && di >= at && di < at + d.length;
+      out += inRun ? '<mark>' + esc(src[i]) + '</mark>' : esc(src[i]);
+      if (isD) di++;
+    }
+    return out.replace(/<\/mark>([^<\d]*)<mark>/g, '$1');
+  }
+  const t = q.trim(); const i = text.toLowerCase().indexOf(t.toLowerCase());
+  if (!t || i < 0 || ((k === 'first' || k === 'last') && i !== 0)) return esc(text);
+  return esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + t.length)) + '</mark>' + esc(text.slice(i + t.length));
+}
+
+/* ===== Lookup component (used by the search bar and the pop-up) ===== */
+function makeLookup(host, where) {
+  let rows = FIELDS.map(f => ({k:f.k, q:''}));
+  host.innerHTML = `
+    <div class="crit" role="group" aria-label="Search fields">
+      ${FIELDS.map((f, i) => `<label>${f.label}<input class="fc" type="${f.type}" data-i="${i}" placeholder="${f.ph}" ${f.k === 'phone' ? 'inputmode="tel"' : ''} autocomplete="off"></label>`).join('')}
+    </div>
+    <div class="crit-foot">
+      <span style="color:#6d6e71">Fill in any of these. Results match every field you fill in.</span>
+      <button type="button" class="linkbtn" data-clear>Clear search</button>
+      <span class="count" aria-live="polite"></span>
+    </div>
+    <div class="results" hidden></div>`;
+  const crit = host.querySelector('.crit'), res = host.querySelector('.results'), count = host.querySelector('.count');
+
+  function drawCrit(focusIdx) {
+    crit.querySelectorAll('input').forEach((el, i) => el.value = rows[i].q);
+    if (focusIdx != null) crit.querySelectorAll('input')[focusIdx]?.focus();
+  }
+  function search() {
+    const active = rows.filter(r => r.q.trim());
+    const ready = active.some(r => (r.k === 'phone' ? digits(r.q).length >= 3 : r.q.trim().length >= 2));
+    if (!ready) { res.hidden = true; count.textContent = active.length ? 'Keep typing…' : ''; return; }
+    const hits = CUSTOMERS.filter(c => active.every(r => fieldMatch(c, r.k, r.q)));
+    count.textContent = hits.length === 1 ? '1 match' : hits.length + ' matches';
+    res.hidden = false;
+    const q = k => (rows.find(r => r.k === k) || {}).q;
+    if (!hits.length) { res.innerHTML = '<div class="empty">No customers match all of these fields. Remove a field or check the spelling.</div>'; return; }
+    res.innerHTML = `<div class="res-head"><span>Name</span><span>Contact</span><span>Last order</span><span></span></div>` + hits.map(c => {
+      const idx = CUSTOMERS.indexOf(c);
+      const v = EMAIL_COUNT[c.email] > 1 ? `<span class="vtag">${EMAIL_COUNT[c.email]} versions of this e-mail</span>` : '';
+      const addr = c.a1 ? `${esc(c.a1)}${c.a2 ? ', ' + esc(c.a2) : ''}, ${esc(c.city)}, ${esc(c.state)} ${hl(c.zip, q('zip'), 'zip')}` : '<span class="miss">No address on file</span>';
+      return `<div class="res">
+        <div><div class="nm">${hl(c.first, q('first'), 'first')} ${hl(c.last, q('last'), 'last')}</div><div class="sm">${c.orders} order${c.orders > 1 ? 's' : ''}</div></div>
+        <div class="ln">${hl(c.email, q('email'), 'email')}${v}<br>${c.phone ? hl(c.phone, q('phone'), 'phone') : '<span class="miss">No phone on file</span>'}<br>${addr}</div>
+        <div class="ln">${esc(c.lastEv)}<br><span class="sm">${esc(c.lastDt)}</span></div>
+        <button type="button" class="btn btn-primary btn-sm use" data-use="${idx}">Use</button>
+      </div>`;
+    }).join('');
+  }
+  host.addEventListener('input', e => {
+    if (e.target.matches('input[data-i]')) { rows[+e.target.dataset.i].q = e.target.value; search(); }
+  });
+  host.addEventListener('click', e => {
+    const t = e.target.closest('button'); if (!t) return;
+    if (t.matches('[data-clear]')) { rows.forEach(r => r.q = ''); drawCrit(0); search(); }
+    else if (t.matches('[data-use]')) { useCustomer(CUSTOMERS[+t.dataset.use]); if (where === 'modal') closePhonebook(); }
+  });
+  drawCrit(); search();
+  return {
+    reset() { rows.forEach(r => r.q = ''); drawCrit(); search(); },
+    // open with one field already filled from the buyer form
+    prefill(k, v) { rows.forEach(r => r.q = r.k === k ? v : ''); drawCrit(FIELDS.findIndex(f => f.k === k)); search(); },
+  };
+}
+
+const lookups = [...document.querySelectorAll('[data-lookup]')].map(h => makeLookup(h, h.dataset.lookup));
+
+/* ===== Fill the buyer fields ===== */
+function useCustomer(c) {
+  const map = {first:c.first, last:c.last, email:c.email, email2:c.email, phone:c.phone, a1:c.a1, a2:c.a2, city:c.city, zip:c.zip};
+  Object.entries(map).forEach(([k, v]) => {
+    const el = document.querySelector(`#buyer [data-k="${k}"]`); el.value = v || '';
+    el.classList.remove('filled'); void el.offsetWidth; if (v) el.classList.add('filled');
+  });
+  if (c.state) $('f_state').value = c.state;
+  const missing = [!c.phone && 'phone', !c.a1 && 'address'].filter(Boolean);
+  $('imported').innerHTML = `<span>Filled from Customer List: <b>${esc(c.first)} ${esc(c.last)}</b> (${esc(c.email)}). Check or edit any field before creating the order.${missing.length ? ' No ' + missing.join(' or ') + ' on file.' : ''}${c.a1 && $('f_pay').value !== 'credit_card' ? ' Address shows when payment method is Credit Card.' : ''}</span><button type="button" class="linkbtn" id="clear_buyer">Clear buyer</button>`;
+  $('imported').hidden = false;
+  $('clear_buyer').onclick = clearBuyer;
+  $('f_pay').focus();
+  setTimeout(() => document.querySelectorAll('.fc.filled').forEach(el => el.classList.remove('filled')), 2500);
+}
+function clearBuyer() {
+  document.querySelectorAll('#buyer [data-k]').forEach(el => { if (el.tagName === 'INPUT') el.value = ''; el.classList.remove('filled'); });
+  $('imported').hidden = true;
+}
+
+/* payment method shows card / check rows, like the real page */
+$('f_pay').addEventListener('change', () => {
+  const v = $('f_pay').value;
+  document.querySelectorAll('.fg.card').forEach(el => el.hidden = v !== 'credit_card');
+  document.querySelectorAll('.fg.check').forEach(el => el.hidden = !(v === 'check'));
+});
+
+/* ===== Phonebook pop-up ===== */
+let lastFocus = null;
+function openPhonebook() { lastFocus = document.activeElement; $('phonebook').hidden = false; setTimeout(() => { if (!$('phonebook').contains(document.activeElement)) $('phonebook').querySelector('input.fc')?.focus(); }, 0); }
+function closePhonebook() { $('phonebook').hidden = true; (lastFocus && lastFocus.id !== 'f_pay' ? lastFocus : null)?.focus?.(); }
+document.querySelectorAll('.pb-open').forEach(b => b.onclick = openPhonebook);
+
+/* Icons in fields: a magnifying glass inside E-mail, Phone, First name, Last name.
+   Opens the Phonebook already searching whatever is typed in that field. */
+const MAG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>';
+[['first','First name'],['last','Last name'],['email','E-mail'],['phone','Phone']].forEach(([k, label]) => {
+  const input = document.querySelector(`#buyer [data-k="${k}"]`);
+  const wrap = document.createElement('div'); wrap.className = 'mag-wrap';
+  input.replaceWith(wrap); wrap.appendChild(input);
+  wrap.insertAdjacentHTML('beforeend', `<button type="button" class="mag" title="Look up customer by ${label}" aria-label="Look up customer by ${label}">${MAG}</button>`);
+  wrap.querySelector('.mag').onclick = () => { openPhonebook(); lookups[0].prefill(k, input.value.trim()); };
+});
+$('pb_close').onclick = $('pb_cancel').onclick = closePhonebook;
+$('phonebook').addEventListener('click', e => { if (e.target.id === 'phonebook') closePhonebook(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('phonebook').hidden) closePhonebook(); });
+
+/* ===== Tickets ===== */
+const GAME_LEVELS = [{n:'General Admission', p:8}, {n:'Student', p:5}, {n:'Senior Citizen', p:5}];
+let evType = (FRAME && FRAME.event) || 'game';
+let LEVELS = GAME_LEVELS, qty = [];
+function renderEvent() {
+  const camp = evType === 'camp';
+  LEVELS = camp ? CQ.CAMP.levels : GAME_LEVELS;
+  qty = LEVELS.map(() => 0);
+  $('ev_name').textContent = camp ? `${CQ.CAMP.name} - ${CQ.CAMP.when}` : 'Football vs Westfield - November 20, 2026 7:00 PM';
+  $('tix_head').textContent = camp ? 'Camp Registrations' : 'General Admission Tickets';
+  $('tix_help').textContent = camp ? 'Event requires registration. Select quantities to add to order.' : 'Event has general admission tickets. Select quantities to add to order.';
+  $('ga').innerHTML = '<span class="h">Qty</span><span class="h">Ticket Name</span>' + LEVELS.map((l, i) => `
+    <div class="qty"><button type="button" data-d="-1" data-i="${i}" aria-label="Remove ${l.n}">−</button><span id="q${i}">0</span><button type="button" data-d="1" data-i="${i}" aria-label="Add ${l.n}">+</button></div>
+    <span class="lvl">${l.n} : $${l.p.toFixed(2)}${camp ? ' <span class="cq-badge">Camper details + 4 questions</span>' : ''}</span>`).join('');
+  CQ.reset(); CQ.render($('regs'), [], 'fc');
+  $('total').textContent = 'Select tickets to calculate order total before placing.';
+}
+$('ga').addEventListener('click', e => {
+  const b = e.target.closest('button[data-d]'); if (!b) return;
+  const i = +b.dataset.i; qty[i] = Math.max(0, qty[i] + +b.dataset.d); $('q' + i).textContent = qty[i];
+  const t = qty.reduce((s, q, j) => s + q * LEVELS[j].p, 0);
+  $('total').textContent = t ? `Order total: $${t.toFixed(2)}` : 'Select tickets to calculate order total before placing.';
+  if (evType === 'camp') CQ.render($('regs'), qty, 'fc');
+});
+CQ.bind($('regs'), () => qty, 'fc');
+renderEvent();
+$('submit').onclick = () => { const t = $('toast'); t.textContent = 'Mockup only: no order is created.'; t.hidden = false; setTimeout(() => t.hidden = true, 2200); };
+
+/* ===== Demo state ===== */
+let place = (FRAME && FRAME.place) || 'above', device = 'desktop';
+function applyDemo() {
+  $('modal_opener').hidden = place !== 'above';
+  $('open_tabs').hidden = place !== 'tabs';
+  $('names_btn_wrap').hidden = place !== 'names';
+  document.body.classList.toggle('icons-on', place === 'icons');
+  $('email_btn_wrap').hidden = place !== 'email';
+  document.querySelectorAll('[data-place]').forEach(b => b.setAttribute('aria-pressed', b.dataset.place === place));
+  document.querySelectorAll('[data-device]').forEach(b => b.setAttribute('aria-pressed', b.dataset.device === device));
+  document.querySelectorAll('[data-event]').forEach(b => b.setAttribute('aria-pressed', b.dataset.event === evType));
+  if (FRAME) return;
+  $('phone_view').hidden = device !== 'mobile';
+  $('desktop_view').hidden = device === 'mobile';
+  if (device === 'mobile') $('phone_frame').srcdoc = PAGE_SRC.replace('<head>', `<head><script>window.FRAME_CFG=${JSON.stringify({place, event: evType})};<\/script>`);
+}
+document.querySelectorAll('[data-place]').forEach(b => b.onclick = () => { place = b.dataset.place; applyDemo(); });
+document.querySelectorAll('[data-event]').forEach(b => b.onclick = () => { evType = b.dataset.event; renderEvent(); applyDemo(); });
+document.querySelectorAll('[data-device]').forEach(b => b.onclick = () => { device = b.dataset.device; applyDemo(); window.scrollTo(0, 0); });
+$('demo_reset').onclick = () => { clearBuyer(); lookups.forEach(l => l.reset()); $('f_pay').value = ''; $('f_pay').dispatchEvent(new Event('change')); closePhonebook(); renderEvent(); applyDemo(); };
+applyDemo();
+</script>
+</body>
+</html>

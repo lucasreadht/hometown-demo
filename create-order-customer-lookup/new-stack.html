@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Create Order New Stack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Exo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#2D2A26;--gray-dark:#6D6E71;--gray-fog:#888F96;--gray-cool:#BCBEC0;--gray-blue:#E5E9EC;--gray-light:#F1F2F2;--gray-lighter:#F7F7F7;
+  --primary:#005CB9;--primary-dark:#00488E;--primary-medium:#C7EAFB;--primary-light:#F1FAFE;
+  --success:#008256;--success-light:#E3FDF7;--warning-light:#FFFCE4;--warning:#E0AF00;--complementary:#FF6900;
+  --ring:0 0 0 1px rgba(45,42,38,.1);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--gray-lighter);font-family:Exo,system-ui,sans-serif;font-size:14px;color:var(--black)}
+[hidden]{display:none !important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+button{font-family:inherit}
+
+/* ===== Demo controls (not part of the product) ===== */
+.demo-bar{background:#2d2a26;color:#fff;padding:10px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:13px}
+.demo-inner{max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.demo-title{font-weight:700;font-size:14px;margin-right:auto}
+.demo-title small{display:block;font-weight:400;opacity:.75;font-size:11px}
+.seg{display:inline-flex;align-items:center;background:#1a1815;border:1px solid #6b655d;border-radius:8px;padding:3px;gap:3px}
+.seg span{font-size:10px;text-transform:uppercase;letter-spacing:.05em;opacity:.85;padding:0 6px}
+.seg button{border:1px solid #8a837b;background:#3d3934;color:#fff;padding:4px 10px;border-radius:5px;cursor:pointer;font:inherit;font-size:12px}
+.seg button:hover{background:#57524b}
+.seg button[aria-pressed="true"]{background:#FFC700;border-color:#FFC700;color:#1a1815;font-weight:700}
+.demo-reset{background:transparent;color:#FFC700;border:1px solid #FFC700;border-radius:6px;padding:5px 10px;font-weight:700;cursor:pointer;font-size:12px}
+.demo-tip{max-width:1280px;margin:8px auto 0;font-size:12px;opacity:.85}
+html.in-frame .demo-bar{display:none}
+#phone_view{background:#e9ecef;padding:24px 16px 40px;min-height:calc(100vh - 60px)}
+.phone{width:399px;max-width:100%;margin:0 auto;background:#111;border-radius:44px;padding:12px;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.phone iframe{display:block;width:375px;max-width:100%;height:740px;border:0;border-radius:32px;background:#fff}
+
+/* ===== Clients app shell ===== */
+.top{background:#000;color:#fff;font-family:verdana,sans-serif}
+.top nav{max-width:1280px;margin:0 auto;padding:0 16px;display:flex;flex-wrap:wrap;align-items:center;min-height:48px;font-size:14px}
+.top a{color:#fff;text-decoration:none;padding:14px 20px;white-space:nowrap}
+.top a.on{color:#9d9d9d}
+.top a.out{margin-left:auto}
+main{max-width:1280px;margin:0 auto;padding:32px 16px 64px;display:flex;flex-direction:column;gap:24px}
+.crumbs{font-size:14px;color:#4B4C50}
+.crumbs a{color:var(--primary);text-decoration:none}
+h1{margin:0;font-size:24px;line-height:32px;font-weight:600}
+.subhead{margin:4px 0 0;color:var(--gray-dark);font-size:15px}
+.cols{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:24px;align-items:start}
+.card{background:#fff;border-radius:12px;box-shadow:var(--ring);padding:24px;display:flex;flex-direction:column;gap:16px}
+.card-h{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}
+.card-h h2{margin:0;font-size:18px;font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.field{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;position:relative;min-width:0}
+.field .opt{font-weight:400;color:var(--gray-dark)}
+.inp{width:100%;font:inherit;font-weight:400;font-size:15px;color:var(--black);height:40px;padding:8px 12px;border:1px solid var(--gray-cool);border-radius:6px;background:#fff}
+.inp:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 1px #fff,0 0 0 .2rem rgba(0,92,185,.3)}
+.inp.with-icon{padding-left:36px}
+.inp.filled{background:var(--warning-light);border-color:var(--warning);transition:background 1.5s}
+.in-ico{position:absolute;left:12px;bottom:12px;color:var(--gray-fog);pointer-events:none}
+select.inp{appearance:auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:500;padding:8px 16px;border:0;border-radius:6px;cursor:pointer;text-decoration:none;line-height:1.4}
+.btn-outline{background:#fff;color:var(--black);box-shadow:0 0 0 1px #d1d5db}
+.btn-outline:hover{background:var(--gray-lighter)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-lg{font-size:16px;padding:12px 20px;font-weight:600}
+.btn:focus-visible,.linkbtn:focus-visible,.res:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+.linkbtn{background:none;border:0;padding:0;color:var(--primary);cursor:pointer;font:inherit;font-weight:600}
+.toggle-row{display:flex;gap:10px;align-items:center;font-size:14px}
+.toggle-row input{width:18px;height:18px;accent-color:var(--primary)}
+.new{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:var(--complementary);border-radius:999px;padding:2px 8px}
+.filled-note{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;background:var(--success-light);border:1px solid var(--success);color:var(--black);border-radius:8px;padding:12px 16px;font-size:14px}
+.filled-note .linkbtn{margin-left:auto}
+.hint{font-size:13px;color:var(--gray-dark);font-weight:400}
+
+/* tickets */
+.lvl{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--gray-blue)}
+.lvl:first-of-type{border-top:0}
+.lvl b{font-weight:600;display:block}
+.lvl small{color:var(--gray-dark);font-size:13px}
+.stepper{display:inline-flex;align-items:center;border-radius:6px;box-shadow:0 0 0 1px #d1d5db;overflow:hidden}
+.stepper button{width:36px;height:36px;border:0;background:#fff;cursor:pointer;font-size:18px;color:var(--black)}
+.stepper button:hover{background:var(--gray-lighter)}
+.stepper span{width:36px;text-align:center;font-weight:600}
+.sum{display:flex;justify-content:space-between;font-size:15px;padding-top:12px;border-top:1px solid var(--gray-blue)}
+.sum.total{font-weight:700;font-size:17px}
+
+/* ===== Results list (shared) ===== */
+.res-list{display:flex;flex-direction:column}
+.res{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:12px 14px;border-top:1px solid var(--gray-blue)}
+.res:first-child{border-top:0}
+.res:hover,.res.active{background:var(--primary-light)}
+.res .nm{font-weight:600;font-size:15px}
+.res .ln{font-size:13px;color:var(--gray-dark);grid-column:1}
+.res .last{grid-column:2;grid-row:1 / span 3;text-align:right;font-size:13px;color:var(--gray-dark);align-self:center}
+.res .last b{display:block;color:var(--black);font-weight:500}
+.res mark{background:var(--warning-medium,#FFE73B);background:#FFF1A8;color:inherit;padding:0}
+.vtag{display:inline-block;font-size:11px;font-weight:600;color:var(--primary-dark);background:var(--primary-medium);border-radius:999px;padding:1px 8px;margin-left:6px}
+.miss{font-style:italic;color:var(--gray-fog)}
+.empty{padding:14px;color:var(--gray-dark)}
+
+/* type-ahead dropdown (Falcon Autocomplete) */
+.ta{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border-radius:8px;box-shadow:0 0 0 1px rgba(45,42,38,.12),0 8px 24px rgba(0,0,0,.12);z-index:30;max-height:360px;overflow:auto;font-weight:400}
+.ta-head{padding:8px 14px;font-size:12px;color:var(--gray-dark);background:var(--gray-lighter);border-bottom:1px solid var(--gray-blue);position:sticky;top:0}
+.ta .res .last{display:none}
+.ta .res{grid-template-columns:1fr}
+
+/* sheet + modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.1);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:50}
+.sheet{position:fixed;top:0;right:0;bottom:0;width:100%;max-width:672px;background:#fff;border-left:1px solid var(--gray-blue);box-shadow:0 10px 15px rgba(0,0,0,.1);z-index:51;display:flex;flex-direction:column;animation:slide .2s ease-out}
+@keyframes slide{from{transform:translateX(40px)}to{transform:none}}
+.modal{position:fixed;left:50%;top:48px;transform:translateX(-50%);width:calc(100% - 32px);max-width:760px;max-height:calc(100vh - 96px);background:#fff;border-radius:12px;box-shadow:0 20px 40px rgba(0,0,0,.2);z-index:51;display:flex;flex-direction:column}
+.p-h{padding:16px;border-bottom:1px solid var(--gray-blue);position:relative;padding-right:52px}
+.p-h h2{margin:0;font-size:16px;font-weight:500}
+.p-h p{margin:2px 0 0;font-size:14px;color:var(--gray-dark)}
+.p-x{position:absolute;top:12px;right:12px;width:32px;height:32px;border:0;background:none;border-radius:6px;cursor:pointer;font-size:20px;color:var(--gray-dark)}
+.p-x:hover{background:var(--gray-light)}
+.p-b{flex:1;overflow-y:auto;padding:24px 16px;display:flex;flex-direction:column;gap:16px}
+.p-f{padding:16px;border-top:1px solid var(--gray-blue);display:flex;justify-content:flex-end;gap:8px}
+.crit{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+.crit-foot{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:13px;color:var(--gray-dark)}
+.crit-foot .count{margin-left:auto;font-weight:600;color:var(--black)}
+.res-box{border-radius:8px;box-shadow:var(--ring)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--black);color:#fff;padding:10px 16px;border-radius:6px;z-index:60}
+
+/* custom questions (same content as the Oct 12 design, in new-admin styling) */
+.cq-badge{font-size:12px;font-weight:600;color:var(--primary-dark);background:var(--primary-medium);border-radius:999px;padding:1px 8px}
+.cq-h{margin:0;font-size:18px;font-weight:600}
+.cq-help{margin:-8px 0 0;color:var(--gray-dark)}
+.cq-fs{border:0;border-radius:8px;box-shadow:var(--ring);padding:16px 20px 20px;margin:0;min-width:0}
+.cq-fs legend{float:left;width:100%;padding:0 0 12px;font-size:15px;font-weight:600}
+.cq-fs legend span{font-weight:400;color:var(--gray-dark)}
+.cq-fs legend + *{clear:both}
+.cq-reg{background:var(--gray-lightest,#F8F8FA)}
+.cq-grid1{display:grid;gap:16px;max-width:720px}
+.cq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;max-width:720px}
+.cq-q{display:flex;flex-direction:column;gap:6px;min-width:0}
+.cq-label{font-weight:600}
+.cq-star{color:#E20010;margin-left:4px}
+.cq-opt{font-weight:400;color:var(--gray-dark)}
+.cq-date{max-width:220px}
+.cq-sub{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gray-dark);margin:0 0 10px}
+.cq-subrow{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;border-top:1px solid var(--gray-blue);margin:20px 0 10px;padding-top:14px;max-width:720px}
+.cq-subrow .cq-sub{margin:0}
+.cq-choices{display:flex;flex-wrap:wrap;gap:8px 20px}
+.cq-choice{display:flex;gap:8px;align-items:center;cursor:pointer}
+.cq-choice input{width:18px;height:18px;accent-color:var(--primary)}
+.cq-copy{background:none;border:0;padding:0;color:var(--primary);font:inherit;font-weight:600;font-size:14px;cursor:pointer}
+.cq-copy:hover{text-decoration:underline}
+
+@media (max-width:900px){.cols{grid-template-columns:1fr}}
+@media (max-width:640px){
+  .top nav{padding:0 4px}
+  .top a{padding:10px 10px;font-size:12px}
+  main{padding:20px 12px 48px;gap:16px}
+  .card{padding:16px}
+  .grid2,.crit{grid-template-columns:1fr}
+  .res{grid-template-columns:1fr}
+  .res .last{grid-column:1;grid-row:auto;text-align:left}
+  .res .last b{display:inline}
+  .modal{top:0;left:0;transform:none;width:100%;max-width:none;max-height:none;height:100%;border-radius:0}
+  .p-f .btn{flex:1}
+  .card-h .btn{width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Demo controls (not part of the product) ===== -->
+<div class="demo-bar">
+  <div class="demo-inner">
+    <div class="demo-title">Create Order on the new admin: Customer Lookup<small>Proposal. Create Order isn't on admin.hometownticketing.com yet; built from its existing parts.</small></div>
+    <div class="seg" role="group" aria-label="Version"><span>Version</span><button onclick="location.href='index.html'">Current Box Office</button><button aria-pressed="true">New admin</button></div>
+    <div class="seg" role="group" aria-label="Event"><span>Event</span><button data-event="game">Football game</button><button data-event="camp">Camp + custom questions</button></div>
+    <div class="seg" role="group" aria-label="Lookup style"><span>Lookup</span><button data-style="typeahead">Type-ahead</button><button data-style="sheet">Side panel</button><button data-style="modal">Pop-up</button></div>
+    <div class="seg" role="group" aria-label="Device"><span>Device</span><button data-device="desktop">Desktop</button><button data-device="mobile">Mobile</button></div>
+    <button type="button" class="demo-reset" id="demo_reset">Reset</button>
+  </div>
+  <div class="demo-tip" id="demo_tip"></div>
+</div>
+
+<div id="phone_view" hidden><div class="phone"><iframe id="phone_frame" title="Mobile view"></iframe></div></div>
+
+<div id="desktop_view">
+<header class="top">
+  <nav aria-label="Main">
+    <a href="#">Dashboard</a><a href="#">District</a><a href="#" class="on">Events</a><a href="#">Reports</a><a href="#">Websites</a><a href="#">Fundraising</a><a href="#">My Hometown</a><a href="#">Settings</a><a href="#" class="out">Log out</a>
+  </nav>
+</header>
+
+<main>
+  <div class="crumbs"><a href="#">Events</a> / <span id="crumb_ev">Football vs Westfield</span> / Create Order</div>
+  <div>
+    <h1>Create Order</h1>
+    <p class="subhead" id="ev_sub">Football vs Westfield · Friday, November 20, 2026 · 7:00 PM</p>
+  </div>
+
+  <div class="cols">
+    <section class="card" aria-labelledby="buyer_h">
+      <div class="card-h">
+        <h2 id="buyer_h">Buyer</h2>
+        <button type="button" class="btn btn-outline" id="open_lookup" hidden>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+          Look Up Customer <span class="new">New</span>
+        </button>
+      </div>
+      <p class="hint" id="ta_hint" hidden><span class="new">New</span>&nbsp; Start typing an e-mail, phone or name to find a past customer. Each field you fill narrows the matches.</p>
+
+      <div class="filled-note" id="filled" hidden role="status"></div>
+
+      <div class="grid2" id="buyer">
+        <div class="field" style="grid-column:1 / -1"><label for="f_email">E-mail</label><input class="inp" id="f_email" type="email" data-k="email" autocomplete="off"></div>
+        <div class="field"><label for="f_phone">Phone</label><input class="inp" id="f_phone" type="tel" data-k="phone" autocomplete="off"></div>
+        <div class="field"><label for="f_email2">Confirm e-mail</label><input class="inp" id="f_email2" type="email" data-k="email2" autocomplete="off"></div>
+        <div class="field"><label for="f_first">First name</label><input class="inp" id="f_first" data-k="first" autocomplete="off"></div>
+        <div class="field"><label for="f_last">Last name</label><input class="inp" id="f_last" data-k="last" autocomplete="off"></div>
+        <div class="field"><label for="f_pay">Payment method</label>
+          <select class="inp" id="f_pay"><option value="">Select…</option><option value="cash">Cash</option><option value="check">Check</option><option value="credit_card">Credit card</option><option value="comp">Comp</option></select></div>
+        <div class="field"><label for="f_promo">Promo code <span class="opt">(optional)</span></label><input class="inp" id="f_promo"></div>
+        <div class="field addr" style="grid-column:1 / -1" hidden><label for="f_a1">Street address</label><input class="inp" id="f_a1" data-k="a1"></div>
+        <div class="field addr" hidden><label for="f_city">City</label><input class="inp" id="f_city" data-k="city"></div>
+        <div class="field addr" hidden><label for="f_zip">ZIP code</label><input class="inp" id="f_zip" data-k="zip"></div>
+        <div class="field" style="grid-column:1 / -1"><label for="f_msg">Internal notes <span class="opt">(optional)</span></label><input class="inp" id="f_msg"></div>
+      </div>
+      <label class="toggle-row"><input type="checkbox" checked> Send receipt and tickets to the buyer's e-mail</label>
+    </section>
+
+    <section class="card" aria-labelledby="tix_h">
+      <div class="card-h"><h2 id="tix_h">Tickets</h2></div>
+      <p class="hint" id="tix_help" hidden>Event requires registration. Each registration asks for camper details and the camp's custom questions.</p>
+      <div id="levels"></div>
+      <div class="sum"><span>Tickets</span><span id="sum_q">0</span></div>
+      <div class="sum total"><span>Total</span><span id="sum_t">$0.00</span></div>
+      <button type="button" class="btn btn-primary btn-lg" id="submit">Create Order</button>
+    </section>
+  </div>
+  <section class="card cq" id="regs" hidden aria-label="Registration Details"></section>
+</main>
+</div>
+
+<!-- Side panel (Falcon Sheet) / Pop-up (Falcon Modal): same content -->
+<div class="overlay" id="overlay" hidden></div>
+<div id="panel" role="dialog" aria-modal="true" aria-labelledby="pnl_title" hidden>
+  <div class="p-h">
+    <h2 id="pnl_title">Customer Phonebook</h2>
+    <p>Searches the Customer List for events you have access to.</p>
+    <button type="button" class="p-x" id="pnl_close" aria-label="Close">&times;</button>
+  </div>
+  <div class="p-b">
+    <div class="crit" id="crit"></div>
+    <div class="crit-foot"><span>Fill in any of these. Results match every field you fill in.</span><button type="button" class="linkbtn" id="crit_clear">Clear search</button><span class="count" id="crit_count" aria-live="polite"></span></div>
+    <div class="res-box" id="pnl_results" hidden><div class="res-list" id="pnl_list"></div></div>
+  </div>
+  <div class="p-f"><button type="button" class="btn btn-outline" id="pnl_cancel">Cancel</button></div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* Custom questions on Create Order (shared by index.html and new-stack.html).
+   Questions and layout from Lucas's Oct 12, 2026 design "Create Order with Custom Questions"
+   (Artifacts/Claude Design/Custom Questions Create Order Tool.zip): order questions asked once,
+   then per registration: camper details + camp questions, with "Copy answers from Registration #1". */
+(function () {
+  const CAMP = {
+    name: 'Summer Youth Basketball Camp',
+    when: 'June 14, 2027 9:00 AM',
+    levels: [
+      {n:'Full Week Camp (Grades 3–5)', p:150},
+      {n:'Full Week Camp (Grades 6–8)', p:150},
+      {n:'Half Day Camp (Mornings)', p:85},
+      {n:'Sibling Registration', p:125},
+    ],
+  };
+  const ORDER_QS = [
+    {id:'hear', type:'dropdown', label:'How did you hear about this camp?', required:true, options:['School website','Coach or teacher','Social media','Email newsletter','Friend or family']},
+  ];
+  const GUEST_QS = [
+    {id:'g_first', type:'text', label:'Camper first name', ph:'First name', required:true},
+    {id:'g_last', type:'text', label:'Camper last name', ph:'Last name', required:true},
+    {id:'g_email', type:'text', label:'Parent/guardian e-mail', ph:'E-mail', required:true},
+    {id:'g_phone', type:'text', label:'Parent/guardian phone', ph:'Phone #', required:true},
+  ];
+  const TICKET_QS = [
+    {id:'emerg', type:'text', label:'Emergency contact (name & phone)', ph:'e.g. Dana Ruiz, (205) 555-0142', required:true},
+    {id:'dob', type:'date', label:'Camper date of birth', required:true},
+    {id:'shirt', type:'radio', label:'Camp T-shirt size', required:true, options:['Youth S','Youth M','Youth L','Adult S','Adult M']},
+    {id:'med', type:'checkbox', label:'Allergies or medical conditions', required:false, options:['Food allergy','Asthma','Bee sting allergy','Other (staff will follow up)']},
+  ];
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  let ans = {};
+
+  function qHTML(q, key, inputCls) {
+    const v = ans[key];
+    const id = 'q_' + key.replace(/[^a-z0-9]/gi, '_');
+    const mark = q.required ? '<span class="cq-star" aria-hidden="true">*</span><span class="sr-only"> (required)</span>' : ' <span class="cq-opt">(optional)</span>';
+    if (q.type === 'radio' || q.type === 'checkbox') {
+      return `<div class="cq-q"><span class="cq-label" id="${id}_l">${esc(q.label)}${mark}</span>
+        <div class="cq-choices" role="${q.type === 'radio' ? 'radiogroup' : 'group'}" aria-labelledby="${id}_l">${q.options.map(o => {
+          const on = q.type === 'radio' ? v === o : (v || []).includes(o);
+          return `<label class="cq-choice"><input type="${q.type}" name="${id}" value="${esc(o)}" data-a="${key}" data-kind="${q.type}" ${on ? 'checked' : ''}> ${esc(o)}</label>`;
+        }).join('')}</div></div>`;
+    }
+    const ctl = q.type === 'dropdown'
+      ? `<select class="${inputCls}" id="${id}" data-a="${key}"><option value="">-- Select --</option>${q.options.map(o => `<option ${v === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`
+      : `<input class="${inputCls}${q.type === 'date' ? ' cq-date' : ''}" id="${id}" type="${q.type === 'date' ? 'date' : 'text'}" data-a="${key}" value="${esc(v || '')}" placeholder="${esc(q.ph || '')}">`;
+    return `<div class="cq-q"><label class="cq-label" for="${id}">${esc(q.label)}${mark}</label>${ctl}</div>`;
+  }
+
+  // qty: array of counts per CAMP.levels
+  function render(host, qty, inputCls) {
+    const blocks = [];
+    CAMP.levels.forEach((l, li) => { for (let i = 0; i < (qty[li] || 0); i++) blocks.push(l.n); });
+    if (!blocks.length) { host.innerHTML = ''; host.hidden = true; return; }
+    host.hidden = false;
+    host.innerHTML = `<h3 class="cq-h">Registration Details</h3>
+      <p class="cq-help">Enter each camper's details and the camp's custom questions, the same form families complete online. Answers save to the order and show on the guest list.</p>
+      <fieldset class="cq-fs"><legend>Order questions <span>· asked once per order</span></legend>
+        <div class="cq-grid1">${ORDER_QS.map(q => qHTML(q, 'order:' + q.id, inputCls)).join('')}</div></fieldset>
+      ${blocks.map((name, n) => `<fieldset class="cq-fs cq-reg"><legend>Registration #${n + 1} · <i>${esc(name)}</i></legend>
+        <div class="cq-sub">Camper details</div>
+        <div class="cq-grid2">${GUEST_QS.map(q => qHTML(q, 'r' + n + ':' + q.id, inputCls)).join('')}</div>
+        <div class="cq-subrow"><span class="cq-sub">Camp questions</span>${n > 0 ? `<button type="button" class="cq-copy" data-copy="${n}">Copy answers from Registration #1</button>` : ''}</div>
+        <div class="cq-grid1">${TICKET_QS.map(q => qHTML(q, 'r' + n + ':' + q.id, inputCls)).join('')}</div></fieldset>`).join('')}`;
+  }
+
+  function bind(host, getQty, inputCls) {
+    host.addEventListener('input', save);
+    host.addEventListener('change', save);
+    function save(e) {
+      const el = e.target.closest('[data-a]'); if (!el) return;
+      const k = el.dataset.a;
+      if (el.dataset.kind === 'checkbox') { const arr = ans[k] || []; ans[k] = el.checked ? [...arr, el.value] : arr.filter(x => x !== el.value); }
+      else ans[k] = el.value;
+    }
+    host.addEventListener('click', e => {
+      const b = e.target.closest('[data-copy]'); if (!b) return;
+      const n = b.dataset.copy;
+      TICKET_QS.forEach(q => { const src = ans['r0:' + q.id]; if (src !== undefined) ans['r' + n + ':' + q.id] = Array.isArray(src) ? [...src] : src; });
+      render(host, getQty(), inputCls);
+      host.querySelector(`[data-copy="${n}"]`)?.focus();
+    });
+  }
+
+  window.CQ = { CAMP, render, bind, reset() { ans = {}; } };
+})();
+</script>
+<script>
+const $ = id => document.getElementById(id);
+const FRAME = window.FRAME_CFG || null;
+if (FRAME) document.documentElement.classList.add('in-frame');
+const PAGE_SRC = '<!doctype html>\n' + document.documentElement.outerHTML;
+
+/* Sample Customer List: one row per distinct name / e-mail / phone / address on past orders */
+const CUSTOMERS = [
+  {first:'Homer',last:'Townes',email:'homer.townes@hometown.com',phone:'(866) 488-4849',a1:'742 Evergreen Ter',city:'Birmingham',state:'AL',zip:'35203',lastEv:'Football vs Westfield',lastDt:'Nov 14, 2026'},
+  {first:'Homer',last:'Townes',email:'homer.townes@hometown.com',phone:'(205) 555-0142',a1:'742 Evergreen Ter',city:'Birmingham',state:'AL',zip:'35203',lastEv:'Boys Basketball vs Oak Grove',lastDt:'Feb 6, 2026'},
+  {first:'Homer',last:'Townes',email:'homer.j.townes@example.com',phone:'',a1:'',city:'',state:'',zip:'',lastEv:'2025-26 Football Season Pass',lastDt:'Aug 2, 2025'},
+  {first:'Marge',last:'Townes',email:'marge.townes@example.com',phone:'(205) 555-0177',a1:'742 Evergreen Ter',city:'Birmingham',state:'AL',zip:'35203',lastEv:'Volleyball vs Westfield',lastDt:'Oct 9, 2026'},
+  {first:'Lisa',last:'Townes',email:'lisa.townes@example.com',phone:'(205) 555-0188',a1:'',city:'',state:'',zip:'',lastEv:'Fall Band Concert',lastDt:'Oct 23, 2026'},
+  {first:'Bart',last:'Townes',email:'bart.townes@example.com',phone:'(205) 555-0199',a1:'',city:'',state:'',zip:'',lastEv:'Football vs Pinecrest',lastDt:'Sep 26, 2026'},
+  {first:'Homer',last:'Delgado',email:'hdelgado@example.com',phone:'(205) 555-0110',a1:'18 Ridge Rd',city:'Hoover',state:'AL',zip:'35226',lastEv:'Football vs Westfield',lastDt:'Nov 14, 2026'},
+  {first:'Homer',last:'Patel',email:'homer.patel@example.com',phone:'(205) 555-0123',a1:'',city:'',state:'',zip:'',lastEv:'Girls Soccer vs Pinecrest',lastDt:'Apr 11, 2026'},
+  {first:'Ned',last:'Townes-Flanders',email:'ned.tf@example.com',phone:'(205) 555-0131',a1:'744 Evergreen Ter',city:'Birmingham',state:'AL',zip:'35203',lastEv:'Football vs Westfield',lastDt:'Nov 14, 2026'},
+  {first:'Carla',last:'Townes',email:'carla.townes@example.com',phone:'(334) 555-0164',a1:'',city:'',state:'',zip:'',lastEv:'Wrestling Tri-Meet',lastDt:'Jan 17, 2026'},
+  {first:'Maria',last:'Alvarez',email:'malvarez@example.com',phone:'(205) 555-0155',a1:'2210 Oak St',city:'Birmingham',state:'AL',zip:'35205',lastEv:'Football vs Westfield',lastDt:'Nov 14, 2026'},
+  {first:'Maria',last:'Alvarez',email:'maria.alvarez.bhs@example.com',phone:'(205) 555-0155',a1:'',city:'',state:'',zip:'',lastEv:'Spring Musical',lastDt:'Apr 25, 2026'},
+  {first:'James',last:'Okafor',email:'jokafor@example.com',phone:'(205) 555-0168',a1:'91 Lakeview Dr',city:'Vestavia Hills',state:'AL',zip:'35216',lastEv:'Boys Basketball vs Oak Grove',lastDt:'Feb 6, 2026'},
+  {first:'Tanya',last:'Brooks',email:'tbrooks@example.com',phone:'(205) 555-0172',a1:'',city:'',state:'',zip:'',lastEv:'Homecoming Dance',lastDt:'Oct 3, 2026'},
+  {first:'Devon',last:'Hughes',email:'devon.hughes@example.com',phone:'(205) 555-0181',a1:'55 Main St',city:'Birmingham',state:'AL',zip:'35203',lastEv:'Football vs Pinecrest',lastDt:'Sep 26, 2026'},
+];
+const EMAIL_COUNT = CUSTOMERS.reduce((m, c) => (m[c.email] = (m[c.email] || 0) + 1, m), {});
+const FIELDS = [
+  {k:'email', label:'E-mail', ph:'Any part of the e-mail', type:'email'},
+  {k:'phone', label:'Phone', ph:'Any part of the number', type:'tel'},
+  {k:'first', label:'First name', ph:'Starts with…', type:'text'},
+  {k:'last', label:'Last name', ph:'Starts with…', type:'text'},
+];
+const digits = s => (s || '').replace(/\D/g, '');
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function matchOne(c, k, q) {
+  q = (q || '').trim(); if (!q) return true;
+  if (k === 'phone') { const d = digits(q); return !d || digits(c.phone).includes(d); }
+  const v = (c[k] || '').toLowerCase(), t = q.toLowerCase();
+  return k === 'first' || k === 'last' ? v.startsWith(t) : v.includes(t);
+}
+function ready(q) { return Object.entries(q).some(([k, v]) => k === 'phone' ? digits(v).length >= 3 : (v || '').trim().length >= 2); }
+function find(q) { return CUSTOMERS.filter(c => Object.entries(q).every(([k, v]) => matchOne(c, k, v))); }
+function hl(text, q, k) {
+  q = (q || '').trim(); if (!q || !text) return esc(text);
+  if (k === 'phone') {
+    const d = digits(q), at = digits(text).indexOf(d); if (!d || at < 0) return esc(text);
+    let out = '', di = 0;
+    for (const ch of text) { const isD = /\d/.test(ch); out += isD && di >= at && di < at + d.length ? '<mark>' + ch + '</mark>' : esc(ch); if (isD) di++; }
+    return out.replace(/<\/mark>([^<\d]*)<mark>/g, '$1');
+  }
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  if (i < 0 || ((k === 'first' || k === 'last') && i !== 0)) return esc(text);
+  return esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length));
+}
+function resultHTML(c, q) {
+  const i = CUSTOMERS.indexOf(c);
+  const v = EMAIL_COUNT[c.email] > 1 ? `<span class="vtag">${EMAIL_COUNT[c.email]} versions</span>` : '';
+  const addr = c.a1 ? `${esc(c.a1)}, ${esc(c.city)}, ${esc(c.state)} ${esc(c.zip)}` : '<span class="miss">No address on file</span>';
+  return `<button type="button" class="res" data-use="${i}" aria-label="Use ${esc(c.first)} ${esc(c.last)}, ${esc(c.email)}">
+    <span class="nm">${hl(c.first, q.first, 'first')} ${hl(c.last, q.last, 'last')}</span>
+    <span class="ln">${hl(c.email, q.email, 'email')}${v} · ${c.phone ? hl(c.phone, q.phone, 'phone') : '<span class="miss">No phone</span>'}</span>
+    <span class="ln">${addr}</span>
+    <span class="last">Last order<b>${esc(c.lastEv)}</b>${esc(c.lastDt)}</span>
+  </button>`;
+}
+
+/* ===== Fill the buyer ===== */
+function useCustomer(c) {
+  const map = {first:c.first, last:c.last, email:c.email, email2:c.email, phone:c.phone, a1:c.a1, city:c.city, zip:c.zip};
+  Object.entries(map).forEach(([k, v]) => {
+    const el = document.querySelector(`#buyer [data-k="${k}"]`); el.value = v || '';
+    el.classList.remove('filled'); void el.offsetWidth; if (v) el.classList.add('filled');
+  });
+  const missing = [!c.phone && 'phone', !c.a1 && 'address'].filter(Boolean);
+  $('filled').innerHTML = `<span>Filled from the Customer List: <b>${esc(c.first)} ${esc(c.last)}</b>. Check or edit anything before creating the order.${missing.length ? ' No ' + missing.join(' or ') + ' on file.' : ''}</span><button type="button" class="linkbtn" id="clear_buyer">Clear buyer</button>`;
+  $('filled').hidden = false;
+  $('clear_buyer').onclick = clearBuyer;
+  closeTA(); closePanel(); $('f_pay').focus();
+  setTimeout(() => document.querySelectorAll('.inp.filled').forEach(el => el.classList.remove('filled')), 2500);
+}
+function clearBuyer() {
+  document.querySelectorAll('#buyer [data-k]').forEach(el => { el.value = ''; el.classList.remove('filled'); });
+  $('filled').hidden = true; closeTA();
+}
+$('f_pay').addEventListener('change', () => document.querySelectorAll('.addr').forEach(el => el.hidden = $('f_pay').value !== 'credit_card'));
+
+/* ===== Option 1: Type-ahead (Falcon Autocomplete) on E-mail, Phone, First name, Last name =====
+   The list under the active field matches everything typed in those 4 buyer fields. */
+const TA_KEYS = ['email', 'phone', 'first', 'last'];
+let taEl = null, taIdx = -1;
+const SEARCH_SVG = '<svg class="in-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>';
+TA_KEYS.forEach(k => {
+  const input = document.querySelector(`#buyer [data-k="${k}"]`);
+  input.insertAdjacentHTML('afterend', SEARCH_SVG);
+  input.setAttribute('role', 'combobox'); input.setAttribute('aria-autocomplete', 'list'); input.setAttribute('aria-expanded', 'false');
+  input.addEventListener('input', () => openTA(input));
+  input.addEventListener('focus', () => openTA(input));
+  input.addEventListener('keydown', e => {
+    if (!taEl) return;
+    const items = [...taEl.querySelectorAll('.res')];
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); taIdx = (taIdx + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length; items.forEach((el, i) => el.classList.toggle('active', i === taIdx)); items[taIdx]?.scrollIntoView({block:'nearest'}); }
+    else if (e.key === 'Enter' && taIdx >= 0) { e.preventDefault(); useCustomer(CUSTOMERS[+items[taIdx].dataset.use]); }
+    else if (e.key === 'Escape') closeTA();
+  });
+});
+function buyerQuery() { const q = {}; TA_KEYS.forEach(k => q[k] = document.querySelector(`#buyer [data-k="${k}"]`).value); return q; }
+function openTA(input) {
+  if (style !== 'typeahead') return;
+  closeTA();
+  const q = buyerQuery(); if (!ready(q) || !input.value.trim()) return;
+  const hits = find(q); if (!hits.length) return;
+  taIdx = -1;
+  taEl = document.createElement('div'); taEl.className = 'ta'; taEl.setAttribute('role', 'listbox');
+  taEl.innerHTML = `<div class="ta-head">${hits.length} past customer${hits.length > 1 ? 's' : ''} match what you've typed</div><div class="res-list">${hits.slice(0, 8).map(c => resultHTML(c, q)).join('')}</div>`;
+  input.parentElement.appendChild(taEl); input.setAttribute('aria-expanded', 'true');
+  taEl.addEventListener('mousedown', e => e.preventDefault());
+  taEl.addEventListener('click', e => { const b = e.target.closest('[data-use]'); if (b) useCustomer(CUSTOMERS[+b.dataset.use]); });
+}
+function closeTA() { taEl?.remove(); taEl = null; document.querySelectorAll('[aria-expanded="true"]').forEach(el => el.setAttribute('aria-expanded', 'false')); }
+document.addEventListener('click', e => { if (taEl && !e.target.closest('.field')) closeTA(); });
+document.querySelectorAll('#buyer .inp').forEach(el => el.addEventListener('blur', () => setTimeout(() => { if (!document.activeElement?.closest?.('.ta')) closeTA(); }, 100)));
+
+/* ===== Options 2 + 3: Side panel (Falcon Sheet) or Pop-up (Falcon Modal) ===== */
+const crit = {email:'', phone:'', first:'', last:''};
+$('crit').innerHTML = FIELDS.map(f => `<label class="field">${f.label}<input class="inp" type="${f.type}" data-c="${f.k}" placeholder="${f.ph}" autocomplete="off"${f.k === 'phone' ? ' inputmode="tel"' : ''}></label>`).join('');
+function search() {
+  const has = Object.values(crit).some(v => v.trim());
+  if (!ready(crit)) { $('pnl_results').hidden = true; $('crit_count').textContent = has ? 'Keep typing…' : ''; return; }
+  const hits = find(crit);
+  $('crit_count').textContent = hits.length === 1 ? '1 match' : hits.length + ' matches';
+  $('pnl_results').hidden = false;
+  $('pnl_list').innerHTML = hits.length ? hits.map(c => resultHTML(c, crit)).join('') : '<div class="empty">No customers match all of these fields. Clear a field or check the spelling.</div>';
+}
+$('crit').addEventListener('input', e => { crit[e.target.dataset.c] = e.target.value; search(); });
+$('crit_clear').onclick = () => { Object.keys(crit).forEach(k => crit[k] = ''); $('crit').querySelectorAll('input').forEach(i => i.value = ''); search(); $('crit').querySelector('input').focus(); };
+$('pnl_list').addEventListener('click', e => { const b = e.target.closest('[data-use]'); if (b) useCustomer(CUSTOMERS[+b.dataset.use]); });
+let lastFocus = null;
+function openPanel() {
+  lastFocus = document.activeElement;
+  $('panel').className = style === 'sheet' ? 'sheet' : 'modal';
+  $('panel').hidden = false; $('overlay').hidden = false;
+  // start with whatever is already typed in the buyer e-mail
+  const em = $('f_email').value.trim();
+  if (em && !crit.email) { crit.email = em; $('crit').querySelector('[data-c="email"]').value = em; search(); }
+  setTimeout(() => $('crit').querySelector('input').focus(), 0);
+}
+function closePanel() { if ($('panel').hidden) return; $('panel').hidden = true; $('overlay').hidden = true; if (lastFocus && lastFocus.id === 'open_lookup') lastFocus.focus(); }
+$('open_lookup').onclick = openPanel;
+$('pnl_close').onclick = $('pnl_cancel').onclick = $('overlay').onclick = closePanel;
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+
+/* ===== Tickets ===== */
+const GAME_LEVELS = [{n:'General Admission', p:8}, {n:'Student', p:5}, {n:'Senior Citizen', p:5}];
+let evType = (FRAME && FRAME.event) || 'game';
+let LEVELS = GAME_LEVELS, qty = [];
+function renderEvent() {
+  const camp = evType === 'camp';
+  LEVELS = camp ? CQ.CAMP.levels : GAME_LEVELS;
+  qty = LEVELS.map(() => 0);
+  $('crumb_ev').textContent = camp ? CQ.CAMP.name : 'Football vs Westfield';
+  $('ev_sub').textContent = camp ? `${CQ.CAMP.name} · Monday, June 14, 2027 · 9:00 AM` : 'Football vs Westfield · Friday, November 20, 2026 · 7:00 PM';
+  $('tix_h').textContent = camp ? 'Camp Registrations' : 'Tickets';
+  $('tix_help').hidden = !camp;
+  $('levels').innerHTML = LEVELS.map((l, i) => `<div class="lvl"><div><b>${l.n}</b><small>$${l.p.toFixed(2)}${camp ? ' · <span class="cq-badge">Camper details + 4 questions</span>' : ''}</small></div>
+    <div class="stepper"><button type="button" data-d="-1" data-i="${i}" aria-label="Remove ${l.n}">−</button><span id="q${i}" aria-live="polite">0</span><button type="button" data-d="1" data-i="${i}" aria-label="Add ${l.n}">+</button></div></div>`).join('');
+  $('sum_q').textContent = '0'; $('sum_t').textContent = '$0.00';
+  CQ.reset(); CQ.render($('regs'), [], 'inp');
+}
+$('levels').addEventListener('click', e => {
+  const b = e.target.closest('[data-d]'); if (!b) return;
+  const i = +b.dataset.i; qty[i] = Math.max(0, qty[i] + +b.dataset.d); $('q' + i).textContent = qty[i];
+  $('sum_q').textContent = qty.reduce((a, b) => a + b, 0);
+  $('sum_t').textContent = '$' + qty.reduce((s, q, j) => s + q * LEVELS[j].p, 0).toFixed(2);
+  if (evType === 'camp') CQ.render($('regs'), qty, 'inp');
+});
+CQ.bind($('regs'), () => qty, 'inp');
+renderEvent();
+$('submit').onclick = () => { $('toast').textContent = 'Mockup only: no order is created.'; $('toast').hidden = false; setTimeout(() => $('toast').hidden = true, 2200); };
+
+/* ===== Demo state ===== */
+const TIPS = {
+  typeahead: 'Type <b>homer.townes</b> in E-mail (2 versions), or <b>homer</b> in First name then <b>townes</b> in Last name (3 versions). Arrow keys + Enter work too.',
+  sheet: 'Click <b>Look Up Customer</b>. Try E-mail <b>homer.townes</b>, First name <b>homer</b> + Last name <b>townes</b>, or Phone <b>4849</b>.',
+  modal: 'Click <b>Look Up Customer</b>. Try E-mail <b>homer.townes</b>, First name <b>homer</b> + Last name <b>townes</b>, or Phone <b>4849</b>.',
+};
+let style = (FRAME && FRAME.style) || 'typeahead', device = 'desktop';
+function applyDemo() {
+  $('open_lookup').hidden = style === 'typeahead';
+  $('ta_hint').hidden = style !== 'typeahead';
+  document.querySelectorAll('#buyer .in-ico').forEach(el => el.hidden = style !== 'typeahead');
+  TA_KEYS.forEach(k => document.querySelector(`#buyer [data-k="${k}"]`).classList.toggle('with-icon', style === 'typeahead'));
+  $('demo_tip').innerHTML = TIPS[style];
+  document.querySelectorAll('[data-style]').forEach(b => b.setAttribute('aria-pressed', b.dataset.style === style));
+  document.querySelectorAll('[data-device]').forEach(b => b.setAttribute('aria-pressed', b.dataset.device === device));
+  document.querySelectorAll('[data-event]').forEach(b => b.setAttribute('aria-pressed', b.dataset.event === evType));
+  if (FRAME) return;
+  $('phone_view').hidden = device !== 'mobile';
+  $('desktop_view').hidden = device === 'mobile';
+  if (device === 'mobile') $('phone_frame').srcdoc = PAGE_SRC.replace('<head>', `<head><script>window.FRAME_CFG=${JSON.stringify({style, event: evType})};<\/script>`);
+}
+document.querySelectorAll('[data-event]').forEach(b => b.onclick = () => { evType = b.dataset.event; renderEvent(); applyDemo(); });
+document.querySelectorAll('[data-style]').forEach(b => b.onclick = () => { style = b.dataset.style; closeTA(); closePanel(); applyDemo(); });
+document.querySelectorAll('[data-device]').forEach(b => b.onclick = () => { device = b.dataset.device; closePanel(); applyDemo(); window.scrollTo(0, 0); });
+$('demo_reset').onclick = () => { clearBuyer(); $('crit_clear').click(); closePanel(); $('f_pay').value = ''; $('f_pay').dispatchEvent(new Event('change')); renderEvent(); applyDemo(); };
+applyDemo();
+</script>
+</body>
+</html>
